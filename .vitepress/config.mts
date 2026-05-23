@@ -25,7 +25,7 @@ export default defineConfig({
       { text: 'API', link: '/api/overview', activeMatch: '/api/' },
       { text: 'Benchmarks', link: '/benchmarks', activeMatch: '/benchmarks' },
       { text: 'Deployment', link: '/deployment', activeMatch: '/deployment' },
-      { text: 'Community', link: '/community', activeMatch: '/community' },
+      { text: 'FAQ', link: '/guide/faq', activeMatch: '/guide/faq' },
     ],
 
     sidebar: {
@@ -35,14 +35,36 @@ export default defineConfig({
           items: [
             { text: 'Quick Start', link: '/guide/getting-started' },
             { text: 'Installation', link: '/guide/installation' },
-            { text: 'Commands', link: '/guide/commands' },
+            { text: 'CLI Commands', link: '/guide/commands' },
             { text: 'Providers', link: '/guide/providers' },
+            { text: 'Configuration', link: '/guide/configuration' },
           ],
         },
         {
-          text: 'SDK',
+          text: 'Usage',
+          items: [
+            { text: 'Running Tasks', link: '/guide/usage/running-tasks' },
+            { text: 'Plan Mode', link: '/guide/usage/plan-mode' },
+            { text: 'Watch Mode (SSE)', link: '/guide/usage/watch-mode' },
+            { text: 'Topology Decision Tree', link: '/guide/usage/topology-decision-tree' },
+          ],
+        },
+        {
+          text: 'Advanced',
+          items: [
+            { text: 'Custom Tools', link: '/guide/advanced/custom-tools' },
+            { text: 'Custom Providers', link: '/guide/advanced/custom-providers' },
+            { text: 'Plugin System', link: '/guide/advanced/plugin-system' },
+            { text: 'Agent Teams', link: '/guide/advanced/agent-teams' },
+          ],
+        },
+        {
+          text: 'Reference',
           items: [
             { text: 'Agent SDK', link: '/guide/sdk' },
+            { text: 'Troubleshooting', link: '/guide/troubleshooting' },
+            { text: 'FAQ', link: '/guide/faq' },
+            { text: 'Changelog', link: '/guide/changelog' },
           ],
         },
       ],
