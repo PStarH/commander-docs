@@ -1,0 +1,400 @@
+/* ============================================
+   Commander Docs — Custom Theme
+   Inspired by opencode.ai design philosophy:
+   monospace-first, minimal, terminal-native
+   ============================================ */
+
+/* --- Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand palette */
+  --cmd-indigo: #6366f1;
+  --cmd-indigo-light: #818cf8;
+  --cmd-indigo-dark: #4f46e5;
+  --cmd-ink: #0f0e17;
+  --cmd-paper: #fafaf9;
+  --cmd-cream: #f5f0eb;
+
+  /* Typography */
+  --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', ui-monospace, monospace;
+
+  /* Override VitePress defaults */
+  --vp-c-indigo: var(--cmd-indigo);
+  --vp-c-indigo-1: var(--cmd-indigo-light);
+  --vp-c-indigo-2: var(--cmd-indigo);
+  --vp-c-indigo-3: var(--cmd-indigo-dark);
+
+  /* Accent */
+  --vp-c-brand-1: var(--cmd-indigo);
+  --vp-c-brand-2: var(--cmd-indigo-light);
+  --vp-c-brand-3: var(--cmd-indigo-dark);
+}
+
+/* ============================================
+   DARK THEME (default)
+   ============================================ */
+:root {
+  --vp-c-bg: #0f0e17;
+  --vp-c-bg-alt: #1a1928;
+  --vp-c-bg-elv: #1e1d2e;
+  --vp-c-bg-soft: #1a1928;
+  --vp-c-text: #e4e4e7;
+  --vp-c-text-1: #fafafa;
+  --vp-c-text-2: #a1a1aa;
+  --vp-c-text-3: #71717a;
+  --vp-c-border: #27272a;
+  --vp-c-divider: #27272a;
+  --vp-c-gutter: #27272a;
+
+  /* Code blocks */
+  --vp-code-block-bg: #12111f;
+  --vp-code-copy-code-bg: #1e1d2e;
+  --vp-code-copy-code-hover-bg: #27272a;
+  --vp-code-line-highlight-color: rgba(99, 102, 241, 0.08);
+  --vp-code-color: #c4b5fd;
+
+  /* Custom blocks */
+  --vp-custom-block-tip-bg: rgba(99, 102, 241, 0.08);
+  --vp-custom-block-tip-text: #a5b4fc;
+  --vp-custom-block-tip-border: rgba(99, 102, 241, 0.25);
+
+  /* Buttons */
+  --vp-button-brand-bg: var(--cmd-indigo);
+  --vp-button-brand-hover-bg: var(--cmd-indigo-dark);
+  --vp-button-brand-text: #fff;
+  --vp-button-alt-bg: #27272a;
+  --vp-button-alt-hover-bg: #3f3f46;
+  --vp-button-alt-text: #e4e4e7;
+  --vp-button-alt-hover-text: #fafafa;
+
+  /* Nav */
+  --vp-nav-bg-color: rgba(15, 14, 23, 0.85);
+  --vp-nav-screen-bg-color: #0f0e17;
+
+  /* Sidebar */
+  --vp-sidebar-bg-color: #0f0e17;
+
+  /* Local search */
+  --vp-local-search-bg: #1a1928;
+  --vp-local-search-result-bg: #1e1d2e;
+  --vp-local-search-result-border: #27272a;
+  --vp-local-search-result-selected-bg: rgba(99, 102, 241, 0.12);
+
+  /* Carbon ads */
+  --vp-carbon-ads-text-color: #a1a1aa;
+  --vp-carbon-ads-poweredby-color: #71717a;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace for headings on the landing page — like opencode's all-mono look */
+.vp-doc h1, .vp-doc h2, .vp-doc h3 {
+  font-family: var(--vp-font-family-mono);
+  letter-spacing: -0.02em;
+}
+
+/* Code should always be monospace (already is) but let's make sure */
+code, kbd, .vp-doc code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.875em;
+}
+
+/* Inline code styling */
+.vp-doc :not(pre) > code {
+  background: rgba(99, 102, 241, 0.1);
+  color: #c4b5fd;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+/* ============================================
+   HOMEPAGE
+   ============================================ */
+
+/* Hero section — inspired by opencode's full-bleed TUI mockup */
+.VPHomeHero {
+  padding: 80px 0 60px !important;
+}
+
+.VPHomeHero .container {
+  max-width: 1100px !important;
+}
+
+.VPHomeHero .name {
+  font-family: var(--vp-font-family-mono) !important;
+  font-size: 3.2rem !important;
+  line-height: 1.1 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+
+.VPHomeHero .text {
+  font-family: var(--vp-font-family-mono) !important;
+  font-size: 1.8rem !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--vp-c-text-2) !important;
+}
+
+.VPHomeHero .tagline {
+  font-size: 1.05rem !important;
+  color: var(--vp-c-text-3) !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+}
+
+/* Hero image/terminal mockup */
+.VPHomeHero .image {
+  max-width: 520px !important;
+}
+
+.VPHomeHero .image-container {
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.VPHomeHero .image-bg {
+  display: none !important;
+}
+
+/* Terminal mockup wrapper */
+.terminal-mockup {
+  background: #0a0a12;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.4);
+}
+
+.terminal-mockup .terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #1a1928;
+  border-bottom: 1px solid #27272a;
+}
+
+.terminal-mockup .terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-mockup .terminal-dot.red { background: #ef4444; }
+.terminal-mockup .terminal-dot.yellow { background: #eab308; }
+.terminal-mockup .terminal-dot.green { background: #22c55e; }
+
+.terminal-mockup .terminal-title {
+  color: #71717a;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.terminal-mockup .terminal-body {
+  padding: 16px 20px;
+  color: #e4e4e7;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.terminal-mockup .prompt { color: #818cf8; }
+.terminal-mockup .comment { color: #52525b; }
+.terminal-mockup .success { color: #4ade80; }
+.terminal-mockup .highlight { color: #c4b5fd; }
+.terminal-mockup .text-muted { color: #71717a; }
+.terminal-mockup .keyword { color: #f472b6; }
+.terminal-mockup .string { color: #fbbf24; }
+.terminal-mockup .number { color: #2dd4bf; }
+
+/* Feature grid */
+.VPHomeFeatures .container {
+  max-width: 1100px !important;
+}
+
+.VPHomeFeatures .items {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+}
+
+.VPHomeFeatures .items .item {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  padding: 24px !important;
+  transition: border-color 0.2s, background 0.2s;
+  background: transparent;
+}
+
+.VPHomeFeatures .items .item:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.VPHomeFeatures .items .item .icon {
+  font-size: 1.5rem !important;
+  margin-bottom: 8px !important;
+}
+
+.VPHomeFeatures .items .item .title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+
+.VPHomeFeatures .items .item .details {
+  font-size: 0.85rem !important;
+  color: var(--vp-c-text-2) !important;
+  line-height: 1.55 !important;
+}
+
+/* Benchmark table on homepage */
+.home-benchmarks {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.home-benchmarks h2 {
+  font-family: var(--vp-font-family-mono);
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+
+.home-benchmarks table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.home-benchmarks th,
+.home-benchmarks td {
+  padding: 12px 16px;
+  border: 1px solid var(--vp-c-border);
+  text-align: center;
+}
+
+.home-benchmarks th {
+  background: var(--vp-c-bg-soft);
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-2);
+}
+
+.home-benchmarks td {
+  font-family: var(--vp-font-family-mono);
+}
+
+.home-benchmarks td:first-child {
+  text-align: left;
+  font-family: var(--vp-font-family-base);
+}
+
+.home-benchmarks td.highlight {
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.home-benchmarks .footnote {
+  margin-top: 12px;
+  color: var(--vp-c-text-3);
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+.VPNav {
+  border-bottom: 1px solid var(--vp-c-border) !important;
+}
+
+.VPNav .title {
+  font-family: var(--vp-font-family-mono) !important;
+  font-weight: 600 !important;
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+.VPSidebarItem .text {
+  font-size: 0.85rem !important;
+}
+
+.VPSidebarItem.is-active .text {
+  color: var(--cmd-indigo-light) !important;
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
+.vp-doc table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-2);
+}
+
+/* Custom block styling */
+.custom-block.tip {
+  border-color: var(--cmd-indigo) !important;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.VPFooter {
+  border-top: 1px solid var(--vp-c-border) !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .VPHomeHero .name {
+    font-size: 2rem !important;
+  }
+  .VPHomeHero .text {
+    font-size: 1.2rem !important;
+  }
+  .VPHomeFeatures .items {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Subtle scrollbar for terminal */
+.terminal-mockup .terminal-body::-webkit-scrollbar {
+  height: 4px;
+}
+.terminal-mockup .terminal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.terminal-mockup .terminal-body::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 2px;
+}

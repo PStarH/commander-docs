@@ -8,10 +8,13 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/commander-docs/favicon.svg', type: 'image/svg+xml' }],
-    ['meta', { name: 'theme-color', content: '#4f46e5' }],
+    ['meta', { name: 'theme-color', content: '#6366f1' }],
     ['meta', { property: 'og:title', content: 'Commander — Multi-Agent Orchestration Engine' }],
     ['meta', { property: 'og:description', content: 'Orchestrate multiple agents across any topology — sequential, parallel, hierarchical, debate, ensemble, evaluator-optimizer — backed by 18 LLM providers.' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
   ],
+
+  appearance: 'dark',
 
   themeConfig: {
     logo: '/commander-docs/logo.svg',
