@@ -15,7 +15,7 @@ Make sure you have [Node.js 18+](https://nodejs.org/) and [pnpm](https://pnpm.io
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/sampan/Commander.git
+git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
 ```

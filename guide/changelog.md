@@ -21,12 +21,6 @@
 - `commander tui` — Terminal dashboard
 - 15 total commands
 
-### Benchmarks
-- **GAIA**: 69.7% (115/165) — +48.5 pp over bare MiMo
-- **BFCL**: 60.0% tool / 91.4% parameter (35-scenario); 91.7%/91.7% (12-core)
-- **PinchBench**: 97.7% (42/43) — vs OpenClaw 89.5%
-- **HumanEval+**: 91.5%
-
 ### Deployment
 - Docker Compose (6-stage multi-arch build)
 - Production overlay with CPU/memory limits, health checks, JSON logging

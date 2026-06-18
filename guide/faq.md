@@ -51,13 +51,6 @@ npx tsx cli.ts run "fix all lint errors"
 
 ## Performance
 
-### How accurate is Commander?
-See the [benchmarks](/benchmarks) page:
-- **GAIA**: 69.7% (+48.5 pp over bare LLM)
-- **BFCL**: 91.4% parameter accuracy
-- **PinchBench**: 97.7% (42/43 tasks)
-- **HumanEval+**: 91.5%
-
 ### Is Commander fast?
 Very. Most simple tasks complete in under 5 seconds. Complex multi-agent tasks typically take 30–60 seconds. Commander uses aggressive caching (SHA-256, per-tenant) to avoid redundant work.
 
@@ -70,7 +63,7 @@ Yes. Per-tenant rate limits, concurrency quotas, storage isolation, memory sandb
 Yes. Docker-based deployment works on any Linux VM. See [Deployment](/deployment).
 
 ### Is there a paid tier?
-The open-source version is fully featured and free. Cloud tiers (Starter $49/mo, Pro $199/mo, Enterprise custom) add managed hosting, SSO, audit logs, and dedicated support. See [Community](/community) for the roadmap.
+The open-source version is fully featured and free. Cloud tiers add managed hosting, SSO, audit logs, and dedicated support. See [Community](/community) for the roadmap.
 
 ## Data & Privacy
 

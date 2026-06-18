@@ -25,7 +25,6 @@
 | `commander company <task>` | Company mode — multi-agent with review |
 | `commander review [--commit\|--base\|--json]` | Code review with guidelines |
 | `commander workers [topics]` | Parallel research workers |
-| `commander benchmark <config> [options]` | Run benchmarks |
 | `commander status` | System status, provider, MetaLearner stats |
 
 ## Configuration
@@ -63,16 +62,6 @@
 | `commander connect` | Connect to providers |
 | `commander plan --topology <name>` | Force specific topology |
 | `commander run --agent-count <n>` | Override agent count |
-
-## Benchmark Runner
-
-```bash
-commander benchmark gaia.yaml                       # Run GAIA benchmark
-commander benchmark config.yaml --parallel 5         # 5 concurrent requests
-commander benchmark config.yaml --output ./results   # Custom output dir
-commander benchmark --list                           # List available configs
-```
-
 ## Approval Modes
 
 | Mode | Behavior |

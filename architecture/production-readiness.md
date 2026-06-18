@@ -55,7 +55,7 @@ Commander maintains **zero tolerance for failures**:
 - Chaos-monkey tests for fault injection
 - Multi-tenant isolation tests (28 scenarios)
 - Stress tests: 10K messages, 50 concurrent calls
-- Performance benchmarks tracked over time
+- Performance tracked over time
 
 ```
 npx tsx --test tests/*.test.ts   # All green, # fail 0

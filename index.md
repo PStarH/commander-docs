@@ -14,23 +14,5 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/sampan/Commander
-    - theme: alt
-      text: Benchmarks
-      link: /benchmarks
+      link: https://github.com/PStarH/Commander
 ---
-
-<div class="home-benchmarks">
-
-## Benchmarks
-
-| Benchmark | Commander | Bare LLM | Competitor |
-|-----------|:---------:|:--------:|:----------:|
-| **GAIA** (165 multi-step reasoning) | <span class="highlight">69.7%</span> | 21.2% | — |
-| **BFCL** (35 function calling) | Tool <span class="highlight">60.0%</span> / Param <span class="highlight">91.4%</span> | — | — |
-| **PinchBench** (43 agentic tasks) | <span class="highlight">97.7%</span> (42/43) | — | 89.5% |
-| **HumanEval+** (164 Python problems) | <span class="highlight">91.5%</span> | — | — |
-
-<p class="footnote">Commander adds <strong>+48.5 pp</strong> over bare MiMo on GAIA. <a href="/benchmarks">Full benchmarks →</a></p>
-
-</div>

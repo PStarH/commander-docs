@@ -1,95 +1,53 @@
-# Community & Roadmap
+# Community
 
-> Target: 2000万 valuation · Timeline: 6 months
-
-## Phase 1: Launch (Weeks 1–4)
-
-### GitHub Presence
-- ✅ Benchmark comparison tables with real numbers
-- 🔲 CONTRIBUTING.md with commit conventions, PR template, dev setup
-- 🔲 Issue templates (bug report, feature request, question)
-- 🔲 GitHub stars badge + CI status badge
-- 🔲 Publish to Hacker News with technical blog post
-
-### Technical Content (1 post / week)
-1. "Building a Multi-Agent Orchestrator: 8 Topologies for AI Workflows"
-2. "How we got 97.7% on PinchBench: Multi-Agent Tool Calling Deep Dive"
-3. "18 LLM Providers, One Interface: Commander's Provider Architecture"
-4. "Production-Ready AI: Circuit Breakers, Dead Letter Queues, and Compensation Registry"
-
-### Community Hub
-- 🔲 Create Discord server (#general, #help, #showcase, #development, #benchmarks)
-- 🔲 Welcome channel with quick start guide and FAQ
-- 🔲 Discord link in README badge
-
-## Phase 2: Growth (Weeks 5–12)
-
-### Open Source Growth
-- 🎯 Target: 500 GitHub stars
-- Respond to all issues within 24h
-- Ship 3 community-contributed PRs
-- Good-first-issue labels with detailed reproduction steps
-- "How to Add a Custom Tool to Commander" tutorial
-
-### Performance Marketing
-- Benchmark comparison blog: Commander vs Claude Code vs Codex CLI vs OpenCode
-- Publish on dev.to, Medium, HackerNoon
-- Submit to r/MachineLearning, r/programming, r/typescript
-- 2-minute demo GIF for README
-
-## Phase 3: Commercialization (Weeks 8–24)
-
-### Tiers
-
-| Tier | Price | Features |
-|------|-------|----------|
-| **Open Source** | Free | Self-hosted, all features |
-| **Cloud Starter** | $49/mo | Managed API, 10K requests/mo, 1 tenant |
-| **Cloud Pro** | $199/mo | 100K requests/mo, 5 tenants, SSO, priority support |
-| **Enterprise** | Custom | Unlimited, dedicated infra, SLA, on-prem option |
-
-### Cloud Features
-- Usage dashboard (requests, tokens, cost breakdown per tenant)
-- API key management UI
-- Per-tenant analytics (success rate, latency, tool usage)
-- Audit log (all requests, tool calls, errors)
-- Teams (invite members, role-based access)
-
-### Enterprise Features
-- SAML/SSO (Okta, Azure AD, Google Workspace)
-- VPC deployment / air-gapped
-- Custom LLM provider (internal models)
-- SOC 2 compliance documentation
-- Dedicated Slack channel support
-
-## Phase 4: Scale (Months 4–6)
-
-### Revenue Targets
-- Month 1: $0 (pre-launch)
-- Month 2: $150 (3 paid users)
-- Month 3: $1,000 (10 paid users)
-- Month 4: $3,500 (25 paid users)
-- Month 5: $8,000 (50 paid users)
-- Month 6: $18,000 (100 paid users)
-
-### Investor Signals
-- 500+ GitHub stars
-- 100+ Discord members
-- $18K MRR with 10% MoM growth
-- 3 enterprise LOIs
-- Published BFCL leaderboard score
-
-### Risk Mitigation
-
-| Risk | Mitigation |
-|------|-----------|
-| Open source cannibalizes paid tiers | Cloud tier offers managed infra + enterprise features OSS can't provide |
-| LLM provider cost unpredictable | Pass-through pricing + caching layer |
-| Competitors catch up | Multi-tenant + enterprise features (moat) |
-| Low community adoption | Heavy investment in documentation + quickstart experience |
+Commander is open source and community-driven. Here's how to get involved.
 
 ## Get Involved
 
-- **GitHub**: [github.com/sampan/Commander](https://github.com/sampan/Commander)
-- **Discord**: Coming soon
+- **GitHub**: [github.com/PStarH/Commander](https://github.com/PStarH/Commander) — star, fork, report issues, contribute PRs
+- **Discord**: Coming soon — general discussion, help, showcase, development
 - **Twitter**: Coming soon
+
+## Contributing
+
+We welcome contributions of all sizes — bug fixes, documentation improvements, new features, and tool integrations.
+
+### Quick Start for Contributors
+
+```bash
+git clone https://github.com/PStarH/Commander.git
+cd Commander
+pnpm install
+npx tsx --test packages/core/tests/*.test.ts  # All green required
+```
+
+### Areas to Contribute
+
+- **New tools**: Add built-in tools for filesystem, web, code analysis, etc.
+- **LLM providers**: Integrate additional providers via the provider interface
+- **Topologies**: Implement new orchestration patterns
+- **Documentation**: Improve guides, API docs, and examples
+- **Bug fixes**: Issues tagged `good-first-issue` are a great starting point
+
+### Guidelines
+
+- All tests must pass (`# fail 0`)
+- TypeScript strict mode — no `as any` or `@ts-ignore` in production code
+- Follow existing code patterns and conventions
+- Add tests for new functionality
+- Keep commits atomic and well-described
+
+## Roadmap
+
+| Area | Coming Soon |
+|------|-------------|
+| **Cloud Platform** | Managed API, usage dashboard, API key management |
+| **Enterprise** | SSO/SAML, audit logs, VPC deployment, SLA support |
+| **Community** | Discord server, contributor guides, showcase gallery |
+| **Ecosystem** | More LLM providers, tool integrations, template projects |
+
+## Stay Updated
+
+- ⭐ Star the [GitHub repo](https://github.com/PStarH/Commander) to track progress
+- Watch the [changelog](/guide/changelog) for release notes
+- Join Discord (coming soon) for community discussions

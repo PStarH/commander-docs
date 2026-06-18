@@ -9,7 +9,7 @@
 ## Local Development
 
 ```bash
-git clone https://github.com/sampan/Commander.git
+git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
 ```
@@ -59,7 +59,7 @@ Commander's CI pipeline (`.github/workflows/ci.yml`) runs on every push/PR:
 
 | Job | Checks |
 |-----|--------|
-| **quality** | TypeScript compilation, 330+ tests, benchmarks, CLI check, core build |
+| **quality** | TypeScript compilation, 330+ tests, CLI check, core build |
 | **docker** | `docker compose build` |
 | **web-gui** | Vite production build |
 
