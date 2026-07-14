@@ -1,27 +1,11 @@
 # 에이전트 런타임
 
-The execution engine at the heart of Commander. The `AgentRuntime` manages the full lifecycle of a single agent: LLM calls, tool execution, verification, checkpointing, and retry — all within configurable token and step budgets. Each agent run follows this sequence:
-
-이 문서는 Commander에서 **에이전트 런타임** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
+**LLM → tools → 검증 → 재시도** 루프.
 
 ```bash
-AgentRuntime.execute(ctx)
-  │
-  ├─ acquireSlot()        ← Concurrency semaphore
-  ├─ [Tenant check]       ← Rate limit + concurrency quota
-  ├─ resolve storage      ← Tenant-scoped memory + caching
-  │
-  ├─ [Retry loop: 0..maxRetries]
-  │   ├─ callWithTimeout()       ← LLM provider call
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
 ```
 
-## 요점
+타임아웃 · 결과 캐시 · 서킷 브레이커 · 체크포인트.
 
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
-- [API](/ko/api/overview)  
+[프로바이더](/ko/guide/providers) · [검증](/ko/architecture/verification)

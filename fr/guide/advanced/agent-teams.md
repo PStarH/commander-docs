@@ -1,32 +1,19 @@
 # Équipes d’agents
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Équipes d’agents**.
-
-## Entrée rapide
+| Motif | Topologie typique |
+|-------|-------------------|
+| Un expert | SINGLE |
+| Pipeline analyse → impl → test | CHAIN |
+| Security + deps en parallèle | DISPATCH |
+| Architecte + N workers | ORCHESTRATOR |
+| Implémenteur + critique | REVIEW |
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts plan "cross-repo security audit"
-npx tsx packages/core/src/cliEntry.ts run "cross-repo security audit" --stream --topology dispatch
+npx tsx packages/core/src/cliEntry.ts run "audit" --topology dispatch --stream
 npx tsx packages/core/src/cliEntry.ts run "task" --agent-count 4
 ```
 
-| Patrón | Topología típica |
-|--------|------------------|
-| Un experto | SINGLE |
-| Pipeline analista → implementador → tester | CHAIN |
-| Security + deps + licenses en paralelo | DISPATCH |
-| Arquitecto + N implementadores | ORCHESTRATOR |
-| Implementador + crítico | REVIEW |
+Handoffs via message bus ; lignée pour l’audit.
 
-
-## Notes
-
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
-
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+[Multi-agents](/fr/architecture/multi-agent) · [Explorateur](/fr/guide/topology-explorer)

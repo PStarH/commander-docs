@@ -1,20 +1,31 @@
 # セキュリティ
 
-Commander is designed for multi-agent workloads that touch code, tools, and untrusted model output. This page is the operator-facing summary. Deep dives: [Security Gateway](/architecture/security-gateway), [Sandbox](/architecture/sandbox), [Multi-Tenancy](/architecture/multi-tenancy). **Do not open public GitHub issues for security bugs.**
+**脆弱性報告:** 公開 Issue 禁止 — **sampan090611@gmail.com**（目安 48 時間以内に受領）。
 
-本ページは Commander における **セキュリティ** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 脅威と対策
+
+| 脅威 | 対策 |
+|------|------|
+| プロンプト / tool 注入 | 出力スキャン、sanitizer、不可逆 tool ゲート |
+| 秘密情報漏洩 | DLP、秘密を出さないログ |
+| 暴走エージェント | 承認モード、トークン予算、timeout、breaker |
+| プロバイダー障害 | フェイルオーバー、rate limit |
+| テナント横断 | ストレージ / メモリ / キャッシュ分離 |
+
+## 設定
 
 ```bash
 export COMMANDER_MODE=read-only
+export COMMANDER_API_KEY="long-random-secret"
+export OLLAMA_BASE_URL=http://localhost:11434
+export COMMANDER_SECURITY_PROFILE=standard
 ```
 
-## 要点
+## ベンチマーク
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+```bash
+pnpm benchmark:redteam
+pnpm benchmark:agentdojo
+```
 
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+[ゲートウェイ](/ja/architecture/security-gateway) · [サンドボックス](/ja/architecture/sandbox)

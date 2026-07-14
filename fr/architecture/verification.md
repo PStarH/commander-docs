@@ -1,31 +1,25 @@
 # Pipeline de vérification
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Pipeline de vérification**.
+Avant de renvoyer un résultat, Commander applique **cinq portes de qualité**.
 
-## Entrée rapide
+| Porte | Vérifie |
+|-------|---------|
+| Hallucination | Faits inventés (signaux / LLM-as-judge) |
+| Consistency | Accord entre agents, pas de contradiction |
+| Completeness | Dimensions requises couvertes |
+| Accuracy | Alignement avec le matériel source |
+| Safety | Contenu, injection, secrets |
 
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "your task"
-npx tsx packages/core/src/cliEntry.ts run "your task" --stream
-```
+Si une porte échoue : **retry avec contexte** ou rapport d’échec explicite — jamais un « succès silencieux » incorrect.
 
-| Puerta | Comprueba |
-|--------|-----------|
-| Hallucination | Hechos inventados (señales / LLM-as-judge) |
-| Consistency | Acuerdo entre agentes, sin contradicciones |
-| Completeness | Dimensiones requeridas cubiertas |
-| Accuracy | Alineación con material fuente |
-| Safety | Contenido, inyección, secretos |
+## Où le voir
 
-
-## Notes
-
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+- Stream CLI / watch : lignes `[gate] …`  
+- Console web : panneau d’exécution  
+- Métriques / logs selon configuration  
 
 ## Lié
 
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+- [Runtime](/fr/architecture/agent-runtime)  
+- [Sécurité](/fr/guide/security)  
+- [Cookbook audit](/fr/guide/cookbook/security-audit)

@@ -1,27 +1,18 @@
 # トポロジ決定木
 
-Not sure which orchestration topology to use? Follow this decision tree. **When**: Simple, well-scoped tasks
+審議エンジンが **5 つの正規トポロジ** を選ぶ指針。[対話型エクスプローラー](/ja/guide/topology-explorer) も参照。
 
-本ページは Commander における **トポロジ決定木** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+1. 明確な一問一答 → **SINGLE**  
+2. 厳密なパイプライン A→B→C → **CHAIN**  
+3. 並列スペシャリスト + 統合 → **DISPATCH**  
+4. 委任・再計画が必要 → **ORCHESTRATOR**  
+5. 高リスク / 批評が必要 → **REVIEW**  
 
 ```bash
-Is the task simple and well-defined?
-├── YES → SINGLE
-└── NO  → Are subtasks independent?
-    ├── YES → DISPATCH
-    └── NO  → Do subtasks depend on each other?
-        ├── YES → CHAIN
-        └── NO  → Is there a clear lead agent?
-            ├── YES → ORCHESTRATOR
+npx tsx packages/core/src/cliEntry.ts plan "your real task"
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review --stream
 ```
 
-## 要点
+名前: `single` · `chain` · `dispatch` · `orchestrator` · `review`。
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+[マルチエージェント](/ja/architecture/multi-agent)

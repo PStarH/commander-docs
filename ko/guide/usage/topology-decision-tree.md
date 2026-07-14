@@ -1,27 +1,16 @@
 # 토폴로지 결정 트리
 
-Not sure which orchestration topology to use? Follow this decision tree. **When**: Simple, well-scoped tasks
+심의 엔진이 **5개 정규 토폴로지**를 고르는 기준. [탐색기](/ko/guide/topology-explorer)도 참고.
 
-이 문서는 Commander에서 **토폴로지 결정 트리** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
+1. 명확한 단일 질문 → **SINGLE**  
+2. 엄격한 파이프라인 → **CHAIN**  
+3. 병렬 전문가 + 합성 → **DISPATCH**  
+4. 리드가 위임·재계획 → **ORCHESTRATOR**  
+5. 고위험/비평 필요 → **REVIEW**  
 
 ```bash
-Is the task simple and well-defined?
-├── YES → SINGLE
-└── NO  → Are subtasks independent?
-    ├── YES → DISPATCH
-    └── NO  → Do subtasks depend on each other?
-        ├── YES → CHAIN
-        └── NO  → Is there a clear lead agent?
-            ├── YES → ORCHESTRATOR
+npx tsx packages/core/src/cliEntry.ts plan "your real task"
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review --stream
 ```
 
-## 요점
-
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
-- [API](/ko/api/overview)  
+[멀티 에이전트](/ko/architecture/multi-agent)

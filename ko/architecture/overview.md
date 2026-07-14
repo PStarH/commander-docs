@@ -1,27 +1,29 @@
 # 아키텍처 개요
 
-Commander is a multi-agent orchestration engine that transforms a single task description into a structured execution plan across multiple agents, tools, and LLM providers. If you are new, this is enough to understand the system:
+Commander는 작업 설명을 여러 에이전트·tools·LLM 프로바이더에 걸친 구조화 실행 계획으로 바꾸는 multi-agent 오케스트레이션 엔진입니다.
 
-이 문서는 Commander에서 **아키텍처 개요** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
+## 먼저 읽을 다섯 페이지
 
-```bash
+1. **이 페이지**  
+2. [핵심 호출 체인](/ko/architecture/core-call-chain)  
+3. [멀티 에이전트](/ko/architecture/multi-agent)  
+4. [에이전트 런타임](/ko/architecture/agent-runtime)  
+5. [검증 파이프라인](/ko/architecture/verification)  
+
+## 고수준 흐름
+
+```
 CLI / HTTP / SDK
-  │
-  ├─ deliberation.ts         Task analysis & topology selection
-  ├─ effortScaler.ts         Scale agents (1-20) by complexity
-  ├─ topologyRouter.ts       Route to optimal topology (5 canonical + 9 legacy)
-  ├─ atomizer.ts             ROMA task decomposition
-  │
-  ├─ agentRuntime.ts         LLM → tools → verification → retry
+  → 심의 (분류·복잡도)
+  → 노력 스케일 (1–20)
+  → 토폴로지
+  → 런타임 (LLM ↔ tools)
+  → 품질 게이트
+  → 합성 · 영속화 · 메트릭
 ```
 
-## 요점
+## 설계 원칙
 
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
+토폴로지 우선 · 프로바이더 비의존(25+fallback) · 크래시 안전 · 기본 관측 가능 · 멀티 테넌트 · 기본 보안 · 가역성.
 
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
-- [API](/ko/api/overview)  
+[프로덕션 준비](/ko/architecture/production-readiness) · [빠른 시작](/ko/guide/getting-started)

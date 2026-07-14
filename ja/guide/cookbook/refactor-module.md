@@ -1,23 +1,14 @@
-# Cookbook: Refactor a module safely
-
-Commander の **Cookbook: Refactor a module safely** について、使い方と運用上の注意をまとめます。
-
-## クイック
+# クックブック: 安全なモジュールリファクタ
 
 ```bash
-cd /path/to/your-project   # or the Commander monorepo for a dry run
-export OPENAI_API_KEY=sk-...
+git checkout -b chore/commander-refactor
 export COMMANDER_MODE=plan
+npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module; keep public API stable"
+export COMMANDER_MODE=suggest
+npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module; keep public API stable" --stream
+git diff && pnpm test
 ```
 
+チェック: プラン妥当 · diff が意図範囲 · テスト緑 · git で戻せる。
 
-## ポイント
-
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+[プランモード](/ja/guide/usage/plan-mode)

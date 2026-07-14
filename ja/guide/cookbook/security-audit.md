@@ -1,22 +1,12 @@
-# Cookbook: Security audit a repository
-
-Commander の **Cookbook: Security audit a repository** について、使い方と運用上の注意をまとめます。
-
-## クイック
+# クックブック: リポジトリのセキュリティ監査
 
 ```bash
-cd /path/to/Commander   # monorepo root
-export OPENAI_API_KEY=sk-...   # or any supported key
+export COMMANDER_MODE=read-only
+npx tsx packages/core/src/cliEntry.ts plan "audit this repository for security vulnerabilities, secrets, and risky dependencies"
+npx tsx packages/core/src/cliEntry.ts run "audit this repository for security vulnerabilities, secrets, and risky dependencies" --stream
+npx tsx packages/core/src/cliEntry.ts run "audit..." --stream --topology review
 ```
 
+成功: プランにトポロジ、stream に tools/gates、具体的な findings。
 
-## ポイント
-
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+[セキュリティ](/ja/guide/security) · [トポロジ](/ja/guide/usage/topology-decision-tree)

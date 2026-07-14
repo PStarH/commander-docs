@@ -1,27 +1,25 @@
 # 구성
 
-Commander is configured through environment variables and configuration files. Commander supports a `.commander.json` config file in your project root:
+환경 변수와 선택적 `.commander.json`.
 
-이 문서는 Commander에서 **구성** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
+| 변수 | 기본 | 설명 |
+|------|------|------|
+| `COMMANDER_MODE` | `auto-edit` | plan / read-only / auto-edit / full-auto / suggest |
+| `COMMANDER_DEBUG` | `false` | 상세 로그 |
+| `COMMANDER_MAX_CONCURRENCY` | `5` | 동시 에이전트 |
+| `COMMANDER_TIMEOUT_MS` | `120000` | 타임아웃 |
+| `PORT` | `4000` | API |
+| `COMMANDER_API_KEY` | — | Bearer |
+| `TENANT_PROVIDER` | `null` | multi-tenant 시 `simple` |
+| `COMMANDER_SECURITY_PROFILE` | `standard` | 샌드박스 프로필 |
 
-```bash
-| Field | Default | Description |
-|-------|---------|-------------|
-| `provider` | `auto` | Primary LLM provider |
-| `model` | `auto` | Model name |
-| `mode` | `balanced` | Execution mode: `fast`, `balanced`, `thorough` |
-| `topology` | `auto` | Orchestration topology: `auto`, `single`, `chain`, `dispatch`, `orchestrator`, `review` |
-| `budget` | `auto` | Token budget (integer ≥1000 or `auto`) |
-| `mcpServers` | `[]` | MCP server configurations |
+```json
+{
+  "provider": "auto",
+  "model": "auto",
+  "topology": "auto",
+  "budget": "auto"
+}
 ```
 
-## 요점
-
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
-- [API](/ko/api/overview)  
+[프로바이더](/ko/guide/providers)

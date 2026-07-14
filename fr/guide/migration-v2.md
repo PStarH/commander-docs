@@ -1,37 +1,32 @@
 # Migration Architecture V2
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Migration Architecture V2**.
+Le **control plane** planifie ; les **workers** exécutent ; l’état vit dans **PostgreSQL**.
 
-## Entrée rapide
+## Variables
 
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "your task"
-npx tsx packages/core/src/cliEntry.ts run "your task" --stream
-```
+| Variable | Rôle |
+|----------|------|
+| `COMMANDER_V2_MODE=1` | Active V2 |
+| `DATABASE_URL` | Requis |
+| `COMMANDER_LEGACY_EXECUTION` | Pont temporaire |
+| `COMMANDER_WORKER_*` | kind, auth, concurrency |
 
-| Plano | Responsabilidad |
-|-------|-----------------|
-| Gateway | Acepta runs, WorkGraphs, pause/resume/cancel — no ejecuta agentes en V2 puro |
-| Worker | Reclama steps, ejecuta, reporta |
-| Kernel | Tablas `commander_*` en Postgres |
+## Routes
 
+| Legacy | V2 |
+|--------|-----|
+| `POST /api/runtime/execute` | `POST /v1/runs` |
+| pause/resume/cancel legacy | `/v1/runs/:id/...` |
 
-| Variable | Default | Significado |
-|----------|---------|-------------|
-| `COMMANDER_V2_MODE` | `0` | `1` activa V2 |
-| `DATABASE_URL` | — | **Requerido** en V2 |
-| `COMMANDER_LEGACY_EXECUTION` | `0` | Puente temporal |
-| `COMMANDER_WORKER_*` | — | kind, auth, concurrency, tenants |
+## Rollout
 
+1. Staging avec pont legacy si besoin  
+2. Canary sur `/v1/runs`  
+3. Couper le legacy  
+4. Monitorer `/v1/slo`, DLQ, leases  
 
-## Notes
+La CLI locale reste le plus rapide en dev. V2 compte pour l’exécution durable multi-réplicas.
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+Monorepo : `docs/v2-migration-guide.md`.
 
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+[Déploiement](/fr/deployment) · [Event sourcing](/fr/architecture/event-sourcing)

@@ -1,16 +1,17 @@
 # マルチエージェント編成
 
-Commander's core differentiator is its ability to orchestrate multiple agents across **5 canonical topologies**, aligned with Anthropic's "Building effective agents" ontology. Nine legacy topology names remain as aliases for backward compatibility during a 2-version migration window. The deliberation engine (`deliberation.ts`) classifies every task and selects the optimal topology:
+| トポロジ | パターン |
+|----------|----------|
+| SINGLE | 1 エージェント |
+| CHAIN | 順次パイプライン |
+| DISPATCH | 並列 + 合成 |
+| ORCHESTRATOR | リード + workers |
+| REVIEW | 生産 + 批評 |
 
-本ページは Commander における **マルチエージェント編成** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+```bash
+npx tsx packages/core/src/cliEntry.ts run "audit" --topology dispatch --stream
+```
 
-## 要点
+メッセージバス · ハンドオフ · トークン予算 · 合成。
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+[トポロジエクスプローラー](/ja/guide/topology-explorer) · [ランタイム](/ja/architecture/agent-runtime)

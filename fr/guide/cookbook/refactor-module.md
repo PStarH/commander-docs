@@ -1,43 +1,21 @@
-# Cookbook : refactor sûr
-
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Cookbook : refactor sûr**.
-
-## Entrée rapide
+# Cookbook : refactoriser un module en sécurité
 
 ```bash
 git checkout -b chore/commander-refactor
-export OPENAI_API_KEY=sk-...
 export COMMANDER_MODE=plan
-```
-
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module to reduce duplication; keep public API stable"
-```
-
-```bash
+npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module; keep public API stable"
 export COMMANDER_MODE=suggest
-npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
-
-# cuando confíes:
-export COMMANDER_MODE=auto-edit
-npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
+npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module; keep public API stable" --stream
+git diff && pnpm test
 ```
 
-| Problema | Acción |
-|----------|--------|
-| Demasiadas ediciones | Quédate en plan/suggest; acota paths |
-| Módulo equivocado | Nombra `packages/foo/src/auth/*` |
-| Merge flojo | `--topology chain` o `review` |
+## Checklist
 
+- [ ] Plan correct avant écriture  
+- [ ] Diff limité  
+- [ ] Tests verts  
+- [ ] Reversible avec git  
 
-## Notes
+En cas de surplus d’éditions : restez en `plan`/`suggest` ; forcez `--topology chain` ou `review`.
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
-
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+[Mode plan](/fr/guide/usage/plan-mode)

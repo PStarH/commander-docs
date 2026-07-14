@@ -1,8 +1,18 @@
-# Prêt production
+# Prêt pour la production
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Prêt production**.
+Primitives de systèmes distribués appliquées aux workloads LLM.
 
-## Entrée rapide
+| Capacité | Implémentation |
+|----------|----------------|
+| Circuit breakers | CLOSED / OPEN / HALF-OPEN par fournisseur |
+| Dead letter queue | NDJSON append-only + replay |
+| Saga / compensation | Rollback des mutations |
+| Checkpoints | SQLite + WAL |
+| Cache sémantique | SHA-256 + similarité |
+| Multi-tenant | Quotas, storage, mémoire isolés |
+| Métriques | Prometheus `/metrics` |
+
+## Health
 
 ```bash
 curl http://localhost:4000/health
@@ -11,25 +21,12 @@ curl http://localhost:4000/readyz
 curl http://localhost:4000/metrics
 ```
 
-| Capacidad | Implementación |
-|-----------|----------------|
-| Circuit breakers | CLOSED / OPEN / HALF-OPEN por proveedor |
-| Dead letter queue | NDJSON append-only + replay |
-| Saga / compensación | Rollback de mutaciones |
-| Checkpoints | SQLite + WAL |
-| Caché semántica | SHA-256 + similitud |
-| Multi-tenant | Cuotas, storage, memoria |
-| Métricas | Prometheus `/metrics` |
+## Tests
 
-
-## Notes
-
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+6700+ tests en CI (unit, intégration, chaos, e2e selon monorepo).
 
 ## Lié
 
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+- [Déploiement](/fr/deployment)  
+- [Résilience](/fr/architecture/resilience)  
+- [Benchmarks](/fr/guide/benchmarks)

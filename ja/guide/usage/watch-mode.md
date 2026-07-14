@@ -1,21 +1,40 @@
-# Watch Mode (SSE Streaming)
+# ウォッチモード（SSE）
 
-Watch mode provides real-time streaming of every execution event via Server-Sent Events (SSE). This is ideal for monitoring long-running tasks, debugging agent behavior, or integrating with custom UIs. Every event in the execution pipeline is streamed:
-
-本ページは Commander における **Watch Mode (SSE Streaming)** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+実行中の **全イベント** を Server-Sent Events でリアルタイム配信します。
 
 ```bash
-# From monorepo source (or: commander watch "...")
 npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 ```
 
-## 要点
+## イベント
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+| 種別 | 内容 |
+|------|------|
+| `task.start` | 開始 |
+| `deliberation` | 複雑度分析 |
+| `topology.select` | トポロジ |
+| `agent.spawn` | エージェント生成 |
+| `tool.call` / `tool.result` | ツール |
+| `verification` | 品質ゲート |
+| `checkpoint` | チェックポイント |
+| `task.complete` / `task.error` | 終了 |
 
-## 関連
+## 消費例
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+```bash
+npx tsx packages/core/src/cliEntry.ts watch "debug" | jq '.type'
+```
+
+```typescript
+const unsub = client.onEvent((e) => console.log(e.type, e.data));
+await client.run('debug the failing test');
+```
+
+```bash
+curl -N -H "Accept: text/event-stream" -H "Authorization: Bearer $TOKEN" \
+  -d '{"task":"debug","stream":true}' http://localhost:4000/execute
+```
+
+用途: CI ダッシュボード、カスタム UI、デバッグ、監査ログ。
+
+[SDK](/ja/guide/sdk) · [Runtime](/ja/architecture/agent-runtime)

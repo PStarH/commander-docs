@@ -1,33 +1,38 @@
 # Dépannage
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Dépannage**.
+> Monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
 
-## Entrée rapide
-
-```bash
-pnpm install && pnpm build
-```
+## Fournisseur indisponible
 
 ```bash
 echo $OPENAI_API_KEY
 npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
+## Rate limit / timeout
+
+- Attendre, `COMMANDER_MAX_CONCURRENCY=1`, 2ᵉ clé  
+- `COMMANDER_TIMEOUT_MS=120000`  
+
+## Hang / circuit breaker
+
 ```bash
 npx tsx packages/core/src/cliEntry.ts status
 npx tsx packages/core/src/cliEntry.ts doctor --reset
 ```
 
+## Mauvais résultats
 
+```bash
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
+npx tsx packages/core/src/cliEntry.ts plan "task"
+```
 
-## Notes
+## Debug
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+```bash
+export COMMANDER_DEBUG=true
+npx tsx packages/core/src/cliEntry.ts run "task"
+```
 
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+[FAQ](/fr/guide/faq) · [Issues](https://github.com/PStarH/Commander/issues) · [Architecture](/fr/architecture/overview)

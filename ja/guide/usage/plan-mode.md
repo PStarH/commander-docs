@@ -1,27 +1,35 @@
 # プランモード
 
-Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes. - **Safety** — Review the full plan before any files are modified
+Commander が **実行前に何をするか** を確認できます。ファイル変更のリスクなしに、戦略・エージェント・tools をレビューします。
 
-本ページは Commander における **プランモード** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## なぜ使うか
+
+- **安全** — 変更前に計画を確認  
+- **学習** — タスク分解の理解  
+- **デバッグ** — 予定トポロジ / agents / tools  
+- **共有** — チームと計画をレビュー  
+
+## 使い方
 
 ```bash
-# Set plan mode
 npx tsx packages/core/src/cliEntry.ts mode plan
-
-# Then run any task
 npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
-
-# Or use the --plan flag for one-off plan mode
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
 
-## 要点
+## 出力例
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+```
+┃ → Complexity: HIGH (score: 72/100)
+┃ → Topology: ORCHESTRATOR
+┃ → Agents: 4 (1 lead + 3 specialists)
+┃ → Provider: deepseek (fallback: openai → anthropic)
+┃ → Token budget: 100,000
+```
+
+プランモード中はターミナルに表示インジケータが出ます。
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [タスク実行](/ja/guide/usage/running-tasks)  
+- [トポロジエクスプローラー](/ja/guide/topology-explorer)

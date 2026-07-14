@@ -1,27 +1,39 @@
 # アーキテクチャ概要
 
-Commander is a multi-agent orchestration engine that transforms a single task description into a structured execution plan across multiple agents, tools, and LLM providers. If you are new, this is enough to understand the system:
+Commander はタスク記述を、複数エージェント・tools・LLM プロバイダーにまたがる構造化実行計画へ変換する multi-agent オーケストレーションエンジンです。
 
-本ページは Commander における **アーキテクチャ概要** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## まずこの 5 ページ
 
-```bash
+1. **本ページ** — 全体フロー  
+2. [コア呼び出しチェーン](/ja/architecture/core-call-chain)  
+3. [マルチエージェント](/ja/architecture/multi-agent)  
+4. [エージェントランタイム](/ja/architecture/agent-runtime)  
+5. [検証パイプライン](/ja/architecture/verification)  
+
+## ハイレベルフロー
+
+```
 CLI / HTTP / SDK
-  │
-  ├─ deliberation.ts         Task analysis & topology selection
-  ├─ effortScaler.ts         Scale agents (1-20) by complexity
-  ├─ topologyRouter.ts       Route to optimal topology (5 canonical + 9 legacy)
-  ├─ atomizer.ts             ROMA task decomposition
-  │
-  ├─ agentRuntime.ts         LLM → tools → verification → retry
+  → 審議 (分類・複雑度)
+  → 努力スケール (1–20 agents)
+  → トポロジ (SINGLE…REVIEW)
+  → ランタイム (LLM ↔ tools)
+  → 品質ゲート (5 層)
+  → 合成・永続化・メトリクス
 ```
 
-## 要点
+## 設計原則
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+1. トポロジ優先  
+2. プロバイダー非依存 (25 + fallback)  
+3. クラッシュ安全 (SQLite WAL)  
+4. デフォルトで観測可能 (SSE / metrics)  
+5. マルチテナント設計  
+6. デフォルトセキュア  
+7. 可逆 (event sourcing / 補償)  
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [本番準備](/ja/architecture/production-readiness)  
+- [セキュリティ](/ja/guide/security)  
+- [クイックスタート](/ja/guide/getting-started)

@@ -1,31 +1,25 @@
 # Tools
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Tools**.
+Commander expose **18 tools intégrés** au LLM par défaut (davantage de classes dans le codebase).
 
-## Entrée rapide
+## Catégories typiques
 
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "your task"
-npx tsx packages/core/src/cliEntry.ts run "your task" --stream
-```
+Filesystem · recherche de code · git · shell/sandbox · web · browser · handoff · exécution de code · utilitaires agent.
 
-| Capacidad | Por qué importa |
-|-----------|-----------------|
-| Schema de argumentos | Menos tool calls basura |
-| Timeouts | Evita runs colgados |
-| Políticas / aprobación | Tools peligrosas bajo control |
-| Compensación | Rollback si muta estado |
-| Caché de resultados | Menos trabajo redundante |
+## Propriétés production
 
+| Capacité | Pourquoi |
+|----------|----------|
+| Schema d’arguments | Moins de tool calls invalides |
+| Timeouts | Évite les runs bloqués |
+| Politiques / approbation | Tools dangereuses sous contrôle |
+| Compensation | Rollback si mutation |
+| Cache de résultats | Moins de travail redondant |
 
-## Notes
+## Custom
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+Voir [Tools custom](/fr/guide/advanced/custom-tools) et `ToolRegistry` dans le monorepo.
 
 ## Lié
 
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+- [Runtime](/fr/architecture/agent-runtime) · [MCP](/fr/architecture/mcp) · [Sandbox](/fr/architecture/sandbox)

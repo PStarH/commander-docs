@@ -1,8 +1,13 @@
-# Contribuer à la doc
+# Contribuer à la documentation
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Contribuer à la doc**.
+## Repos
 
-## Entrée rapide
+| Repo | Rôle |
+|------|------|
+| [Commander](https://github.com/PStarH/Commander) | Produit |
+| [commander-docs](https://github.com/PStarH/commander-docs) | Site VitePress |
+
+## Local
 
 ```bash
 git clone https://github.com/PStarH/commander-docs.git
@@ -13,20 +18,14 @@ npm run check
 npm run build
 ```
 
-| Repo | Rol |
-|------|-----|
-| [Commander](https://github.com/PStarH/Commander) | Producto |
-| [commander-docs](https://github.com/PStarH/commander-docs) | Este sitio VitePress |
+## Règles
 
+1. Métriques : **25** providers · **5** topologies · **18** tools · **6700+** tests  
+2. CLI monorepo : `npx tsx packages/core/src/cliEntry.ts`  
+3. Vue : toujours `withBase()`  
+4. Logo : `/logo.svg` sans double base  
+5. **Prose native par locale** — interdit : anglais + bannière  
 
-## Notes
+Locales : `en`, `zh`, `ja`, `ko`, `es`, `fr`.
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
-
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+[Communauté](/fr/community)

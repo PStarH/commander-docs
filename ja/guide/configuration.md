@@ -1,27 +1,35 @@
 # 設定
 
-Commander is configured through environment variables and configuration files. Commander supports a `.commander.json` config file in your project root:
+環境変数と任意の `.commander.json`。
 
-本ページは Commander における **設定** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 主要環境変数
 
-```bash
-| Field | Default | Description |
-|-------|---------|-------------|
-| `provider` | `auto` | Primary LLM provider |
-| `model` | `auto` | Model name |
-| `mode` | `balanced` | Execution mode: `fast`, `balanced`, `thorough` |
-| `topology` | `auto` | Orchestration topology: `auto`, `single`, `chain`, `dispatch`, `orchestrator`, `review` |
-| `budget` | `auto` | Token budget (integer ≥1000 or `auto`) |
-| `mcpServers` | `[]` | MCP server configurations |
+| 変数 | 既定 | 説明 |
+|------|------|------|
+| `COMMANDER_MODE` | `auto-edit` | plan / read-only / auto-edit / full-auto / suggest |
+| `COMMANDER_DEBUG` | `false` | 詳細ログ |
+| `COMMANDER_MAX_CONCURRENCY` | `5` | 同時エージェント数 |
+| `COMMANDER_TIMEOUT_MS` | `120000` | タイムアウト |
+| `PORT` | `4000` | API ポート |
+| `COMMANDER_API_KEY` | — | Bearer |
+| `TENANT_PROVIDER` | `null` | `simple` で multi-tenant |
+| `COMMANDER_SECURITY_PROFILE` | `standard` | サンドボックスプロファイル |
+
+プロバイダーキーは [プロバイダー](/ja/guide/providers) を参照。
+
+## `.commander.json`
+
+```json
+{
+  "provider": "auto",
+  "model": "auto",
+  "mode": "balanced",
+  "topology": "auto",
+  "budget": "auto"
+}
 ```
 
-## 要点
-
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+```bash
+export COMMANDER_MODE=plan
+npx tsx packages/core/src/cliEntry.ts config
+```

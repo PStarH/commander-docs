@@ -1,22 +1,20 @@
-# Watch Mode (SSE Streaming)
+# 워치 모드 (SSE)
 
-Commander의 **Watch Mode (SSE Streaming)** 사용법과 운영 포인트를 정리합니다.
-
-## 빠른 시작
+실행 이벤트를 Server-Sent Events로 실시간 전송합니다.
 
 ```bash
-# From monorepo source (or: commander watch "...")
 npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 ```
 
+이벤트: `task.start` · `deliberation` · `topology.select` · `agent.spawn` · `tool.call` · `verification` · `task.complete` …
 
-## 포인트
+```bash
+npx tsx packages/core/src/cliEntry.ts watch "debug" | jq '.type'
+```
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+```typescript
+const unsub = client.onEvent((e) => console.log(e.type, e.data));
+await client.run('debug the failing test');
+```
 
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+[SDK](/ko/guide/sdk) · [Runtime](/ko/architecture/agent-runtime)

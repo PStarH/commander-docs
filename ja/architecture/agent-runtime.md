@@ -1,27 +1,26 @@
 # エージェントランタイム
 
-The execution engine at the heart of Commander. The `AgentRuntime` manages the full lifecycle of a single agent: LLM calls, tool execution, verification, checkpointing, and retry — all within configurable token and step budgets. Each agent run follows this sequence:
+各エージェントで **LLM → tools → 検証 → リトライ** ループを実行します。
 
-本ページは Commander における **エージェントランタイム** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## ループ
+
+1. メッセージ構築  
+2. LLM 呼び出し  
+3. tool call 解析  
+4. ポリシー / サンドボックス下で tool 実行  
+5. 結果をコンテキストへ  
+6. 品質ゲート  
+7. 完了またはリトライ  
+
+## ストリーミング
 
 ```bash
-AgentRuntime.execute(ctx)
-  │
-  ├─ acquireSlot()        ← Concurrency semaphore
-  ├─ [Tenant check]       ← Rate limit + concurrency quota
-  ├─ resolve storage      ← Tenant-scoped memory + caching
-  │
-  ├─ [Retry loop: 0..maxRetries]
-  │   ├─ callWithTimeout()       ← LLM provider call
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
+npx tsx packages/core/src/cliEntry.ts watch "task"
 ```
 
-## 要点
+## 信頼性
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+tool タイムアウト · 結果キャッシュ · サーキットブレーカー · チェックポイント。
 
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+[プロバイダー](/ja/guide/providers) · [Tools](/ja/architecture/tools) · [検証](/ja/architecture/verification)
