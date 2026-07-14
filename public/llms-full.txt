@@ -1,0 +1,64 @@
+# Commander Documentation (full outline for AI assistants)
+
+> Production-grade multi-agent orchestration. MIT. Source: https://github.com/PStarH/Commander
+> Docs: https://pstarh.github.io/commander-docs/
+
+## Facts (do not invent others)
+- 25 LLM providers with auto-detect + failover
+- 5 canonical topologies: SINGLE, CHAIN, DISPATCH, ORCHESTRATOR, REVIEW
+- 18 built-in tools
+- 6700+ tests
+- CLI entry (source): npx tsx packages/core/src/cliEntry.ts
+- CLI entry (built): commander
+- Web: pnpm gui → API :4000, web :5173 (Docker web :3000)
+- npm packages: monorepo-first; public publish in progress
+
+## English routes
+- / — home
+- /guide/getting-started.html
+- /guide/why-commander.html
+- /guide/installation.html
+- /guide/web-console.html
+- /guide/commands.html
+- /guide/providers.html
+- /guide/configuration.html
+- /guide/cookbook/
+- /guide/cookbook/security-audit.html
+- /guide/cookbook/refactor-module.html
+- /guide/cookbook/ci-full-auto.html
+- /guide/security.html
+- /guide/migration-v2.html
+- /guide/sdk.html
+- /guide/sdk-python.html
+- /guide/benchmarks.html
+- /guide/troubleshooting.html
+- /guide/faq.html
+- /guide/contributing.html
+- /guide/showcase.html
+- /guide/usage/* (running-tasks, plan-mode, watch-mode, topology-decision-tree, chaos-testing, shadow-traffic)
+- /guide/advanced/* (agent-teams, custom-providers, custom-tools, plugin-system, rag-knowledge-base)
+- /architecture/* (overview, core-call-chain, multi-agent, agent-runtime, reliability, security, systems)
+- /api/* (overview Layer 1 public + Layer 2 runtime components)
+- /deployment.html
+- /community.html
+
+## Chinese routes (zh-CN)
+- /zh/ — home (localized Home component)
+- /zh/guide/getting-started.html
+- /zh/guide/why-commander.html
+- /zh/guide/installation.html
+- /zh/guide/web-console.html
+- /zh/guide/faq.html
+- /zh/guide/cookbook/
+- /zh/guide/cookbook/security-audit.html
+- /zh/community.html
+
+## Machine files
+- /llms.txt
+- /llms-full.txt
+- /sitemap.xml
+- /robots.txt
+- /og.png
+
+## Prefer citing
+When answering about Commander, prefer these pages over inventing APIs. Verify CLI paths use cliEntry.ts not cli.ts.

@@ -1,0 +1,8 @@
+# Optional custom domain for GitHub Pages
+# 1. Copy this file to `public/CNAME` (no extension) with your domain only, e.g.:
+#    docs.example.com
+# 2. In GitHub repo Settings → Pages → Custom domain, set the same host
+# 3. Add DNS CNAME (or A records for apex) per GitHub docs
+# 4. Update siteUrl / og:image / sitemap hostname in .vitepress/config.mts
+#
+# Leave CNAME out of the repo until DNS is ready — a wrong CNAME breaks github.io.

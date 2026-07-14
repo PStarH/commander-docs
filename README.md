@@ -15,14 +15,24 @@ Documentation site for [Commander](https://github.com/PStarH/Commander) — mult
 ```bash
 npm install
 npm run dev      # http://localhost:5173/commander-docs/
+npm run check    # content guards (metrics, CLI paths, zh pages)
 ```
 
 ## Build & preview
 
 ```bash
-npm run build
+npm run ci       # check + build
 npm run preview
 ```
+
+## Locales
+
+| Path | Language |
+|------|----------|
+| `/` | English (full) |
+| `/zh/` | 简体中文 (entry: quick start, why, FAQ, cookbook sample) |
+
+Language switcher is in the VitePress nav.
 
 ## Deploy
 

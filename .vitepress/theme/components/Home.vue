@@ -1,87 +1,176 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue'
-import { withBase } from 'vitepress'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { withBase, useData } from 'vitepress'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
+const { lang } = useData()
+const isZh = computed(() => (lang.value || '').startsWith('zh'))
+
 // Keep stats aligned with packages/core (25 providers, 18 tools) and product README.
-const features = [
-  {
-    title: 'Live SSE streaming',
-    desc: 'Every agent thought, tool call, and decision streams to your terminal in real time via Server-Sent Events. Not polling. Not logs after the fact — you watch your agents reason, step by step.',
-    link: '/architecture/agent-runtime',
-    span: 'wide',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
-  },
-  {
-    title: 'Automatic topology selection',
-    desc: 'The deliberation engine classifies each task (CODING / RESEARCH / ANALYSIS / FACTUAL) and picks from 5 canonical topologies — SINGLE, CHAIN, DISPATCH, ORCHESTRATOR, REVIEW.',
-    link: '/guide/usage/topology-decision-tree',
-    span: 'tall',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
-  },
-  {
-    title: '25 providers with auto-failover',
-    desc: 'Set any one API key. Commander detects your provider, and if it fails, falls through a configurable chain — OpenAI → Anthropic → DeepSeek → Groq → Ollama.',
-    link: '/guide/providers',
-    span: 'short',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
-  },
-  {
-    title: 'Quality gates on every output',
-    desc: 'Five-layer verification: hallucination, consistency, completeness, accuracy, and safety. Failed gates trigger retry with full context — no silent wrong answers.',
-    link: '/architecture/verification',
-    span: 'short',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
-  },
-  {
-    title: 'Self-optimizing runtime',
-    desc: 'A meta-learner using Thompson Sampling and Reflexion tunes agent configurations across runs. Activates after 5+ recorded experiences.',
-    link: '/architecture/intelligence',
-    span: 'tall',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
-  },
-  {
-    title: 'Production infrastructure',
-    desc: 'Circuit breakers, dead letter queue, SQLite WAL checkpoints, semantic caching, saga transactions, and a supervision tree. Built with the same discipline as any production distributed system.',
-    link: '/architecture/production-readiness',
-    span: 'wide',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
-  },
-]
+const features = computed(() =>
+  isZh.value
+    ? [
+        {
+          title: '实时 SSE 流式输出',
+          desc: '每个代理的思考、工具调用与决策经 Server-Sent Events 实时进入终端。不是轮询，不是事后日志。',
+          link: '/architecture/agent-runtime',
+          span: 'wide',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
+        },
+        {
+          title: '自动拓扑选择',
+          desc: '审议引擎分类任务（CODING / RESEARCH / ANALYSIS / FACTUAL），从 5 种规范拓扑中选择：SINGLE、CHAIN、DISPATCH、ORCHESTRATOR、REVIEW。',
+          link: '/guide/usage/topology-decision-tree',
+          span: 'tall',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
+        },
+        {
+          title: '25 家提供商自动故障转移',
+          desc: '任意一把 API Key。自动识别提供商，失败时按可配置链路切换 — OpenAI → Anthropic → DeepSeek → Groq → Ollama。',
+          link: '/guide/providers',
+          span: 'short',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
+        },
+        {
+          title: '每次输出都有质量门',
+          desc: '五层校验：幻觉、一致性、完整性、准确性、安全。失败则带上下文重试 — 不静默给错答案。',
+          link: '/architecture/verification',
+          span: 'short',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
+        },
+        {
+          title: '自优化运行时',
+          desc: '基于 Thompson Sampling 与 Reflexion 的元学习，跨运行调参。积累 5+ 经验后生效。',
+          link: '/architecture/intelligence',
+          span: 'tall',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
+        },
+        {
+          title: '生产级基础设施',
+          desc: '熔断、死信队列、SQLite WAL 检查点、语义缓存、Saga 事务、监督树 — 与分布式系统同纪律。',
+          link: '/architecture/production-readiness',
+          span: 'wide',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
+        },
+      ]
+    : [
+        {
+          title: 'Live SSE streaming',
+          desc: 'Every agent thought, tool call, and decision streams to your terminal in real time via Server-Sent Events. Not polling. Not logs after the fact — you watch your agents reason, step by step.',
+          link: '/architecture/agent-runtime',
+          span: 'wide',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
+        },
+        {
+          title: 'Automatic topology selection',
+          desc: 'The deliberation engine classifies each task (CODING / RESEARCH / ANALYSIS / FACTUAL) and picks from 5 canonical topologies — SINGLE, CHAIN, DISPATCH, ORCHESTRATOR, REVIEW.',
+          link: '/guide/usage/topology-decision-tree',
+          span: 'tall',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
+        },
+        {
+          title: '25 providers with auto-failover',
+          desc: 'Set any one API key. Commander detects your provider, and if it fails, falls through a configurable chain — OpenAI → Anthropic → DeepSeek → Groq → Ollama.',
+          link: '/guide/providers',
+          span: 'short',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
+        },
+        {
+          title: 'Quality gates on every output',
+          desc: 'Five-layer verification: hallucination, consistency, completeness, accuracy, and safety. Failed gates trigger retry with full context — no silent wrong answers.',
+          link: '/architecture/verification',
+          span: 'short',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
+        },
+        {
+          title: 'Self-optimizing runtime',
+          desc: 'A meta-learner using Thompson Sampling and Reflexion tunes agent configurations across runs. Activates after 5+ recorded experiences.',
+          link: '/architecture/intelligence',
+          span: 'tall',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
+        },
+        {
+          title: 'Production infrastructure',
+          desc: 'Circuit breakers, dead letter queue, SQLite WAL checkpoints, semantic caching, saga transactions, and a supervision tree. Built with the same discipline as any production distributed system.',
+          link: '/architecture/production-readiness',
+          span: 'wide',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
+        },
+      ],
+)
 
-const stats = [
-  { value: '25', label: 'LLM providers' },
-  { value: '5', label: 'Canonical topologies' },
-  { value: '18', label: 'Built-in tools' },
-  { value: '6700+', label: 'Tests' },
-]
+const stats = computed(() =>
+  isZh.value
+    ? [
+        { value: '25', label: 'LLM 提供商' },
+        { value: '5', label: '规范拓扑' },
+        { value: '18', label: '内置工具' },
+        { value: '6700+', label: '测试' },
+      ]
+    : [
+        { value: '25', label: 'LLM providers' },
+        { value: '5', label: 'Canonical topologies' },
+        { value: '18', label: 'Built-in tools' },
+        { value: '6700+', label: 'Tests' },
+      ],
+)
 
-const whyCards = [
-  {
-    title: 'You are the engineer, not a passenger',
-    desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
-  },
-  {
-    title: 'No graph builders. No YAML.',
-    desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
-  },
-  {
-    title: 'Production primitives, not demos',
-    desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
-  },
-  {
-    title: 'One key, twenty-five providers',
-    desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
-  },
-]
+const whyCards = computed(() =>
+  isZh.value
+    ? [
+        {
+          title: '你是工程师，不是乘客',
+          desc: '其它框架把代理图藏在 YAML 后面。Commander 流式输出思考、工具与质量门，让你能调试并信任结果。',
+        },
+        {
+          title: '不画图。不写 YAML。',
+          desc: '自然语言描述任务。审议引擎分类、选拓扑，代理 1–20 按需扩展。简单任务保持简单。',
+        },
+        {
+          title: '生产原语，不是演示玩具',
+          desc: '熔断、DLQ、Saga 补偿、WAL 检查点、语义缓存、多租户 — 与分布式系统同一套纪律。',
+        },
+        {
+          title: '一把 Key，二十五家提供商',
+          desc: '任意 Key 即可。云端与本地（Ollama、vLLM）自动发现与故障转移，换提供商不必重写流程。',
+        },
+      ]
+    : [
+        {
+          title: 'You are the engineer, not a passenger',
+          desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
+        },
+        {
+          title: 'No graph builders. No YAML.',
+          desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
+        },
+        {
+          title: 'Production primitives, not demos',
+          desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
+        },
+        {
+          title: 'One key, twenty-five providers',
+          desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
+        },
+      ],
+)
 
-const quickLinks = [
-  { text: 'Get started', to: '/guide/getting-started', theme: 'brand' },
-  { text: 'Why Commander', to: '/guide/why-commander', theme: 'alt' },
-  { text: 'Cookbook', to: '/guide/cookbook/', theme: 'alt' },
-  { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
-]
+const quickLinks = computed(() =>
+  isZh.value
+    ? [
+        { text: '快速开始', to: '/zh/guide/getting-started', theme: 'brand' },
+        { text: '为什么选它', to: '/zh/guide/why-commander', theme: 'alt' },
+        { text: '实战手册', to: '/zh/guide/cookbook/', theme: 'alt' },
+        { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
+      ]
+    : [
+        { text: 'Get started', to: '/guide/getting-started', theme: 'brand' },
+        { text: 'Why Commander', to: '/guide/why-commander', theme: 'alt' },
+        { text: 'Cookbook', to: '/guide/cookbook/', theme: 'alt' },
+        { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
+      ],
+)
 
 const demoLines = [
   { cls: 'cmd-demo-muted', text: '$ commander run "audit this repo" --stream' },
@@ -96,6 +185,91 @@ const demoLines = [
   { cls: 'cmd-demo-dim', text: '└────────────────────────────────────────────' },
 ]
 
+const t = computed(() =>
+  isZh.value
+    ? {
+        badge: 'v0.2 · 预生产',
+        h1a: '多代理编排，',
+        h1b: '为生产而生。',
+        sub: '一把 API Key。Commander 分类任务、选择拓扑，并把每个代理决策流式打到终端。无黑盒。6700+ 测试，不画图，不写 YAML。',
+        demoTitle: '看清每一步决策',
+        demoDesc: '审议、拓扑、工具与质量门实时流出 — 不是事后日志。复制命令、设置 Key，看着代理工作。',
+        checklist: '五分钟清单',
+        cookbook: '实战配方',
+        featuresTitle: 'Commander 能做什么',
+        featuresSub: '六大核心能力，均有生产级基础设施与 CI 审计支撑。',
+        whyTitle: '为什么选 Commander',
+        whySub: '为想看清 AI 在做什么的工程师而建。',
+        pathsTitle: '从这里开始',
+        pathsSub: '同一引擎的三条入口。',
+        path1k: '01 · CLI',
+        path1t: '终端直接跑',
+        path1d: '克隆、设 Key，两分钟内流式多代理运行。',
+        path1a: '快速开始 →',
+        path2k: '02 · 控制台',
+        path2t: '打开 Web 控制台',
+        path2d: '对话、拓扑、DLQ、治理。',
+        path2a: 'Web 控制台 →',
+        path2to: '/zh/guide/web-console',
+        path3k: '03 · SDK',
+        path3t: '嵌入 TypeScript',
+        path3d: '事件、记忆与 plan 模式。',
+        path3a: 'Agent SDK →',
+        path1to: '/zh/guide/getting-started',
+        path3to: '/guide/sdk',
+        ctaTitle: '准备好编排了吗？',
+        ctaSub: '一条命令，25 家提供商，决策全程可见。设好 Key 开干。',
+        ctaStart: '快速开始',
+        ctaInstall: '安装',
+        ctaStar: '在 GitHub 上 Star',
+        more: '了解更多 →',
+        startTo: '/zh/guide/getting-started',
+        installTo: '/zh/guide/installation',
+        cookbookTo: '/zh/guide/cookbook/',
+      }
+    : {
+        badge: 'v0.2 · Pre-production',
+        h1a: 'Multi-agent orchestration,',
+        h1b: 'built for production.',
+        sub: 'Set one API key. Commander classifies the task, picks the right topology, and streams every agent decision to your terminal. No black boxes. 6700+ tests, no graph builders, no YAML.',
+        demoTitle: 'See every decision',
+        demoDesc:
+          'Deliberation, topology, tools, and quality gates stream live — not after the fact. Copy, set a key, and watch agents work.',
+        checklist: '5-minute checklist',
+        cookbook: 'Cookbook recipes',
+        featuresTitle: 'What Commander does',
+        featuresSub: 'Six core capabilities, each backed by production-grade infrastructure and audited in CI.',
+        whyTitle: 'Why Commander',
+        whySub: 'Built for engineers who want to see what their AI is actually doing.',
+        pathsTitle: 'Start where you are',
+        pathsSub: 'Three paths into the same engine.',
+        path1k: '01 · CLI',
+        path1t: 'Run from the terminal',
+        path1d: 'Clone, set one key, stream a multi-agent run in under two minutes.',
+        path1a: 'Quick start →',
+        path2k: '02 · Console',
+        path2t: 'Open the Web Console',
+        path2d: 'chat, topology, DLQ, governance.',
+        path2a: 'Web Console →',
+        path2to: '/guide/web-console',
+        path3k: '03 · SDK',
+        path3t: 'Embed in TypeScript',
+        path3d: 'events, memory, and plan mode.',
+        path3a: 'Agent SDK →',
+        path1to: '/guide/getting-started',
+        path3to: '/guide/sdk',
+        ctaTitle: 'Ready to orchestrate?',
+        ctaSub: 'One command, 25 providers, every decision visible. Set an API key and go.',
+        ctaStart: 'Get started',
+        ctaInstall: 'Install',
+        ctaStar: 'Star on GitHub',
+        more: 'Read more →',
+        startTo: '/guide/getting-started',
+        installTo: '/guide/installation',
+        cookbookTo: '/guide/cookbook/',
+      },
+)
+
 /** Prefix site base for internal paths (required on GitHub Pages /commander-docs/). */
 function hrefFor(to: string, external?: boolean) {
   if (external || /^https?:\/\//.test(to)) return to
@@ -104,12 +278,19 @@ function hrefFor(to: string, external?: boolean) {
 
 let ctx: gsap.Context | null = null
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return true
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 function playAnimations() {
   if (ctx) {
     ctx.revert()
     ctx = null
   }
-  ScrollTrigger.getAll().forEach(t => t.kill())
+  ScrollTrigger.getAll().forEach((t) => t.kill())
+
+  if (prefersReducedMotion()) return
 
   const hero = document.querySelector('.cmd-hero')
   if (!hero) return
@@ -167,7 +348,7 @@ onBeforeUnmount(() => {
     ctx.revert()
     ctx = null
   }
-  ScrollTrigger.getAll().forEach(t => t.kill())
+  ScrollTrigger.getAll().forEach((t) => t.kill())
 })
 </script>
 
@@ -178,14 +359,14 @@ onBeforeUnmount(() => {
       <div class="cmd-hero-inner">
         <div class="cmd-hero-text">
           <span class="cmd-badge">
-            <span class="cmd-badge-dot" /> v0.2 · Pre-production
+            <span class="cmd-badge-dot" /> {{ t.badge }}
           </span>
           <h1>
-            Multi-agent orchestration,<br />
-            <span class="cmd-accent">built for production.</span>
+            {{ t.h1a }}<br />
+            <span class="cmd-accent">{{ t.h1b }}</span>
           </h1>
           <p class="cmd-sub">
-            Set one API key. Commander classifies the task, picks the right topology, and streams every agent decision to your terminal. No black boxes. 6700+ tests, no graph builders, no YAML.
+            {{ t.sub }}
           </p>
           <div class="cmd-actions">
             <a
@@ -223,18 +404,15 @@ onBeforeUnmount(() => {
     <section class="cmd-demo-strip" aria-label="Live stream demo">
       <div class="cmd-demo-grid">
         <div class="cmd-demo-copy">
-          <h2>See every decision</h2>
-          <p>
-            Deliberation, topology, tools, and quality gates stream live — not after the fact.
-            Copy, set a key, and watch agents work.
-          </p>
+          <h2>{{ t.demoTitle }}</h2>
+          <p>{{ t.demoDesc }}</p>
           <pre class="cmd-demo-code" tabindex="0"><code>git clone https://github.com/PStarH/Commander.git
 cd Commander && pnpm install
 export OPENAI_API_KEY=sk-...
 npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre>
           <div class="cmd-actions">
-            <a :href="hrefFor('/guide/getting-started')" class="cmd-btn cmd-btn--brand">5-minute checklist</a>
-            <a :href="hrefFor('/guide/cookbook/')" class="cmd-btn cmd-btn--alt">Cookbook recipes</a>
+            <a :href="hrefFor(t.startTo)" class="cmd-btn cmd-btn--brand">{{ t.checklist }}</a>
+            <a :href="hrefFor(t.cookbookTo)" class="cmd-btn cmd-btn--alt">{{ t.cookbook }}</a>
           </div>
         </div>
         <div class="cmd-demo-terminal" role="img" aria-label="Example Commander stream output">
@@ -258,8 +436,8 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
     <!-- FEATURES — non-symmetric bento grid -->
     <section class="cmd-features">
       <div class="cmd-section-head">
-        <h2>What Commander does</h2>
-        <p>Six core capabilities, each backed by production-grade infrastructure and audited in CI.</p>
+        <h2>{{ t.featuresTitle }}</h2>
+        <p>{{ t.featuresSub }}</p>
       </div>
       <div class="cmd-bento">
         <a
@@ -271,7 +449,7 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
           <div class="cmd-feature-icon" v-html="f.icon" />
           <h3 class="cmd-feature-title">{{ f.title }}</h3>
           <p class="cmd-feature-desc">{{ f.desc }}</p>
-          <span class="cmd-feature-arrow">Read more →</span>
+          <span class="cmd-feature-arrow">{{ t.more }}</span>
         </a>
       </div>
     </section>
@@ -279,8 +457,8 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
     <!-- WHY -->
     <section class="cmd-why">
       <div class="cmd-section-head">
-        <h2>Why Commander</h2>
-        <p>Built for engineers who want to see what their AI is actually doing.</p>
+        <h2>{{ t.whyTitle }}</h2>
+        <p>{{ t.whySub }}</p>
       </div>
       <div class="cmd-why-grid">
         <div v-for="(w, i) in whyCards" :key="i" class="cmd-why-card">
@@ -293,40 +471,40 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
     <!-- PATHS -->
     <section class="cmd-paths">
       <div class="cmd-section-head">
-        <h2>Start where you are</h2>
-        <p>Three paths into the same engine.</p>
+        <h2>{{ t.pathsTitle }}</h2>
+        <p>{{ t.pathsSub }}</p>
       </div>
       <div class="cmd-paths-grid">
-        <a :href="hrefFor('/guide/getting-started')" class="cmd-path-card">
-          <span class="cmd-path-kicker">01 · CLI</span>
-          <h3>Run from the terminal</h3>
-          <p>Clone, set one key, stream a multi-agent run in under two minutes.</p>
-          <span class="cmd-feature-arrow">Quick start →</span>
+        <a :href="hrefFor(t.path1to)" class="cmd-path-card">
+          <span class="cmd-path-kicker">{{ t.path1k }}</span>
+          <h3>{{ t.path1t }}</h3>
+          <p>{{ t.path1d }}</p>
+          <span class="cmd-feature-arrow">{{ t.path1a }}</span>
         </a>
-        <a :href="hrefFor('/guide/web-console')" class="cmd-path-card">
-          <span class="cmd-path-kicker">02 · Console</span>
-          <h3>Open the Web Console</h3>
-          <p><code>pnpm gui</code> — chat, topology, DLQ, governance.</p>
-          <span class="cmd-feature-arrow">Web Console →</span>
+        <a :href="hrefFor(t.path2to)" class="cmd-path-card">
+          <span class="cmd-path-kicker">{{ t.path2k }}</span>
+          <h3>{{ t.path2t }}</h3>
+          <p><code>pnpm gui</code> — {{ t.path2d }}</p>
+          <span class="cmd-feature-arrow">{{ t.path2a }}</span>
         </a>
-        <a :href="hrefFor('/guide/sdk')" class="cmd-path-card">
-          <span class="cmd-path-kicker">03 · SDK</span>
-          <h3>Embed in TypeScript</h3>
-          <p><code>CommanderClient.run()</code> with events, memory, and plan mode.</p>
-          <span class="cmd-feature-arrow">Agent SDK →</span>
+        <a :href="hrefFor(t.path3to)" class="cmd-path-card">
+          <span class="cmd-path-kicker">{{ t.path3k }}</span>
+          <h3>{{ t.path3t }}</h3>
+          <p><code>CommanderClient.run()</code> — {{ t.path3d }}</p>
+          <span class="cmd-feature-arrow">{{ t.path3a }}</span>
         </a>
       </div>
     </section>
 
     <!-- CTA -->
     <section class="cmd-cta">
-      <h2>Ready to orchestrate?</h2>
-      <p>One command, 25 providers, every decision visible. Set an API key and go.</p>
+      <h2>{{ t.ctaTitle }}</h2>
+      <p>{{ t.ctaSub }}</p>
       <div class="cmd-actions">
-        <a :href="hrefFor('/guide/getting-started')" class="cmd-btn cmd-btn--brand">Get started</a>
-        <a :href="hrefFor('/guide/installation')" class="cmd-btn cmd-btn--alt">Install</a>
+        <a :href="hrefFor(t.startTo)" class="cmd-btn cmd-btn--brand">{{ t.ctaStart }}</a>
+        <a :href="hrefFor(t.installTo)" class="cmd-btn cmd-btn--alt">{{ t.ctaInstall }}</a>
         <a href="https://github.com/PStarH/Commander" class="cmd-btn cmd-btn--ghost" target="_blank" rel="noopener">
-          Star on GitHub <span class="cmd-ext">↗</span>
+          {{ t.ctaStar }} <span class="cmd-ext">↗</span>
         </a>
       </div>
     </section>

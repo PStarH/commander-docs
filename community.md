@@ -57,13 +57,30 @@ pnpm test:all   # or: cd packages/core && npx tsx --test tests/*.test.ts
 | **Community spaces** | Planned | Discord, showcase gallery |
 | **Ecosystem** | Planned | More providers, tools, template projects |
 
+## Trust signals
+
+[![CI](https://img.shields.io/github/actions/workflow/status/PStarH/Commander/ci.yml?style=flat-square&label=CI)](https://github.com/PStarH/Commander/actions)
+[![License](https://img.shields.io/github/license/PStarH/Commander?style=flat-square)](https://github.com/PStarH/Commander/blob/master/LICENSE)
+[![Docs](https://img.shields.io/badge/docs-live-22C55E?style=flat-square)](https://pstarh.github.io/commander-docs/)
+[![Stars](https://img.shields.io/github/stars/PStarH/Commander?style=social)](https://github.com/PStarH/Commander/stargazers)
+
+## Contribute docs
+
+See [Contributing](/guide/contributing) for local setup, content rules, and i18n notes.
+
+## Showcase
+
+List your project on the [Showcase](/guide/showcase) page (PR welcome).
+
 ## Stay updated
 
 - Star [Commander](https://github.com/PStarH/Commander)
 - Watch [changelog](/guide/changelog) for release notes
 - Open an issue when something in the docs is wrong — we treat that as a first-class bug
 - Security reports: [Security](/guide/security) (private email — not public issues)
+- 中文入口: [简体中文](/zh/)
 
 ## Docs for AI assistants
 
-Machine-readable index: [`llms.txt`](https://pstarh.github.io/commander-docs/llms.txt)
+- [`llms.txt`](https://pstarh.github.io/commander-docs/llms.txt) — short index  
+- [`llms-full.txt`](https://pstarh.github.io/commander-docs/llms-full.txt) — full route outline

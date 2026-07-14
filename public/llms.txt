@@ -5,12 +5,14 @@ Commander classifies tasks, picks a topology (SINGLE/CHAIN/DISPATCH/ORCHESTRATOR
 
 ## Docs
 - https://pstarh.github.io/commander-docs/
+- https://pstarh.github.io/commander-docs/zh/ (简体中文)
 - https://pstarh.github.io/commander-docs/guide/getting-started.html
 - https://pstarh.github.io/commander-docs/guide/why-commander.html
 - https://pstarh.github.io/commander-docs/guide/cookbook/
 - https://pstarh.github.io/commander-docs/architecture/overview.html
 - https://pstarh.github.io/commander-docs/api/overview.html
 - https://pstarh.github.io/commander-docs/guide/security.html
+- Full outline: https://pstarh.github.io/commander-docs/llms-full.txt
 
 ## Source
 - https://github.com/PStarH/Commander
