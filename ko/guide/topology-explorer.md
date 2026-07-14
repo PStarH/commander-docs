@@ -1,74 +1,36 @@
-# Interactive Topology Explorer
+# 토폴로지 탐색기
 
-**Interactive Topology Explorer.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+5개 정규 토폴로지를 한눈에 비교하고, 작업 유형에 맞는 선택을 고르는 가이드입니다.
 
-## 참고 표
+## 한눈에
 
-| | |
-|--|--|
-| **Agents** | 1 |
-| **Best for** | FAQ, simple explain, one-shot transform |
-| **Cost** | Lowest |
-| **Risk** | No peer review |
+| 토폴로지 | 한 줄 | 에이전트 감 |
+|----------|-------|-------------|
+| **SINGLE** | 한 에이전트가 전부 | 1 |
+| **CHAIN** | 순차 파이프 | 2–3 |
+| **DISPATCH** | 독립 병렬 + 합성 | 2–10 |
+| **ORCHESTRATOR** | 리드가 전문가에게 위임 | 3–8 |
+| **REVIEW** | 생성 → 비평 → 정제 | 2–5 |
 
-
-## 주요 섹션
-
-### Decision tree
-
-**Decision tree** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Topology cards
-
-**Topology cards** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Quick chooser
-
-**Quick chooser** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Force a topology
-
-**Force a topology** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Related
-
-**Related** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
-
-```
-Is the task a single clear question with one owner?
-  YES → SINGLE
-  NO  ↓
-Does work form a strict pipeline (A then B then C)?
-  YES → CHAIN
-  NO  ↓
-Can specialists work in parallel then merge?
-  YES → DISPATCH
-  NO  ↓
-Does a lead need to delegate and re-plan?
-  YES → ORCHESTRATOR
-  NO  ↓
-Is quality / risk high enough to require critique?
-  YES → REVIEW
-  else → start with DISPATCH or ask `commander plan`
-```
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "what does this function do?"
-# often → SINGLE
-```
-
-## 운영 체크
+## 강제 선택
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts run "task" --topology dispatch
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
 ```
+
+자동 선택은 심의·복잡도 점수를 따릅니다. 상세 트리: [토폴로지 의사결정 트리](/ko/guide/usage/topology-decision-tree).
+
+## 언제 무엇을
+
+- **단순 Q&A** → SINGLE  
+- **다단계 변환** → CHAIN  
+- **독립 모듈 감사** → DISPATCH  
+- **설계+구현 분할** → ORCHESTRATOR  
+- **보안·고위험** → REVIEW  
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [멀티 에이전트](/ko/architecture/multi-agent)  
+- [왜 Commander](/ko/guide/why-commander)  
+- [Cookbook](/ko/guide/cookbook/)  

@@ -1,70 +1,56 @@
-# Configuration
+# 設定
 
-**Configuration.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander は環境変数と設定ファイルで構成します。
 
-## 参照表
+## 環境変数
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COMMANDER_MODE` | `auto-edit` | Approval mode: `plan`, `read-only`, `auto-edit`, `full-auto`, `suggest` |
-| `COMMANDER_DEBUG` | `false` | Enable verbose debug logging |
-| `COMMANDER_LOG_LEVEL` | `info` | Log level: `debug`, `info`, `warn`, `error` |
-| `COMMANDER_LOG_PERSIST` | `false` | Enable log persistence to disk (auto-degrades to Error-only when backlog >10000) |
-| `COMMANDER_MAX_CONCURRENCY` | `5` | Maximum concurrent agent executions |
-| `COMMANDER_TIMEOUT_MS` | `120000` | Default execution timeout (ms) |
+### コア
 
+| 変数 | 既定 | 説明 |
+|------|------|------|
+| `COMMANDER_MODE` | `auto-edit` | `plan` / `read-only` / `auto-edit` / `full-auto` / `suggest` |
+| `COMMANDER_DEBUG` | `false` | 詳細ログ |
+| `COMMANDER_LOG_LEVEL` | `info` | `debug`…`error` |
+| `COMMANDER_MAX_CONCURRENCY` | `5` | 同時エージェント上限 |
+| `COMMANDER_TIMEOUT_MS` | `120000` | 実行タイムアウト (ms) |
 
-## 主な節
+### サーバー
 
-### Environment Variables
+| 変数 | 既定 | 説明 |
+|------|------|------|
+| `PORT` | `4000` | HTTP ポート |
+| `HOST` | `0.0.0.0` | バインド |
+| `CORS_ORIGIN` | `*` | CORS |
+| `RATE_LIMIT_*` | — | レート制限 |
 
-**Environment Variables** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+### マルチテナント · セキュリティ · 観測
 
-### CLI Configuration
+| 変数 | 説明 |
+|------|------|
+| `TENANT_PROVIDER` | `null` または `simple` |
+| `COMMANDER_API_KEY` | API Bearer |
+| `COMMANDER_SECURITY_PROFILE` | サンドボックス・プロファイル |
+| `COMMANDER_EVENT_SOURCING_WAL` | WAL パス |
+| `OTEL_*` | OpenTelemetry |
 
-**CLI Configuration** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+### プロバイダー
 
-### Provider Config
+`OPENAI_API_KEY` 等 — [プロバイダー](/ja/guide/providers)。ローカルは `OLLAMA_BASE_URL`。
 
-**Provider Config** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+## ファイル
+
+`.commander.json` / `.env` / monorepo の `.env.example` を参照。秘密は git に入れない。
 
 ## 例
 
-```json
-{
-  "provider": "auto",
-  "model": "auto",
-  "mode": "balanced",
-  "topology": "auto",
-  "budget": "auto",
-  "mcpServers": [],
-  "a2a": {
-    "server": {
-      "enabled": false,
-      "port": 3002,
-      "host": "127.0.0.1"
-    },
-    "remoteAgents": []
-  }
-}
-```
 ```bash
-export OPENAI_API_KEY=sk-...        # Primary: OpenAI | Fallback: DeepSeek → GLM → MiMo
-export ANTHROPIC_API_KEY=sk-ant-... # Anthropic Claude
-export GOOGLE_API_KEY=...           # Google Gemini
-```
-
-## 運用チェック
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+export COMMANDER_MODE=plan
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts plan "task"
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [インストール](/ja/guide/installation)  
+- [セキュリティ](/ja/guide/security)  
+- [デプロイ](/ja/deployment)  

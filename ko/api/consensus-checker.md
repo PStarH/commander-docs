@@ -1,33 +1,8 @@
 # Consensus Checker
 
-**Consensus Checker.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+고위험 결정을 위해 여러 LLM 프로바이더의 **가중 투표**로 합의를 봅니다.
 
-## 참고 표
-
-| Level | Threshold | Action |
-|-------|-----------|--------|
-| Unanimous | ≥95% | Proceed |
-| Strong | ≥80% | Proceed |
-| Moderate | ≥50% | Discuss |
-| Low | >0 | Rethink |
-| Diverged | 0 | Escalate |
-
-
-## 주요 섹션
-
-### Types
-
-**Types** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### API
-
-**API** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Consensus Thresholds
-
-**Consensus Thresholds** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 타입
 
 ```typescript
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
@@ -50,40 +25,34 @@ interface ConsensusResult {
   actionType?: 'proceed' | 'discuss' | 'rethink' | 'escalate';
 }
 ```
+
+## API
+
 ```typescript
 const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
 
-// Create a consensus check
 const checkId = checker.createCheck(question: string, context?: string): string;
 
-// Add a vote from a model
 checker.addVote(
   checkId: string,
   modelId: string,
-  modelName: string,
   decision: string,
-  confidence: number,
-  reasoning: string
-): boolean;
+  confidence?: number,
+);
 
-// Get the consensus result
-const result = checker.getResult(checkId: string): ConsensusResult | undefined;
-
-// Wait for all votes
-await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
+const result = await checker.finalize(checkId);
 ```
 
-## 운영 체크
+## 언제 쓰나
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+- 보안·규정·배포 같은 **고위험** 판단  
+- REVIEW 토폴로지와 함께 multi-model 교차 검증  
+- Layer 2 확장 — 일반 앱은 `CommanderClient.run` 으로 충분  
+
+패키지: monorepo `@commander/core`.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [API 개요](/ko/api/overview)  
+- [검증](/ko/architecture/verification)  
+- [멀티 에이전트](/ko/architecture/multi-agent)  

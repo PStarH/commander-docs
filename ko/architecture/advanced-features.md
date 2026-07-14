@@ -1,79 +1,63 @@
-# Advanced Engine Features
+# 고급 엔진 기능
 
-**Advanced Engine Features.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 정교한 실행 제어를 위한 여러 고급 엔진 컴포넌트를 포함합니다.
 
-## 주요 섹션
+## Speculative Executor
 
-### Speculative Executor
-
-**Speculative Executor** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Entropy Gater
-
-**Entropy Gater** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Cycle Detector
-
-**Cycle Detector** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Context Window Manager
-
-**Context Window Manager** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Code Extractor
-
-**Code Extractor** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Format Bridge
-
-**Format Bridge** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Evolutionary Workflow Engine
-
-**Evolutionary Workflow Engine** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Structured Output
-
-**Structured Output** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+여러 실행 경로를 병렬로 돌리고 최선 결과를 고릅니다.
 
 ```typescript
 import { SpeculativeExecutor } from '@commander/core';
 
 const executor = new SpeculativeExecutor();
-
-// Run 3 speculative paths in parallel
 const results = await executor.executeSpeculative(task, {
   strategies: [
     { provider: 'deepseek', temperature: 0.3 },
     { provider: 'openai', temperature: 0.5 },
     { provider: 'anthropic', temperature: 0.7 },
   ],
-  selector: 'quality', // Pick the highest quality result
+  selector: 'quality',
 });
 ```
+
+## Entropy Gater
+
+엔트로피 기반으로 저신뢰 출력을 걸러냅니다.
+
 ```typescript
 import { EntropyGater } from '@commander/core';
 
 const gater = new EntropyGater({ threshold: 0.7 });
-
-// Filter unreliable outputs
 const filtered = gater.filter(agentOutputs);
-// Only returns outputs with confidence > 0.7
 ```
 
-## 운영 체크
+## Cycle Detector
+
+태스크 그래프의 순환 의존을 탐지·해제합니다.
+
+```typescript
+import { CycleDetector } from '@commander/core';
+
+const detector = new CycleDetector();
+if (detector.hasCycle(taskGraph)) {
+  const broken = detector.breakCycles(taskGraph);
+}
+```
+
+## Context Window Manager
+
+토큰 예산을 넘지 않도록 메시지를 압축·윈도우 슬라이딩합니다. 런타임 `ContextCompactor` / `TokenGovernor` 와 연동됩니다.
+
+## 언제 쓰나
+
+일반 앱은 CLI/SDK `run` 만으로 충분합니다. 커스텀 플래너·연구 계측·특수 토폴로지에서 위 컴포넌트를 직접 조합합니다.
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
 ```
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [추측 실행](/ko/architecture/speculative-execution)  
+- [에이전트 런타임](/ko/architecture/agent-runtime)  
+- [검증](/ko/architecture/verification)  

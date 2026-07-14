@@ -1,39 +1,8 @@
-# Channel Adapters
+# チャネル・アダプタ
 
-**Channel Adapters.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander はアダプタ経由で複数の通信チャネルをサポートします。エージェントが Telegram など各プラットフォームでユーザーと対話できます。
 
-## 参照表
-
-| Adapter | Status | Features |
-|---------|--------|----------|
-| Terminal | ✅ Built-in | Full interaction, streaming, plan mode |
-| HTTP (REST) | ✅ Built-in | Execute, plan, watch endpoints |
-| SSE | ✅ Built-in | Real-time event streaming |
-| Telegram | ✅ Built-in | Async agent interaction via chat |
-| Discord | 🔲 Planned | Server/channel-based interaction |
-| Slack | 🔲 Planned | Workspace integration |
-| WebSocket | 🔲 Planned | Bidirectional real-time communication |
-
-
-## 主な節
-
-### Architecture
-
-**Architecture** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Telegram Adapter
-
-**Telegram Adapter** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Creating Custom Adapters
-
-**Creating Custom Adapters** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Built-in Adapters
-
-**Built-in Adapters** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## インターフェース
 
 ```typescript
 interface ChannelAdapter {
@@ -44,6 +13,9 @@ interface ChannelAdapter {
   disconnect(): Promise<void>;
 }
 ```
+
+## Telegram アダプタ
+
 ```typescript
 import { TelegramAdapter } from '@commander/core';
 
@@ -63,17 +35,20 @@ adapter.onMessage(async (msg) => {
 await adapter.connect();
 ```
 
-## 運用チェック
+## カスタム・アダプタ
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+`ChannelAdapter` を実装して Discord 等を追加できます。`connect` / `send` / `onMessage` / `disconnect` を満たせばランタイムに載せられます。
+
+## 運用
+
+- 公開ボットは `allowedChatIds` でホワイトリスト  
+- トークンは env のみ  
+- 本番はゲートウェイ認証と揃える  
+
+monorepo `packages/core`。CLI: `npx tsx packages/core/src/cliEntry.ts`。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [Web コンソール](/ja/guide/web-console)  
+- [セキュリティ](/ja/guide/security)  
+- [MCP](/ja/architecture/mcp)  

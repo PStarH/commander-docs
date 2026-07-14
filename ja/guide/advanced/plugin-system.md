@@ -1,106 +1,32 @@
-# Plugin System
+# プラグイン・システム
 
-**Plugin System.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander プラグインはランタイム・フックで挙動を拡張します。サードパーティは **サンドボックス読み込み文脈** で権限昇格を防ぎます。
 
-## 参照表
+## 概要
 
-| Hook | When It Fires |
-|------|---------------|
-| `beforeLLMCall` | Before every LLM request |
-| `afterLLMCall` | After every LLM request |
-| `beforeToolCall` | Before every tool execution |
-| `afterToolCall` | After every tool execution |
-| `onAgentStart` | Agent begins work |
-| `onAgentComplete` | Agent finishes work |
-| `onSubtaskCreate` | New subtask created |
-| `onSubtaskComplete` | Subtask finished |
-| `onCheckpoint` | State checkpoint saved |
-| `onError` | Error occurred (non-fatal) |
-| `onRetry` | Retry attempt starting |
-| `beforeVerification` | Before quality gate check |
-| `afterVerification` | After quality gate check |
-| `onTokenUsage` | Token budget updated |
-| `onMetricsEmit` | Metrics collected |
-| `beforeRun` | Execution run starts |
-| `afterRun` | Execution run completes |
-| `onHandoff` | Agent-to-agent handoff |
-| `onStreamEvent` | SSE event emitted |
+- **19 フック** — LLM 前後、ツール前後、run 前後など  
+- **権限上限** — メインを超えない  
+- **タイムアウト** — プラグインごと `maxExecutionTimeMs`  
+- **内蔵例** — `builtin-rag`（既定オフ）  
 
-
-## 主な節
-
-### Hook Points
-
-**Hook Points** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Creating a Plugin
-
-**Creating a Plugin** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Registering a Plugin
-
-**Registering a Plugin** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Plugin Security
-
-**Plugin Security** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Use Cases
-
-**Use Cases** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
-
-```typescript
-import { CommanderPlugin } from '@commander/core';
-
-class LoggingPlugin implements CommanderPlugin {
-  name = 'logging';
-
-  hooks = {
-    beforeLLMCall: async (params) => {
-      console.log(`[LLM] Calling ${params.provider} with ${params.messages.length} messages`);
-      return params; // Return modified params, or throw to block
-    },
-
-    afterToolCall: async (result) => {
-      console.log(`[Tool] ${result.tool} completed in ${result.durationMs}ms`);
-      return result; // Return modified result, or throw to block
-    },
-
-    onError: async (error) => {
-      console.error(`[Error] ${error.message}`);
-      // Don't return — errors are fire-and-forget
-    },
-
-    onMetricsEmit: async (metrics) => {
-      // Forward metrics to external monitoring
-      await fetch('https://monitor.example.com/metrics', {
-        method: 'POST',
-        body: JSON.stringify(metrics),
-      });
-    },
-  };
-}
-```
-```typescript
-import { getHookManager } from '@commander/core';
-
-const hookManager = getHookManager();
-hookManager.register(new LoggingPlugin());
-```
-
-## 運用チェック
+## 有効化例 (RAG)
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts plugin enable rag
 ```
+
+または `.commander.json` で `builtin-rag.enabled: true`。
+
+## カスタム
+
+`CommanderPlugin` を実装して登録。ロードはサンドボックス経由。ネットワーク・ファイル権限はプロファイルに従う。
+
+## セキュリティ
+
+スキャン · 権限宣言 · タイムアウト · 例外隔離。[Sandbox](/ja/architecture/sandbox) · [セキュリティ](/ja/guide/security)。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [RAG](/ja/guide/advanced/rag-knowledge-base)  
+- [拡張ポイント](/ja/architecture/extension-points)  
+- [本番準備](/ja/architecture/production-readiness)  

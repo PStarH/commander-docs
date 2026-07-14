@@ -1,39 +1,8 @@
-# Channel Adapters
+# 채널 어댑터
 
-**Channel Adapters.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 어댑터 시스템으로 여러 커뮤니케이션 채널을 지원합니다. 에이전트가 Telegram 등 다양한 플랫폼에서 사용자와 대화할 수 있습니다.
 
-## 참고 표
-
-| Adapter | Status | Features |
-|---------|--------|----------|
-| Terminal | ✅ Built-in | Full interaction, streaming, plan mode |
-| HTTP (REST) | ✅ Built-in | Execute, plan, watch endpoints |
-| SSE | ✅ Built-in | Real-time event streaming |
-| Telegram | ✅ Built-in | Async agent interaction via chat |
-| Discord | 🔲 Planned | Server/channel-based interaction |
-| Slack | 🔲 Planned | Workspace integration |
-| WebSocket | 🔲 Planned | Bidirectional real-time communication |
-
-
-## 주요 섹션
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Telegram Adapter
-
-**Telegram Adapter** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Creating Custom Adapters
-
-**Creating Custom Adapters** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Built-in Adapters
-
-**Built-in Adapters** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 인터페이스
 
 ```typescript
 interface ChannelAdapter {
@@ -44,6 +13,9 @@ interface ChannelAdapter {
   disconnect(): Promise<void>;
 }
 ```
+
+## Telegram 어댑터
+
 ```typescript
 import { TelegramAdapter } from '@commander/core';
 
@@ -63,17 +35,42 @@ adapter.onMessage(async (msg) => {
 await adapter.connect();
 ```
 
-## 운영 체크
+## 커스텀 어댑터
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+```typescript
+import { ChannelAdapter, InboundMessage, OutboundMessage } from '@commander/core';
+
+class DiscordAdapter implements ChannelAdapter {
+  readonly name = 'discord';
+
+  async connect(): Promise<void> {
+    // Initialize Discord client
+  }
+
+  async send(message: OutboundMessage): Promise<void> {
+    // Send message to Discord channel
+  }
+
+  onMessage(handler: (msg: InboundMessage) => void): void {
+    // Wire inbound events
+  }
+
+  async disconnect(): Promise<void> {
+    // Cleanup
+  }
+}
 ```
+
+## 운영 메모
+
+- 공개 봇은 `allowedChatIds` 로 화이트리스트  
+- 시크릿 토큰은 env에만 두고 git에 넣지 않기  
+- 프로덕션에서는 `COMMANDER_API_KEY` 와 동일하게 게이트웨이 인증을 맞출 것  
+
+패키지는 monorepo `packages/core`. CLI: `npx tsx packages/core/src/cliEntry.ts`.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [웹 콘솔](/ko/guide/web-console)  
+- [보안](/ko/guide/security)  
+- [MCP](/ko/architecture/mcp)  

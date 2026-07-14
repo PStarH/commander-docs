@@ -1,70 +1,66 @@
-# Frequently Asked Questions
+# よくある質問 (FAQ)
 
-**Frequently Asked Questions.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+## 一般
 
-## 参照表
+### Commander とは？
 
-| Topology | Use when |
-|----------|----------|
-| **SINGLE** | Simple, one-shot answers |
-| **CHAIN** | Sequential pipeline steps |
-| **DISPATCH** | Parallel specialists + synthesis |
-| **ORCHESTRATOR** | Lead agent delegates to workers |
-| **REVIEW** | Produce then critique / merge |
+マルチエージェント編成エンジンです。5 正規トポロジ（SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW）、25 LLM プロバイダー、18 組み込みツール。
 
+### 他の AI コーディングツールとの違いは？
 
-## 主な節
+多くは単一エージェント・単一モデル。Commander は **複数エージェント** を **トポロジ** で編成し、複雑度から戦略を選びます。ブレーカー・マルチテナント・WAL・Prometheus・SSE など本番志向。
 
-### General
+### オープンソース？
 
-**General** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+はい。MIT。
 
-### Setup
+### マルチエージェント編成とは？
 
-**Setup** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+1 タスクに複数 AI エージェントを走らせ、並列・レビュー・リード委譲などで協力させることです。
 
-### Usage
+## セットアップ
 
-**Usage** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+### API キーは複数必要？
 
-### Performance
+いいえ。**1 つで十分**。`OPENAI_API_KEY` 等を設定すれば自動検出。複数キーでフェイルオーバー。
 
-**Performance** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+### オフラインは？
 
-### Enterprise
-
-**Enterprise** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Data & Privacy
-
-**Data & Privacy** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Related
-
-**Related** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+Ollama / vLLM:
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 npx tsx packages/core/src/cliEntry.ts run "analyze this code"
 ```
+
+### npm は？
+
+公開は **進行中**。今は monorepo を clone。[Agent SDK](/ja/guide/sdk)。
+
+## 使い方
+
+### ファイルを編集する？
+
+既定は可能。承認モードで制御: `plan` / `read-only` / `suggest` / `auto-edit` / `full-auto`。
+
+### CI/CD？
+
 ```bash
 export COMMANDER_MODE=full-auto
 npx tsx packages/core/src/cliEntry.ts run "fix all lint errors"
 ```
 
-## 運用チェック
+### エージェント数？
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+1–20。単純は 1、複雑はチーム。
+
+### 5 トポロジ？
+
+SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW。[トポロジ決定木](/ja/guide/usage/topology-decision-tree)。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [なぜ Commander](/ja/guide/why-commander)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [クックブック](/ja/guide/cookbook/)  
+- [トラブルシューティング](/ja/guide/troubleshooting)  

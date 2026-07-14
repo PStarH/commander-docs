@@ -1,37 +1,28 @@
-# Plan Mode
+# Plan モード
 
-**Plan Mode.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Plan モードは、Commander が **実際に動く前に** 何をするかを見せます。実行戦略・エージェント配分・ツール呼び出しをゼロリスクで確認できます。
 
-## 主な節
+## なぜ使うか
 
-### Why Use Plan Mode
+- **安全** — ファイル変更前に計画をレビュー  
+- **学習** — 分解とアプローチを理解  
+- **デバッグ** — トポロジ・エージェント・ツールを確認  
+- **協働** — チームで計画を共有・反復  
 
-**Why Use Plan Mode** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+## 使い方
 
-### Usage
-
-**Usage** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Plan Output
-
-**Plan Output** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Visual Indicator
-
-**Visual Indicator** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+> monorepo ソース。ビルド後は `commander` に置き換え可。
 
 ```bash
-# Set plan mode
 npx tsx packages/core/src/cliEntry.ts mode plan
-
-# Then run any task
 npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 
-# Or use the --plan flag for one-off plan mode
+# 一回だけ
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
+
+## 出力の例
+
 ```
 ┃ → Deliberating task...
 ┃ → Complexity: HIGH (score: 72/100)
@@ -39,28 +30,14 @@ npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ┃ → Agents: 4 (1 lead + 3 specialists)
 ┃ → Provider: deepseek (fallback: openai → anthropic)
 ┃ → Token budget: 100,000
-┃
-┃ → Subtasks:
-┃   1. Analyze existing database schema
-┃   2. Design migration plan
-┃   3. Implement changes (parallel: 2 agents)
-┃   4. Verify and test
-┃
+┃ → Subtasks: ...
 ┃ → Estimated duration: 45s
-┃ → Total tools calls: ~12
 ```
 
-## 運用チェック
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+ファイルは変更されません。問題なければ `suggest` / `auto-edit` で本実行します。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [タスク実行](/ja/guide/usage/running-tasks)  
+- [Watch モード](/ja/guide/usage/watch-mode)  
+- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)  

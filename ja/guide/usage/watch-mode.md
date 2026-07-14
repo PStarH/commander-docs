@@ -1,52 +1,31 @@
-# Watch Mode (SSE Streaming)
+# Watch モード (SSE ストリーム)
 
-**Watch Mode (SSE Streaming).** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Watch モードは Server-Sent Events (SSE) で実行イベントをリアルタイム配信します。長時間タスクの監視、エージェント挙動のデバッグ、カスタム UI 連携に向きます。
 
-## 参照表
-
-| Event Type | Description |
-|------------|-------------|
-| `task.start` | Task started |
-| `deliberation` | Complexity analysis |
-| `topology.select` | Topology selected |
-| `agent.spawn` | Agent created |
-| `tool.call` | Tool execution started |
-| `tool.result` | Tool execution completed |
-| `subtask.complete` | Subtask finished |
-| `verification` | Quality gate check |
-| `checkpoint` | State checkpoint saved |
-| `task.complete` | Task finished |
-| `task.error` | Error occurred |
-
-
-## 主な節
-
-### Usage
-
-**Usage** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Streamed Events
-
-**Streamed Events** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Event Format
-
-**Event Format** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Consuming Events
-
-**Consuming Events** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Use Cases
-
-**Use Cases** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## 使い方
 
 ```bash
-# From monorepo source (or: commander watch "...")
 npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
+# または run --stream
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
 ```
+
+## ストリームされるイベント
+
+| 型 | 説明 |
+|----|------|
+| `task.start` | 開始 |
+| `deliberation` | 複雑度分析 |
+| `topology.select` | トポロジ選択 |
+| `agent.spawn` | エージェント生成 |
+| `tool.call` / `tool.result` | ツール実行 |
+| `subtask.complete` | サブタスク完了 |
+| `verification` | 品質ゲート |
+| `checkpoint` | チェックポイント |
+| `task.complete` / `task.error` | 完了 / エラー |
+
+## イベント形式
+
 ```json
 {
   "type": "tool.call",
@@ -59,17 +38,12 @@ npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 }
 ```
 
-## 運用チェック
+## 消費
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+CLI の `watch` / `run --stream`、Web Console、SDK の `onEvent`、HTTP SSE で同じイベント流を受け取れます。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [Plan モード](/ja/guide/usage/plan-mode)  
+- [Web コンソール](/ja/guide/web-console)  
+- [Agent SDK](/ja/guide/sdk)  

@@ -1,52 +1,21 @@
 # Agent Transaction Runtime (ATR)
 
-**Agent Transaction Runtime (ATR).** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+ATR은 에이전트 결정 루프와 **모든 외부 시스템 호출 사이**에 있는 정산(settlement) 계층입니다. 액션을 멱등·복구 가능·리스 기반·펜싱 보호로 보장합니다.
 
-## 참고 표
+## 왜 ATR인가
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `idempotency.ttlSeconds` | `3600` | How long to retain idempotency records |
-| `lease.ttlMs` | `30000` | Lease time-to-live |
-| `lease.heartbeatMs` | `5000` | Heartbeat interval |
-| `compensation.timeoutMs` | `10000` | Max time per compensation handler |
-
-
-## 주요 섹션
-
-### Why ATR
-
-**Why ATR** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Core Concepts
-
-**Core Concepts** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### GitHub Adapter
-
-**GitHub Adapter** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### HTTP API
-
-**HTTP API** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Configuration
-
-**Configuration** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+ATR 없이 에이전트 실행은 fire-and-forget입니다. 도구는 성공했는데 결과 기록 전에 크래시하면 액션이 사라지고, 재시도하면 이중 실행됩니다. ATR은 트랜잭션 보장으로 이를 막습니다.
 
 ```
 Agent Decision → ATR Settlement Layer → External System
-                    ├── Idempotency (no duplicates)
-                    ├── Recovery (compensable rollback)
-                    ├── Leasing (single-owner runs)
-                    └── Fencing (zombie process protection)
+                     ├── Idempotency (중복 없음)
+                     ├── Recovery (보상 롤백)
+                     ├── Leasing (단일 소유 런)
+                     └── Fencing (좀비 프로세스 차단)
 ```
+
+## 런 수명주기
+
 ```
 PENDING → EXECUTING → VERIFYING → COMMITTED
                │            │
@@ -54,17 +23,35 @@ PENDING → EXECUTING → VERIFYING → COMMITTED
                └───────────────────→ ABORTED → COMPENSATED
 ```
 
-## 운영 체크
+- **PENDING** — 생성됨, 미시작  
+- **EXECUTING** — 작업 중  
+- **VERIFYING** — 품질 게이트  
+- **COMMITTED** — 성공 종료  
+- **ABORTED** — 실패/취소  
+- **COMPENSATED** — 부작용 롤백 완료  
+- **PAUSED** — HITL/예산 정지 (재개 가능)  
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+## 멱등성
+
+외부 액션마다 SHA-256 멱등 키. 동일 키 재시도는 캐시 결과를 반환합니다.
+
+```typescript
+import { IdempotencyStore } from '@commander/core';
+
+const store = new IdempotencyStore({ ttlSeconds: 3600 });
+
+const result = await store.execute('github:create-pr:abc123', async () => {
+  return await github.createPR({ title: 'Fix bug', body: '...' });
+});
 ```
+
+## 리스 & 펜싱
+
+단일 워커/프로세스가 런을 소유합니다. 만료 lease와 fencing 토큰이 좀비 실행을 막습니다. 복구는 [이벤트 소싱](/ko/architecture/event-sourcing) 의 RecoveryBootstrapper 와 연동됩니다.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [이벤트 소싱](/ko/architecture/event-sourcing)  
+- [Saga](/ko/architecture/saga)  
+- [Resilience](/ko/architecture/resilience)  
+- [V2 마이그레이션](/ko/guide/migration-v2)  

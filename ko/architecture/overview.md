@@ -1,93 +1,77 @@
-# Architecture Overview
+# 아키텍처 개요
 
-**Architecture Overview.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 단일 작업 설명을 여러 에이전트·도구·LLM 프로바이더에 걸친 구조화된 실행 계획으로 바꿉니다.
 
-## 주요 섹션
+## 먼저 읽을 다섯 페이지
 
-### Read these five first
+1. **이 페이지** — 고수준 흐름과 패키지 맵  
+2. [코어 호출 체인](/ko/architecture/core-call-chain)  
+3. [멀티 에이전트](/ko/architecture/multi-agent)  
+4. [에이전트 런타임](/ko/architecture/agent-runtime)  
+5. [검증 파이프라인](/ko/architecture/verification)  
 
-**Read these five first** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+나머지는 선택적 심화(신뢰성·보안·시스템)입니다.
 
-### High-Level Flow
-
-**High-Level Flow** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Package Structure
-
-**Package Structure** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Key Design Principles
-
-**Key Design Principles** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 고수준 흐름
 
 ```
 CLI / HTTP / SDK
   │
-  ├─ deliberation.ts         Task analysis & topology selection
-  ├─ effortScaler.ts         Scale agents (1-20) by complexity
-  ├─ topologyRouter.ts       Route to optimal topology (5 canonical + 9 legacy)
-  ├─ atomizer.ts             ROMA task decomposition
+  ├─ deliberation.ts         작업 분석 & 토폴로지 선택
+  ├─ effortScaler.ts         에이전트 1–20 스케일
+  ├─ topologyRouter.ts       5 정규 토폴로지
+  ├─ atomizer.ts             ROMA 분해
   │
-  ├─ agentRuntime.ts         LLM → tools → verification → retry
-  │   ├─ providers/          25 LLM providers with fallback chains
-  │   ├─ toolResultCache.ts  SHA-256 caching per tenant
-  │   ├─ stateCheckpointer.ts Crash-safe snapshots (SQLite WAL)
-  │   ├─ circuitBreaker.ts   Failure threshold → open circuit
-  │   ├─ deadLetterQueue.ts  7 categories, 15 failure modes, replay support
-  │   ├─ compensationRegistry.ts Mutation tool rollback
-  │   ├─ contextCompactor.ts Token-aware message compaction
-  │   ├─ tokenGovernor.ts    Token budget enforcement
-  │   ├─ verificationLoop.ts Quality gates (5-stage)
-  │   ├─ eventSourcingEngine.ts WAL + hash chain event log
-  │   └─ qualityGater.ts    Agent Capsules degradation detection
+  ├─ agentRuntime.ts         LLM → tools → verify → retry
+  │   ├─ providers/          25 프로바이더 + 폴백
+  │   ├─ toolResultCache / stateCheckpointer / circuitBreaker
+  │   ├─ deadLetterQueue / compensation / verificationLoop
+  │   └─ eventSourcing / qualityGater
   │
-  ├─ enterpriseSecurityGateway.ts  7-layer defense-in-depth
-  │   ├─ dataLossPrevention.ts  DLP with 12+ sensitive patterns
-  │   ├─ capabilityToken.ts   Short-lived HMAC auth tokens
-  │   ├─ auditChainLedger.ts  Tamper-proof hash chain audit
-  │   └─ agentLineage.ts      Immutable parent-child agent tracking
-  │
-  ├─ agentHandoff.ts         Agent-to-agent handoff with inbox
-  ├─ messageBus.ts           Pub/sub for inter-agent + system events
-  ├─ metricsCollector.ts     Unified metrics (Prometheus + adapters)
-  ├─ threeLayerMemory.ts     Working/Episodic/Long-term with embedding
-  ├─ hallucinationDetector.ts Signal-based hallucination detection
-  ├─ reflectionEngine.ts     Post-execution self-evaluation
-  ├─ metaLearner.ts          Thompson Sampling + Reflexion
-  │
-  ├─ recoveryBootstrapper.ts Zombie run detection & recovery on startup
-  ├─ unifiedAuditLog.ts      Cross-source audit aggregation
-  │
-  └─ pluginManager.ts        19 hook points, sandboxed load context
+  ├─ enterpriseSecurityGateway (7계층) · DLP · capability tokens
+  ├─ agentHandoff / messageBus / metrics / threeLayerMemory
+  ├─ hallucinationDetector / reflection / metaLearner
+  ├─ recoveryBootstrapper / unifiedAuditLog
+  └─ pluginManager (19 hook)
 ```
+
+## 패키지 구조
+
 ```
 packages/core/src/
-├── runtime/             ← Execution engine (190+ files)
-├── ultimate/            ← Orchestration engine (44+ files)
-├── security/            ← Enterprise security gateway (70+ files)
-├── tools/               ← 18 built-in tools
-├── sandbox/             ← Security profiles, TEE, seccomp, Petri net
-├── atr/                 ← Agent Task Recovery system
-├── selfEvolution/       ← Meta-learning
-├── saga/                ← Distributed compensation transactions
-├── mcp/                 ← Model Context Protocol + A2A
-├── plugins/builtin/     ← RAG knowledge base plugin
-└── ... core modules
+├── runtime/     실행 엔진
+├── ultimate/    오케스트레이션
+├── security/    보안 게이트웨이
+├── tools/       18 내장 도구
+├── sandbox/     프로파일, TEE, seccomp, Petri net
+├── atr/         Agent Transaction Runtime
+├── selfEvolution/  메타러닝
+├── saga/        보상 트랜잭션
+├── mcp/         MCP + A2A
+└── plugins/builtin/  RAG 등
 ```
 
-## 운영 체크
+## 설계 원칙
+
+1. **Topology-first** — 실행 전에 작업 구조를 분석  
+2. **Provider-agnostic** — 25 프로바이더 통일 인터페이스 + 폴백  
+3. **Crash-safe** — 단계마다 WAL 체크포인트, 이벤트 재생  
+4. **Observable by default** — 메트릭, 트레이스, SSE, Grafana  
+5. **Multi-tenant by design** — 스토리지·메모리·쿼터·캐시 격리  
+6. **Secure by default** — 7계층 게이트웨이, DLP, 토큰, 플러그인 샌드박스  
+7. **Reversible by design** — 해시 체인, 보상, DLQ, RecoveryBootstrapper  
+
+## 로컬에서 보기
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
+
+지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [프로덕션 준비](/ko/architecture/production-readiness)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API 개요](/ko/api/overview)  

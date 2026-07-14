@@ -1,62 +1,23 @@
-# Smart Model Router
+# 스마트 모델 라우터
 
-**Smart Model Router.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Smart Model Router는 **능력 기반 모델 선택**과 사용자 정의 라우팅 규칙을 제공합니다. 코어 `ModelRouter` 위에 모델 풀·규칙·예산 제약을 얹습니다.
 
-## 참고 표
+## 능력 태그
 
-| Capability | Description |
-|------------|-------------|
-| `code` | Code generation and understanding |
-| `reasoning` | Logical reasoning and chain-of-thought |
-| `analysis` | Data analysis and interpretation |
-| `creative` | Creative writing and brainstorming |
-| `math` | Mathematical computation |
-| `multimodal` | Multiple input modalities |
-| `vision` | Image understanding |
-| `image_generation` | Image creation |
-| `long_context` | Large context window support |
-| `low_cost` | Cost-efficient inference |
-| `fast` | Low-latency inference |
-| `high_quality` | Highest quality output |
-| `function_calling` | Tool use support |
-| `json_mode` | Structured JSON output |
-| `streaming` | Streaming response support |
-| `translation` | Multi-language translation |
-| `summarization` | Text summarization |
-| `extraction` | Information extraction |
+| Capability | 설명 |
+|------------|------|
+| `code` | 코드 생성·이해 |
+| `reasoning` | 논리·CoT |
+| `analysis` | 데이터 분석 |
+| `creative` | 창작·브레인스토밍 |
+| `math` | 수학 |
+| `multimodal` / `vision` / `image_generation` | 멀티모달·비전·이미지 생성 |
+| `long_context` | 긴 컨텍스트 |
+| `low_cost` / `fast` / `high_quality` | 비용·지연·품질 |
+| `function_calling` / `json_mode` / `streaming` | 도구·JSON·스트림 |
+| `translation` / `summarization` / `extraction` | 번역·요약·추출 |
 
-
-## 주요 섹션
-
-### Capabilities
-
-**Capabilities** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Configuration
-
-**Configuration** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Routing Modes
-
-**Routing Modes** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Model Tiers
-
-**Model Tiers** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Routing Decision
-
-**Routing Decision** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Programmatic API
-
-**Programmatic API** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Integration with Deliberation
-
-**Integration with Deliberation** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 설정
 
 ```typescript
 import { SmartModelRouter } from '@commander/core';
@@ -82,60 +43,27 @@ const router = new SmartModelRouter({
       contextWindow: 200000,
       tier: 'power',
     },
-    {
-      id: 'deepseek-chat',
-      provider: 'deepseek',
-      capabilities: ['code', 'reasoning', 'low_cost'],
-      costPer1MInput: 0.14,
-      costPer1MOutput: 0.28,
-      contextWindow: 64000,
-      tier: 'eco',
-    },
   ],
-  routingRules: [
-    {
-      taskType: 'code_review',
-      requiredCapabilities: ['code', 'reasoning'],
-      preferredTier: 'power',
-      maxCostPer1K: 0.05,
-    },
-    {
-      taskType: 'simple_query',
-      requiredCapabilities: ['reasoning'],
-      preferredTier: 'eco',
-      maxCostPer1K: 0.001,
-    },
-  ],
-  budget: {
-    maxCostPerTask: 1.0,
-    dailyBudget: 10.0,
-  },
 });
 ```
-```
-Task → Analyze requirements → Match capabilities → Filter by budget
-                                                         │
-                    ┌────────────────────────────────────┘
-                    ▼
-            Select model by tier preference
-                    │
-                    ┌────────────────────────────────────┐
-                    ▼                                    ▼
-            Primary model                          Fallback chain
-            (best match)                           (next tier)
-```
 
-## 운영 체크
+## 모드
+
+- **auto** — 능력·비용·지연으로 자동 선택  
+- **manual** — 고정 모델  
+- **cascade** — 규칙 우선, 실패 시 폴백 체인  
+
+## 운영
+
+키 하나만 있어도 기본 라우터가 동작합니다. 풀·예산을 세밀히 쓰려면 monorepo 설정과 연동하세요.
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
 ```
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [프로바이더](/ko/guide/providers)  
+- [Resilience](/ko/architecture/resilience)  
+- [인텔리전스](/ko/architecture/intelligence)  

@@ -1,103 +1,37 @@
 # Inspector Agent
 
-**Inspector Agent.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+ランタイム健全性・異常・設定ドリフトを検知するインスペクタです。運用ダッシュボードや doctor フローと併用します。
 
-## 参照表
+## 役割
 
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| Response Time | >1000ms | >5000ms |
-| Error Rate | >5% | >20% |
-| Memory Usage | >90% | >95% |
-| Queue Depth | >100 | >500 |
-| Success Rate | <80% | <50% |
+- プロバイダー / ブレーカー / DLQ の異常シグナル  
+- 長時間 stuck run の検出  
+- 設定・権限のざっくり健全性チェック  
 
-
-## 主な節
-
-### Types
-
-**Types** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### API
-
-**API** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Auto-Detection Thresholds
-
-**Auto-Detection Thresholds** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## 使い方（概念）
 
 ```typescript
-type IssueSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
-type IssueCategory = 'performance' | 'reliability' | 'security' | 'memory' | 'coordination' | 'configuration';
+import { getGlobalInspectorAgent } from '@commander/core';
 
-interface Issue {
-  id: string;
-  category: IssueCategory;
-  severity: IssueSeverity;
-  title: string;
-  description: string;
-  status: 'open' | 'acknowledged' | 'resolved' | 'ignored';
-  suggestions: string[];
-}
-
-interface InspectionReport {
-  id: string;
-  timestamp: string;
-  overallHealth: number;
-  overallStatus: 'healthy' | 'degraded' | 'unhealthy';
-  components: ComponentHealth[];
-  openIssues: Issue[];
-  recommendations: string[];
-}
-```
-```typescript
-const inspector = new InspectorAgent();
-
-// Update component health status
-inspector.updateComponent(
-  name: string,
-  status: 'healthy' | 'degraded' | 'unhealthy',
-  score: number,
-  metrics?: Record<string, number>
-): void;
-
-// Detect an issue
-const issue = inspector.detectIssue(
-  category: IssueCategory,
-  severity: IssueSeverity,
-  title: string,
-  description: string,
-  suggestions?: string[]
-): Issue;
-
-// Auto-detect issues from metrics
-inspector.autoDetect(componentName: string, metrics: Record<string, number>): Issue[];
-
-// Run full inspection
-inspector.inspect(): InspectionReport;
-
-// Get health trend
-inspector.getHealthTrend(): {
-  trend: 'improving' | 'declining' | 'stable';
-  change: number;
-  history: Array<{ timestamp: string; health: number }>;
-};
+const inspector = getGlobalInspectorAgent();
+const report = await inspector.inspect({ tenantId: 'default' });
+// report.issues[] — severity, code, recommendation
 ```
 
-## 運用チェック
+CLI ではまず:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts doctor
 npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
 ```
+
+## いつ使うか
+
+- Layer 2 拡張・社内 ops ツール  
+- 通常のタスク実行だけなら CLI doctor + Web Console で足りる  
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [API 概要](/ja/api/overview)  
+- [Resilience](/ja/architecture/resilience)  
+- [トラブルシューティング](/ja/guide/troubleshooting)  

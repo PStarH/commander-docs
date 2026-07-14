@@ -1,62 +1,18 @@
-# Smart Model Router
+# スマート・モデル・ルーター
 
-**Smart Model Router.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Smart Model Router は **能力ベースのモデル選択** とユーザー定義ルーティングを提供します。コア `ModelRouter` の上にモデルプール・規則・予算制約を載せます。
 
-## 参照表
+## 能力タグ
 
-| Capability | Description |
-|------------|-------------|
-| `code` | Code generation and understanding |
-| `reasoning` | Logical reasoning and chain-of-thought |
-| `analysis` | Data analysis and interpretation |
-| `creative` | Creative writing and brainstorming |
-| `math` | Mathematical computation |
-| `multimodal` | Multiple input modalities |
-| `vision` | Image understanding |
-| `image_generation` | Image creation |
-| `long_context` | Large context window support |
-| `low_cost` | Cost-efficient inference |
-| `fast` | Low-latency inference |
-| `high_quality` | Highest quality output |
-| `function_calling` | Tool use support |
-| `json_mode` | Structured JSON output |
-| `streaming` | Streaming response support |
-| `translation` | Multi-language translation |
-| `summarization` | Text summarization |
-| `extraction` | Information extraction |
+| Capability | 説明 |
+|------------|------|
+| `code` / `reasoning` / `analysis` / `creative` / `math` | 主要タスク種 |
+| `multimodal` / `vision` / `image_generation` | マルチモーダル |
+| `long_context` / `low_cost` / `fast` / `high_quality` | 文脈・コスト・速度・品質 |
+| `function_calling` / `json_mode` / `streaming` | ツール・JSON・ストリーム |
+| `translation` / `summarization` / `extraction` | 翻訳・要約・抽出 |
 
-
-## 主な節
-
-### Capabilities
-
-**Capabilities** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Configuration
-
-**Configuration** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Routing Modes
-
-**Routing Modes** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Model Tiers
-
-**Model Tiers** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Routing Decision
-
-**Routing Decision** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Programmatic API
-
-**Programmatic API** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Integration with Deliberation
-
-**Integration with Deliberation** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## 設定
 
 ```typescript
 import { SmartModelRouter } from '@commander/core';
@@ -73,69 +29,27 @@ const router = new SmartModelRouter({
       contextWindow: 128000,
       tier: 'power',
     },
-    {
-      id: 'claude-sonnet-4-20250514',
-      provider: 'anthropic',
-      capabilities: ['code', 'reasoning', 'long_context', 'function_calling'],
-      costPer1MInput: 3,
-      costPer1MOutput: 15,
-      contextWindow: 200000,
-      tier: 'power',
-    },
-    {
-      id: 'deepseek-chat',
-      provider: 'deepseek',
-      capabilities: ['code', 'reasoning', 'low_cost'],
-      costPer1MInput: 0.14,
-      costPer1MOutput: 0.28,
-      contextWindow: 64000,
-      tier: 'eco',
-    },
   ],
-  routingRules: [
-    {
-      taskType: 'code_review',
-      requiredCapabilities: ['code', 'reasoning'],
-      preferredTier: 'power',
-      maxCostPer1K: 0.05,
-    },
-    {
-      taskType: 'simple_query',
-      requiredCapabilities: ['reasoning'],
-      preferredTier: 'eco',
-      maxCostPer1K: 0.001,
-    },
-  ],
-  budget: {
-    maxCostPerTask: 1.0,
-    dailyBudget: 10.0,
-  },
 });
 ```
-```
-Task → Analyze requirements → Match capabilities → Filter by budget
-                                                         │
-                    ┌────────────────────────────────────┘
-                    ▼
-            Select model by tier preference
-                    │
-                    ┌────────────────────────────────────┐
-                    ▼                                    ▼
-            Primary model                          Fallback chain
-            (best match)                           (next tier)
-```
 
-## 運用チェック
+## モード
+
+- **auto** — 能力・コスト・遅延で自動  
+- **manual** — 固定モデル  
+- **cascade** — 規則優先、失敗時フォールバック  
+
+## 運用
+
+キー 1 つでも基本ルーターは動きます。
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts run "task" --stream
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [プロバイダー](/ja/guide/providers)  
+- [Resilience](/ja/architecture/resilience)  
+- [インテリジェンス](/ja/architecture/intelligence)  
