@@ -1,17 +1,10 @@
-# 추측 실행
+# Speculative Execution
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/speculative-execution)
+Commander implements **PASTE-style speculative execution** (Pattern-Aware Speculative Execution) that pre-executes likely tool calls during LLM thinking time. Research shows this achieves up to 48.5% reduction in task completion time. During LLM thinking/processing time, Commander predicts the most likely next tool calls based on observed patterns and pre-executes them. If the model actually makes
 
+이 문서는 Commander에서 **Speculative Execution** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-Commander implements **PASTE-style speculative execution** (Pattern-Aware Speculative Execution) that pre-executes likely tool calls during LLM thinking time. Research shows this achieves up to 48.5% reduction in task completion time.
-
-## How It Works
-
-
-During LLM thinking/processing time, Commander predicts the most likely next tool calls based on observed patterns and pre-executes them. If the model actually makes those calls, results are already available (zero-wait). Wrong predictions are discarded at no cost.
-
-```
+```bash
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  LLM Call   │────▶│ Pattern Tracker  │────▶│ Speculative     │
 │  (thinking) │     │ (predict next)   │     │ Executor        │
@@ -20,104 +13,15 @@ During LLM thinking/processing time, Commander predicts the most likely next too
                          ┌─────────────────────────────┘
                          ▼
                ┌──────────────────┐
-               │  Pre-executed    │
-               │  Tool Results    │
-               │  (cached)        │
-               └──────────────────┘
 ```
 
-## Safety
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-Only **read-only** tools are speculatively executed:
-- `file.read`, `web.search`, `web.fetch`, `code.search`, `git.status`
+## 관련
 
-**State-mutating** tools are NEVER speculatively executed:
-- `file.write`, `file.edit`, `shell.execute`, `git.commit`, `apply_patch`
-
-This ensures speculative execution is always safe — wrong predictions have zero side effects.
-
-## Pattern Tracking
-
-
-The `PatternTracker` records tool call sequences and identifies recurring patterns:
-
-```typescript
-import { PatternTracker } from '@commander/core';
-
-const tracker = new PatternTracker();
-
-// Record observed tool sequences
-tracker.recordSequence(['file.read', 'code.search', 'file.read']);
-
-// Predict next tool given partial sequence
-const predictions = tracker.predictNext(['file.read']);
-// → [{ toolName: 'code.search', confidence: 0.8 }]
-```
-
-### Pattern Lifecycle
-
-
-1. **Observation** — Tool call sequences are recorded as n-grams (2, 3, 4-grams)
-2. **Confidence building** — Each recurrence increases confidence: `min(1, frequency / 10)`
-3. **Pruning** — Low-confidence patterns (<2 occurrences) or stale patterns (>5 min unused) are pruned
-4. **Prediction** — Given a partial sequence, the tracker finds the most likely next tool
-
-## 구성
-
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `maxPatternLength` | `4` | Max n-gram length |
-| `maxTrackedPatterns` | `50` | Max patterns in memory |
-| `minConfidence` | `0.1` | Minimum confidence to predict |
-| `staleThresholdMs` | `300000` | Prune patterns older than 5 min |
-
-## Programmatic API
-
-
-```typescript
-import { SpeculativeExecutor, PatternTracker } from '@commander/core';
-
-const tracker = new PatternTracker();
-const executor = new SpeculativeExecutor({ tracker });
-
-// During LLM thinking time
-const predictions = tracker.predictNext(currentToolSequence);
-
-// Pre-execute predicted tools (read-only only)
-const preExecuted = await executor.speculate(predictions);
-
-// When the model actually calls a tool, check if we already have the result
-const cached = executor.getCachedResult('file.read', { path: 'src/index.ts' });
-if (cached) {
-  // Use cached result — zero wait
-  return cached;
-} else {
-  // Execute normally
-  return await executeTool('file.read', { path: 'src/index.ts' });
-}
-```
-
-## When Speculative Execution Helps Most
-
-
-| Scenario | Speedup | Why |
-|----------|---------|-----|
-| Multi-file analysis | High | `file.read` → `code.search` → `file.read` patterns are predictable |
-| Code review | Medium | `git.diff` → `file.read` → `code.search` sequences recur |
-| Debugging | Low-Medium | Tool sequences are less predictable |
-| Simple queries | None | Single tool call, no patterns to exploit |
-
-## Monitoring
-
-
-Speculative execution metrics are available via the metrics collector:
-
-```
-speculative_predictions_total        — Total predictions made
-speculative_correct_total            — Predictions that matched actual calls
-speculative_accuracy_ratio           — correct / predictions
-speculative_preexecuted_tools_total  — Tools pre-executed speculatively
-speculative_time_saved_ms            — Total wait time eliminated
-```
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

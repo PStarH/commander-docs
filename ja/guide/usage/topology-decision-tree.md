@@ -1,15 +1,10 @@
 # トポロジ決定木
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/usage/topology-decision-tree)
+Not sure which orchestration topology to use? Follow this decision tree. **When**: Simple, well-scoped tasks
 
+本ページは Commander における **トポロジ決定木** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-Not sure which orchestration topology to use? Follow this decision tree.
-
-## Quick Reference
-
-
-```
+```bash
 Is the task simple and well-defined?
 ├── YES → SINGLE
 └── NO  → Are subtasks independent?
@@ -18,56 +13,15 @@ Is the task simple and well-defined?
         ├── YES → CHAIN
         └── NO  → Is there a clear lead agent?
             ├── YES → ORCHESTRATOR
-            └── NO  → REVIEW
 ```
 
-## Topology Details
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-### SINGLE
+## 関連
 
-**When**: Simple, well-scoped tasks
-**Example**: "Explain this function", "Format this file"
-**Agents**: 1
-
-### CHAIN
-
-**When**: Multi-step transformations where each step depends on the previous
-**Example**: "Read the file → analyze the code → generate a report"
-**Agents**: 2–3
-
-### DISPATCH
-
-**When**: Independent subtasks that can run simultaneously
-**Example**: "Search for bugs in all modules at once"
-**Agents**: 2–10
-
-### ORCHESTRATOR
-
-**When**: Complex task with a clear decomposition path
-**Example**: A lead architect decomposes the work and delegates to specialists
-**Agents**: 3–8
-
-### REVIEW
-
-**When**: High-risk decisions requiring cross-validation, iterative refinement, or consensus
-**Example**: "Is this security vulnerability real or a false positive?"
-**Agents**: 2–5
-
-## Complexity-Based Selection
-
-
-Commander automatically selects the topology based on task complexity:
-
-| Score | Auto-Selected Topology |
-|:-----:|:----------------------:|
-| 0–20 | SINGLE |
-| 20–40 | CHAIN |
-| 40–60 | DISPATCH |
-| 60–80 | ORCHESTRATOR |
-| 80–100 | REVIEW |
-
-Override the automatic selection:
-```bash
-npx tsx packages/core/src/cliEntry.ts run "task" --topology review
-```
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

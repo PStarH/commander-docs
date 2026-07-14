@@ -1,15 +1,10 @@
-# カスタムプロバイダー
+# Custom Providers
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/advanced/custom-providers)
+Connect Commander to any LLM provider by implementing the `LLMProvider` interface. Commander supports automatic fallback between providers:
 
+本ページは Commander における **Custom Providers** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-Connect Commander to any LLM provider by implementing the `LLMProvider` interface.
-
-## Provider Interface
-
-
-```typescript
+```bash
 interface LLMProvider {
   readonly name: string;
   readonly model: string;
@@ -18,88 +13,15 @@ interface LLMProvider {
     messages: Message[],
     options: CallOptions
   ): Promise<LLMResponse>;
-
-  isAvailable(): boolean;
-}
 ```
 
-## Example: Custom Provider
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-```typescript
-import { BaseLLMProvider, Message, CallOptions, LLMResponse } from '@commander/core';
+## 関連
 
-class MyCustomProvider extends BaseLLMProvider {
-  readonly name = 'my-provider';
-  readonly model = 'my-model-v1';
-
-  async call(messages: Message[], options: CallOptions): Promise<LLMResponse> {
-    const response = await fetch('https://api.my-provider.com/v1/chat', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.MY_PROVIDER_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages,
-        max_tokens: options.maxTokens,
-        temperature: options.temperature ?? 0.7,
-      }),
-    });
-
-    const data = await response.json();
-
-    return {
-      content: data.choices[0].message.content,
-      usage: {
-        promptTokens: data.usage.prompt_tokens,
-        completionTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens,
-      },
-      model: this.model,
-    };
-  }
-
-  isAvailable(): boolean {
-    return !!process.env.MY_PROVIDER_KEY;
-  }
-}
-```
-
-## Registering a Provider
-
-
-```typescript
-import { CommanderRuntime } from '@commander/core';
-
-const runtime = new CommanderRuntime();
-runtime.registerProvider('my-provider', new MyCustomProvider());
-```
-
-## Provider Fallback Chain
-
-
-Commander supports automatic fallback between providers:
-
-```typescript
-runtime.setFallbackChain('my-provider', ['openai', 'anthropic']);
-```
-
-If the primary provider fails (rate limited, timeout, down), Commander automatically:
-1. Detects the failure
-2. Logs the error with full context
-3. Falls back to the next provider in the chain
-4. Retries with appropriate backoff
-
-## Provider Selection Strategy
-
-
-Commander selects providers based on:
-
-| Factor | Behavior |
-|--------|----------|
-| Task complexity | Harder tasks → stronger models |
-| Cost constraints | Simple tasks → cheaper providers |
-| Latency requirements | Time-sensitive → fast inference (Groq, Together) |
-| Availability | Fallback chain if primary unavailable |
-| Historical accuracy | MetaLearner tracks success rates |
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

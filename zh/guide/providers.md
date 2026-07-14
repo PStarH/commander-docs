@@ -1,67 +1,22 @@
 # 提供商
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/providers)
+Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider. Commander uses a `modelRouter.ts` to select the optimal provider based on:
 
-
-
-Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider.
-
-| Variable | Provider |
-|----------|----------|
-| `OPENAI_API_KEY` | OpenAI / DeepSeek / GLM / MiMo (fallback chain) |
-| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
-| `ANTHROPIC_API_KEY` | Anthropic Claude |
-| `GOOGLE_API_KEY` | Google Gemini |
-| `DEEPSEEK_API_KEY` | DeepSeek (dedicated) |
-| `ZHIPU_API_KEY` | GLM (Zhipu AI) |
-| `MIMO_API_KEY` | MiMo (dedicated) |
-| `XIAOMI_API_KEY` | Xiaomi MiMo |
-| `GROQ_API_KEY` | Groq (fast inference) |
-| `TOGETHER_API_KEY` | Together AI |
-| `PERPLEXITY_API_KEY` | Perplexity |
-| `FIREWORKS_API_KEY` | Fireworks AI |
-| `REPLICATE_API_TOKEN` | Replicate |
-| `MISTRAL_API_KEY` | Mistral AI |
-| `CO_API_KEY` | Cohere |
-| `OPENROUTER_API_KEY` | OpenRouter (200+ models) |
-| `OLLAMA_BASE_URL` / `OLLAMA_API_KEY` | Ollama (local) |
-| `VLLM_BASE_URL` / `VLLM_API_KEY` | vLLM (local) |
-| `AWS_ACCESS_KEY_ID` | AWS Bedrock |
-| `XAI_API_KEY` | xAI (Grok) |
-| `ANYSCALE_API_KEY` | Anyscale |
-| `DEEPINFRA_API_KEY` | DeepInfra |
-| `AGNES_API_KEY` | Agnes |
-| `STEPFUN_API_KEY` | StepFun |
-| `MINIMAX_API_KEY` | MiniMax |
-
-## Provider Selection
-
-
-Commander uses a `modelRouter.ts` to select the optimal provider based on:
-
-- **Task complexity** — harder tasks route to stronger models
-- **Cost constraints** — simpler tasks use cheaper providers
-- **Latency requirements** — time-sensitive tasks use faster inference (Groq, Together)
-- **Fallback chain** — if primary provider fails, Commander automatically falls back
+本文说明 **提供商** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
 ```bash
 # The simplest setup—just one key lets Commander auto-select
 export OPENAI_API_KEY=sk-...
 ```
 
-## 自定义提供商
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-Implement the `LLMProvider` interface and register it:
+## 相关
 
-```typescript
-import { BaseLLMProvider } from '@commander/core';
-
-class MyProvider extends BaseLLMProvider {
-  async call(messages, options) {
-    // Your implementation
-  }
-}
-
-runtime.registerProvider('my-provider', new MyProvider());
-```
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

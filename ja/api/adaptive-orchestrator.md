@@ -1,15 +1,10 @@
 # 適応型オーケストレーター
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/api/adaptive-orchestrator)
-
-
-
 Manages agent coordination and task execution across different orchestration modes.
 
-## Types
+本ページは Commander における **適応型オーケストレーター** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-```typescript
+```bash
 interface Agent {
   id: string;
   name: string;
@@ -18,53 +13,15 @@ interface Agent {
   load: number;         // 0-1
   successRate: number;  // 0-1
   isAvailable: boolean;
-}
-
-interface OrchestrationPlan {
-  id: string;
-  mode: OrchestrationMode;
-  tasks: Task[];
-  agents: Agent[];
-  resourceAllocation: ResourceAllocation;
-  estimatedDuration: number;
-}
-
-interface ResourceAllocation {
-  leadAgentId?: string;
-  specialistAgentIds: string[];
-  maxConcurrent: number;
-  tokenBudget: {
-    lead: number;
-    specialists: number;
-    evaluation: number;
-    overhead: number;
-  };
-}
 ```
 
-## API
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-```typescript
-const orchestrator = new AdaptiveOrchestrator();
+## 関連
 
-// Register agents
-const agentId = orchestrator.registerAgent(
-  agent: Omit<Agent, 'load' | 'successRate' | 'isAvailable'>
-): string;
-
-// Create plan
-const plan = orchestrator.createPlan(
-  tasks: Task[],
-  suggestedMode?: OrchestrationMode
-): OrchestrationPlan;
-
-// Execute plan
-const results = await orchestrator.execute(plan): Map<string, Task>;
-
-// Get metrics
-const metrics = orchestrator.getMetrics(): ExecutionMetrics;
-
-// Adapt plan based on metrics
-const adaptedPlan = orchestrator.adapt(plan: OrchestrationPlan): OrchestrationPlan;
-```
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

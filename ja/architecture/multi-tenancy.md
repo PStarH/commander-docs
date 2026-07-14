@@ -1,15 +1,10 @@
 # Multi-Tenant Architecture
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/multi-tenancy)
-
-
-
 Commander supports multi-tenant isolation at every layer.
 
-## Request Flow
+本ページは Commander における **Multi-Tenant Architecture** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-```
+```bash
 Request → HttpServer
            │
            ├─ authenticate()           ← Bearer token → tenant mapping
@@ -18,49 +13,15 @@ Request → HttpServer
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
-                                        │
-                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
-                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
-                                        │
-                                        └─ Tenant-scoped instances:
-                                            ├─ SamplesStore(path/tenant_{id}/)
-                                            ├─ TraceStore(path/tenant_{id}/)
-                                            ├─ StateCheckpointer(path/tenant_{id}/)
-                                            ├─ ThreeLayerMemory(per-instance)
-                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
 ```
 
-## Isolation Layers
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-| Layer | Mechanism |
-|-------|-----------|
-| Rate limits | Per-tenant: requests/minute |
-| Concurrency | Per-tenant: max concurrent runs |
-| Storage | Per-tenant directory paths |
-| Memory | Per-instance ThreeLayerMemory |
-| Cache | SHA-256 key includes tenantId |
-| Metrics | Every counter/gauge/histogram has `tenant` label |
+## 関連
 
-## プロバイダー
-
-
-| Provider | Behavior |
-|----------|----------|
-| `NullTenantProvider` | No isolation, backward compatible (single-tenant) |
-| `SimpleTenantProvider` | Static config map of tenant → config |
-
-## Tenant Config
-
-
-```typescript
-interface TenantConfig {
-  tenantId: string;
-  tokenBudget: number;
-  maxConcurrency: number;
-  maxRunsPerMinute: number;
-  enabled: boolean;
-  workspacePath?: string;
-}
-```
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

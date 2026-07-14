@@ -1,23 +1,8 @@
 # 플랜 모드
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/usage/plan-mode)
+Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes. - **Safety** — Review the full plan before any files are modified
 
-
-
-Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes.
-
-## Why Use Plan Mode
-
-
-- **Safety** — Review the full plan before any files are modified
-- **Learning** — Understand how Commander decomposes and approaches tasks
-- **Debugging** — See which topology, agents, and tools will be used
-- **Collaboration** — Share and iterate on the plan with team members
-
-## 사용법
-
-
-> From monorepo source; after build use `commander` instead of `npx tsx packages/core/src/cliEntry.ts`.
+이 문서는 Commander에서 **플랜 모드** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 # Set plan mode
@@ -30,30 +15,13 @@ npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
 
-## Plan Output
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-When you run a task in plan mode, Commander shows:
+## 관련
 
-```
-┃ → Deliberating task...
-┃ → Complexity: HIGH (score: 72/100)
-┃ → Topology: ORCHESTRATOR
-┃ → Agents: 4 (1 lead + 3 specialists)
-┃ → Provider: deepseek (fallback: openai → anthropic)
-┃ → Token budget: 100,000
-┃
-┃ → Subtasks:
-┃   1. Analyze existing database schema
-┃   2. Design migration plan
-┃   3. Implement changes (parallel: 2 agents)
-┃   4. Verify and test
-┃
-┃ → Estimated duration: 45s
-┃ → Total tools calls: ~12
-```
-
-## Visual Indicator
-
-
-The terminal shows a **plan mode indicator** in the lower-right corner when active, so you always know whether Commander is in plan or execution mode.
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

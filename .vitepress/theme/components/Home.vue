@@ -5,14 +5,15 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const { lang } = useData()
-const locale = computed<'en' | 'zh' | 'ja' | 'ko'>(() => {
+const locale = computed<'en' | 'zh' | 'ja' | 'ko' | 'es' | 'fr'>(() => {
   const l = lang.value || 'en'
   if (l.startsWith('zh')) return 'zh'
   if (l.startsWith('ja')) return 'ja'
   if (l.startsWith('ko')) return 'ko'
+  if (l.startsWith('es')) return 'es'
+  if (l.startsWith('fr')) return 'fr'
   return 'en'
 })
-const isZh = computed(() => locale.value === 'zh')
 const locPrefix = computed(() => (locale.value === 'en' ? '' : `/${locale.value}`))
 
 const featureIcons = {
@@ -68,6 +69,22 @@ const features = computed(() => {
       ['자가 최적화 런타임', 'Thompson Sampling + Reflexion. 5+ 경험 후 활성.'],
       ['프로덕션 인프라', '서킷 브레이커, DLQ, WAL, 시맨틱 캐시, Saga.'],
     ],
+    es: [
+      ['Streaming SSE en vivo', 'Pensamientos, tools y decisiones en tiempo real por SSE.'],
+      ['Topología automática', 'Clasifica CODING / RESEARCH / ANALYSIS / FACTUAL y elige entre 5 topologías.'],
+      ['25 proveedores + failover', 'Una API key. Auto-detección y bascula entre cloud y local.'],
+      ['Puertas de calidad', 'Cinco capas: alucinación, consistencia, completitud, exactitud, seguridad.'],
+      ['Runtime auto-optimizado', 'Thompson Sampling + Reflexion. Activo tras 5+ experiencias.'],
+      ['Infra de producción', 'Circuit breakers, DLQ, WAL, caché semántica, saga.'],
+    ],
+    fr: [
+      ['Streaming SSE live', 'Pensées, tools et décisions en temps réel via SSE.'],
+      ['Topologie automatique', 'Classe CODING / RESEARCH / ANALYSIS / FACTUAL et choisit parmi 5 topologies.'],
+      ['25 fournisseurs + failover', 'Une clé API. Auto-détection et bascule cloud / local.'],
+      ['Portes de qualité', 'Cinq couches : hallucination, cohérence, complétude, exactitude, sécurité.'],
+      ['Runtime auto-optimisé', 'Thompson Sampling + Reflexion. Actif après 5+ expériences.'],
+      ['Infra de production', 'Circuit breakers, DLQ, WAL, cache sémantique, saga.'],
+    ],
   }[locale.value]
 
   return base.map((b, i) => ({
@@ -83,6 +100,8 @@ const stats = computed(() => {
     zh: ['LLM 提供商', '规范拓扑', '内置工具', '测试'],
     ja: ['LLM プロバイダー', '正規トポロジ', '組み込みツール', 'テスト'],
     ko: ['LLM 프로바이더', '정규 토폴로지', '내장 도구', '테스트'],
+    es: ['Proveedores LLM', 'Topologías canónicas', 'Tools integradas', 'Tests'],
+    fr: ['Fournisseurs LLM', 'Topologies canoniques', 'Tools intégrés', 'Tests'],
   }[locale.value]
   return [
     { value: '25', label: labels[0] },
@@ -92,83 +111,119 @@ const stats = computed(() => {
   ]
 })
 
-const whyCards = computed(() =>
-  locale.value === 'zh'
-    ? [
-        {
-          title: '你是工程师，不是乘客',
-          desc: '其它框架把代理图藏在 YAML 后面。Commander 流式输出思考、工具与质量门，让你能调试并信任结果。',
-        },
-        {
-          title: '不画图。不写 YAML。',
-          desc: '自然语言描述任务。审议引擎分类、选拓扑，代理 1–20 按需扩展。简单任务保持简单。',
-        },
-        {
-          title: '生产原语，不是演示玩具',
-          desc: '熔断、DLQ、Saga 补偿、WAL 检查点、语义缓存、多租户 — 与分布式系统同一套纪律。',
-        },
-        {
-          title: '一把 Key，二十五家提供商',
-          desc: '任意 Key 即可。云端与本地（Ollama、vLLM）自动发现与故障转移，换提供商不必重写流程。',
-        },
-      ]
-    : locale.value === 'ja'
-      ? [
-          {
-            title: 'あなたは乗客ではなくエンジニア',
-            desc: '他フレームワークは YAML の裏にグラフを隠します。Commander は思考・ツール・品質ゲートをストリームし、信頼できる実行を可能にします。',
-          },
-          {
-            title: 'グラフビルダーなし。YAML なし。',
-            desc: '自然言語でタスクを記述。審議が分類しトポロジを選び、エージェント 1–20 をスケール。',
-          },
-          {
-            title: '本番プリミティブ',
-            desc: 'サーキットブレーカー、DLQ、Saga、WAL、セマンティックキャッシュ、マルチテナント。',
-          },
-          {
-            title: 'キー 1 つ、25 プロバイダー',
-            desc: '任意の API キー。クラウドとローカル (Ollama / vLLM) の自動検出とフェイルオーバー。',
-          },
-        ]
-      : locale.value === 'ko'
-        ? [
-            {
-              title: '승객이 아니라 엔지니어',
-              desc: '다른 프레임워크는 YAML 뒤에 그래프를 숨깁니다. Commander는 사고·도구·품질 게이트를 스트림합니다.',
-            },
-            {
-              title: '그래프 빌더 없음. YAML 없음.',
-              desc: '자연어로 작업 설명. 심의가 분류하고 토폴로지를 고르며 에이전트 1–20을 확장합니다.',
-            },
-            {
-              title: '프로덕션 프리미티브',
-              desc: '서킷 브레이커, DLQ, Saga, WAL, 시맨틱 캐시, 멀티 테넌시.',
-            },
-            {
-              title: '키 하나, 25 프로바이더',
-              desc: '아무 API 키나. 클라우드와 로컬(Ollama/vLLM) 자동 감지와 페일오버.',
-            },
-          ]
-        : [
-            {
-              title: 'You are the engineer, not a passenger',
-              desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
-            },
-            {
-              title: 'No graph builders. No YAML.',
-              desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
-            },
-            {
-              title: 'Production primitives, not demos',
-              desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
-            },
-            {
-              title: 'One key, twenty-five providers',
-              desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
-            },
-          ],
-)
+const whyCards = computed(() => {
+  const packs: Record<string, { title: string; desc: string }[]> = {
+    en: [
+      {
+        title: 'You are the engineer, not a passenger',
+        desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
+      },
+      {
+        title: 'No graph builders. No YAML.',
+        desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
+      },
+      {
+        title: 'Production primitives, not demos',
+        desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
+      },
+      {
+        title: 'One key, twenty-five providers',
+        desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
+      },
+    ],
+    zh: [
+      {
+        title: '你是工程师，不是乘客',
+        desc: '其它框架把代理图藏在 YAML 后面。Commander 流式输出思考、工具与质量门，让你能调试并信任结果。',
+      },
+      {
+        title: '不画图。不写 YAML。',
+        desc: '自然语言描述任务。审议引擎分类、选拓扑，代理 1–20 按需扩展。简单任务保持简单。',
+      },
+      {
+        title: '生产原语，不是演示玩具',
+        desc: '熔断、DLQ、Saga 补偿、WAL 检查点、语义缓存、多租户 — 与分布式系统同一套纪律。',
+      },
+      {
+        title: '一把 Key，二十五家提供商',
+        desc: '任意 Key 即可。云端与本地（Ollama、vLLM）自动发现与故障转移，换提供商不必重写流程。',
+      },
+    ],
+    ja: [
+      {
+        title: 'あなたは乗客ではなくエンジニア',
+        desc: '他フレームワークは YAML の裏にグラフを隠します。Commander は思考・ツール・品質ゲートをストリームし、信頼できる実行を可能にします。',
+      },
+      {
+        title: 'グラフビルダーなし。YAML なし。',
+        desc: '自然言語でタスクを記述。審議が分類しトポロジを選び、エージェント 1–20 をスケール。',
+      },
+      {
+        title: '本番プリミティブ',
+        desc: 'サーキットブレーカー、DLQ、Saga、WAL、セマンティックキャッシュ、マルチテナント。',
+      },
+      {
+        title: 'キー 1 つ、25 プロバイダー',
+        desc: '任意の API キー。クラウドとローカル (Ollama / vLLM) の自動検出とフェイルオーバー。',
+      },
+    ],
+    ko: [
+      {
+        title: '승객이 아니라 엔지니어',
+        desc: '다른 프레임워크는 YAML 뒤에 그래프를 숨깁니다. Commander는 사고·도구·품질 게이트를 스트림합니다.',
+      },
+      {
+        title: '그래프 빌더 없음. YAML 없음.',
+        desc: '자연어로 작업 설명. 심의가 분류하고 토폴로지를 고르며 에이전트 1–20을 확장합니다.',
+      },
+      {
+        title: '프로덕션 프리미티브',
+        desc: '서킷 브레이커, DLQ, Saga, WAL, 시맨틱 캐시, 멀티 테넌시.',
+      },
+      {
+        title: '키 하나, 25 프로바이더',
+        desc: '아무 API 키나. 클라우드와 로컬(Ollama/vLLM) 자동 감지와 페일오버.',
+      },
+    ],
+    es: [
+      {
+        title: 'Eres ingeniero, no pasajero',
+        desc: 'Otros frameworks esconden grafos detrás de YAML. Commander transmite pensamientos, tools y puertas de calidad para que puedas depurar y confiar.',
+      },
+      {
+        title: 'Sin constructores de grafos. Sin YAML.',
+        desc: 'Describe la tarea en lenguaje natural. La deliberación clasifica, elige topología y escala agentes 1–20.',
+      },
+      {
+        title: 'Primitivas de producción',
+        desc: 'Circuit breakers, DLQ, saga, WAL, caché semántica, multi-tenant — la misma disciplina que un sistema distribuido.',
+      },
+      {
+        title: 'Una key, veinticinco proveedores',
+        desc: 'Cualquier API key. Auto-detección y failover entre cloud y local (Ollama, vLLM).',
+      },
+    ],
+    fr: [
+      {
+        title: 'Vous êtes ingénieur, pas passager',
+        desc: 'D’autres frameworks cachent les graphes derrière du YAML. Commander streame pensées, tools et portes de qualité pour déboguer et faire confiance.',
+      },
+      {
+        title: 'Pas de constructeur de graphes. Pas de YAML.',
+        desc: 'Décrivez la tâche en langage naturel. La délibération classe, choisit la topologie et scale les agents 1–20.',
+      },
+      {
+        title: 'Primitives de production',
+        desc: 'Circuit breakers, DLQ, saga, WAL, cache sémantique, multi-tenant — la même discipline qu’un système distribué.',
+      },
+      {
+        title: 'Une clé, vingt-cinq fournisseurs',
+        desc: 'N’importe quelle clé API. Auto-détection et bascule cloud / local (Ollama, vLLM).',
+      },
+    ],
+  }
+  return packs[locale.value]
+})
 
 const quickLinks = computed(() => {
   const pre = locPrefix.value
@@ -177,6 +232,8 @@ const quickLinks = computed(() => {
     zh: ['快速开始', '为什么选它', '实战手册'],
     ja: ['クイックスタート', 'なぜ Commander', 'クックブック'],
     ko: ['빠른 시작', '왜 Commander', '쿡북'],
+    es: ['Empezar', 'Por qué Commander', 'Cookbook'],
+    fr: ['Démarrer', 'Pourquoi Commander', 'Cookbook'],
   }[locale.value]
   return [
     { text: labels[0], to: `${pre}/guide/getting-started`, theme: 'brand' },
@@ -338,6 +395,76 @@ const t = computed(() => {
       ctaInstall: '설치',
       ctaStar: 'GitHub에서 Star',
       more: '더 보기 →',
+    },
+    es: {
+      badge: 'v0.2 · Pre-producción',
+      h1a: 'Orquestación multi-agente,',
+      h1b: 'hecha para producción.',
+      sub: 'Una API key. Commander clasifica la tarea, elige la topología y transmite cada decisión al terminal. Sin cajas negras. 6700+ tests, sin grafos ni YAML.',
+      demoTitle: 'Mira cada decisión',
+      demoDesc:
+        'Deliberación, topología, tools y puertas de calidad en vivo. Copia, configura una key y observa a los agentes.',
+      checklist: 'Lista de 5 minutos',
+      cookbook: 'Recetas del cookbook',
+      featuresTitle: 'Qué hace Commander',
+      featuresSub: 'Seis capacidades núcleo con infraestructura de producción y CI.',
+      whyTitle: 'Por qué Commander',
+      whySub: 'Para ingenieros que quieren ver qué hace su IA de verdad.',
+      pathsTitle: 'Empieza donde estés',
+      pathsSub: 'Tres caminos al mismo motor.',
+      path1k: '01 · CLI',
+      path1t: 'Desde el terminal',
+      path1d: 'Clona, configura una key, stream en menos de dos minutos.',
+      path1a: 'Inicio rápido →',
+      path2k: '02 · Consola',
+      path2t: 'Abre la consola web',
+      path2d: 'chat, topología, DLQ, gobernanza.',
+      path2a: 'Consola web →',
+      path3k: '03 · SDK',
+      path3t: 'Integra en TypeScript',
+      path3d: 'eventos, memoria y modo plan.',
+      path3a: 'Agent SDK →',
+      ctaTitle: '¿Listo para orquestar?',
+      ctaSub: 'Un comando, 25 proveedores, cada decisión visible.',
+      ctaStart: 'Empezar',
+      ctaInstall: 'Instalar',
+      ctaStar: 'Star en GitHub',
+      more: 'Leer más →',
+    },
+    fr: {
+      badge: 'v0.2 · Pré-production',
+      h1a: 'Orchestration multi-agents,',
+      h1b: 'faite pour la production.',
+      sub: 'Une clé API. Commander classe la tâche, choisit la topologie et streame chaque décision dans le terminal. Pas de boîte noire. 6700+ tests, sans graphes ni YAML.',
+      demoTitle: 'Voyez chaque décision',
+      demoDesc:
+        'Délibération, topologie, tools et portes de qualité en live. Copiez, définissez une clé, observez les agents.',
+      checklist: 'Checklist 5 minutes',
+      cookbook: 'Recettes cookbook',
+      featuresTitle: 'Ce que fait Commander',
+      featuresSub: 'Six capacités cœur, infra de production et CI.',
+      whyTitle: 'Pourquoi Commander',
+      whySub: 'Pour les ingénieurs qui veulent voir ce que fait vraiment leur IA.',
+      pathsTitle: 'Commencez où vous êtes',
+      pathsSub: 'Trois chemins vers le même moteur.',
+      path1k: '01 · CLI',
+      path1t: 'Depuis le terminal',
+      path1d: 'Clonez, définissez une clé, streamez en moins de deux minutes.',
+      path1a: 'Démarrage rapide →',
+      path2k: '02 · Console',
+      path2t: 'Ouvrir la console web',
+      path2d: 'chat, topologie, DLQ, gouvernance.',
+      path2a: 'Console web →',
+      path3k: '03 · SDK',
+      path3t: 'Intégrer en TypeScript',
+      path3d: 'événements, mémoire et mode plan.',
+      path3a: 'Agent SDK →',
+      ctaTitle: 'Prêt à orchestrer ?',
+      ctaSub: 'Une commande, 25 fournisseurs, chaque décision visible.',
+      ctaStart: 'Démarrer',
+      ctaInstall: 'Installer',
+      ctaStar: 'Star sur GitHub',
+      more: 'Lire la suite →',
     },
   }[locale.value]
 

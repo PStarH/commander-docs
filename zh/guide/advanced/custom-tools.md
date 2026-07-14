@@ -1,15 +1,10 @@
-# 自定义工具
+# Custom Tools
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/advanced/custom-tools)
+Extend Commander with your own tools by implementing the `Tool` interface. Every registered tool automatically gets:
 
+本文说明 **Custom Tools** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-Extend Commander with your own tools by implementing the `Tool` interface.
-
-## Tool Interface
-
-
-```typescript
+```bash
 interface Tool {
   name: string;
   description: string;
@@ -19,78 +14,14 @@ interface Tool {
 }
 ```
 
-## Example: Webhook Tool
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-import { Tool, ToolContext } from '@commander/core';
+## 相关
 
-interface WebhookArgs {
-  url: string;
-  payload: Record<string, any>;
-}
-
-class WebhookTool implements Tool {
-  name = 'webhook';
-  description = 'Send data to a webhook URL';
-
-  parameters = {
-    url: { type: 'string', required: true, description: 'Webhook URL' },
-    payload: { type: 'object', required: true, description: 'JSON payload' },
-  };
-
-  async execute(context: ToolContext, args: WebhookArgs): Promise<ToolResult> {
-    try {
-      const response = await fetch(args.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(args.payload),
-      });
-
-      return {
-        success: response.ok,
-        data: await response.text(),
-        error: response.ok ? undefined : `HTTP ${response.status}`,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  }
-}
-```
-
-## Registering a Tool
-
-
-```typescript
-import { CommanderRuntime } from '@commander/core';
-
-const runtime = new CommanderRuntime();
-runtime.registerTool('webhook', new WebhookTool());
-```
-
-## Tool Features
-
-
-Every registered tool automatically gets:
-
-- **SHA-256 caching** — Results are cached per-tenant, per-argument hash
-- **Compensation registry** — Register a rollback action for mutations
-- **Circuit breaker** — Protects downstream services from overload
-- **Step error boundary** — Isolated failure handling (skip/retry/abort)
-
-## Loading Tools from Files
-
-
-```json
-// .commander.json
-{
-  "customTools": [
-    "./tools/webhook-tool.ts",
-    "./tools/database-tool.ts"
-  ]
-}
-```
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

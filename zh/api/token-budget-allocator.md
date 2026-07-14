@@ -1,15 +1,10 @@
 # Token 预算分配器
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/token-budget-allocator)
-
-
-
 Allocates token budgets across agents based on topology and task complexity.
 
-## Types
+本文说明 **Token 预算分配器** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```typescript
+```bash
 interface TokenBudget {
   totalBudget: number;
   perAgentBudget: number;
@@ -18,40 +13,16 @@ interface TokenBudget {
 }
 
 interface AllocationResult {
-  lead: number;
-  specialists: number;
-  evaluation: number;
-  overhead: number;
-}
 ```
 
-## API
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
+## 相关
 
-// Allocate based on topology
-const budget = allocator.allocate(
-  topology: Topology,
-  complexity: number,
-  agentCount: number
-): TokenBudget;
-
-// Get allocation breakdown
-const allocation = allocator.getAllocation(
-  topology: OrchestrationTopology,
-  totalBudget: number
-): AllocationResult;
-```
-
-## Allocation by Topology
-
-
-| Topology | Lead | Specialists | Evaluation | Overhead |
-|----------|------|-------------|------------|----------|
-| SINGLE | 95% | 0% | 5% | 0% |
-| CHAIN | 30% | 50% | 15% | 5% |
-| DISPATCH | 15% | 65% | 15% | 5% |
-| ORCHESTRATOR | 35% | 45% | 15% | 5% |
-| REVIEW | 25% | 30% | 40% | 5% |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

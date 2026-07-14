@@ -1,15 +1,10 @@
-# 缓存
+# Caching
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/architecture/caching)
+Commander implements a multi-level caching layer to reduce LLM calls, improve response times, and prevent redundant computation. Each cache is per-tenant isolated. An exact-match cache keyed by SHA-256 hash of `(tenantId + tool + args)`:
 
+本文说明 **Caching** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-Commander implements a multi-level caching layer to reduce LLM calls, improve response times, and prevent redundant computation. Each cache is per-tenant isolated.
-
-## Cache Layers
-
-
-```
+```bash
 Tool Call
   │
   ├─ SingleFlightRequestCache  ── Deduplicates concurrent identical requests
@@ -18,78 +13,16 @@ Tool Call
   ├─ ToolResultCache           ── SHA-256 exact-match cache
   │   (Deterministic tools: read file, search code, etc.)
   │
-  └─ SemanticCache             ── Similarity-based semantic cache
-      (Non-deterministic LLM calls with similar meaning)
 ```
 
-## ToolResultCache
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-An exact-match cache keyed by SHA-256 hash of `(tenantId + tool + args)`:
+## 相关
 
-```typescript
-const cache = new ToolResultCache({ basePath: '/data/cache' });
-
-const key = cache.hashKey(tenantId, toolName, args);
-const cached = await cache.get(key);
-
-if (cached) return cached;
-
-const result = await executeTool(toolName, args);
-await cache.set(key, result);
-```
-
-- Perfect for deterministic tools: file reads, code search, grep operations
-- Per-tenant key isolation prevents cross-tenant data leaks
-- Cache entries have configurable TTLs
-- LRU eviction when storage exceeds quota
-
-## SemanticCache
-
-
-For non-deterministic operations (LLM calls), Commander uses embedding-based similarity:
-
-```typescript
-const semanticCache = new SemanticCache({ similarityThreshold: 0.95 });
-
-// Before LLM call
-const similar = await semanticCache.find(input, tenantId);
-if (similar) return similar.result;
-
-// After LLM call
-await semanticCache.store(input, result, tenantId);
-```
-
-- Embedding vectors are compared using cosine similarity
-- Configurable threshold: higher = fewer false positives, lower = more cache hits
-- Eviction policy: TTL + LRU combination
-
-## SingleFlightRequestCache
-
-
-Prevents duplicate concurrent execution of identical requests (the "thundering herd" problem):
-
-```typescript
-const singleFlight = new SingleFlightRequestCache();
-
-// Three concurrent calls with the same key:
-const [a, b, c] = await Promise.all([
-  singleFlight.execute('key-1', () => expensiveOperation()),
-  singleFlight.execute('key-1', () => expensiveOperation()),
-  singleFlight.execute('key-1', () => expensiveOperation()),
-]);
-
-// Only ONE expensiveOperation runs, all three get the same result
-```
-
-This is particularly valuable when multiple agents or runs start simultaneously and request the same tool execution or LLM call.
-
-## Integration
-
-
-The caches are layered in the tool execution pipeline:
-
-1. **SingleFlight** deduplicates in-flight requests
-2. **ToolResultCache** serves cached exact-match results
-3. **SemanticCache** serves cached similar-meaning results
-4. Only after all caches miss does the actual LLM call or tool execution proceed
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

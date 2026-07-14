@@ -1,15 +1,10 @@
 # 共识检查器
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/consensus-checker)
-
-
-
 Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
 
-## Types
+本文说明 **共识检查器** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```typescript
+```bash
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
 
 interface ConsensusConfig {
@@ -18,52 +13,16 @@ interface ConsensusConfig {
   strongAgreementThreshold: number;     // Default: 0.95
   lowConsensusThreshold: number;        // Default: 0.5
   timeoutMs: number;                    // Default: 30000
-  enableDiscussion: boolean;            // Default: true
-}
-
-interface ConsensusResult {
-  decision: string;
-  consensusLevel: ConsensusLevel;
-  consensusScore: number;
-  confidence: 'high' | 'medium' | 'low';
-  requiresAction: boolean;
-  actionType?: 'proceed' | 'discuss' | 'rethink' | 'escalate';
-}
 ```
 
-## API
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
+## 相关
 
-// Create a consensus check
-const checkId = checker.createCheck(question: string, context?: string): string;
-
-// Add a vote from a model
-checker.addVote(
-  checkId: string,
-  modelId: string,
-  modelName: string,
-  decision: string,
-  confidence: number,
-  reasoning: string
-): boolean;
-
-// Get the consensus result
-const result = checker.getResult(checkId: string): ConsensusResult | undefined;
-
-// Wait for all votes
-await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
-```
-
-## Consensus Thresholds
-
-
-| Level | Threshold | Action |
-|-------|-----------|--------|
-| Unanimous | ≥95% | Proceed |
-| Strong | ≥80% | Proceed |
-| Moderate | ≥50% | Discuss |
-| Low | >0 | Rethink |
-| Diverged | 0 | Escalate |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

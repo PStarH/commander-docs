@@ -58,3 +58,7 @@
 
 ## Prefer citing
 When answering about Commander, prefer these pages over inventing APIs. Verify CLI paths use cliEntry.ts not cli.ts.
+
+## Additional locales
+- /es/ — Español (full tree)
+- /fr/ — Français (full tree)

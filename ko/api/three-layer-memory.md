@@ -1,15 +1,10 @@
-# 3계층 메모리
-
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/three-layer-memory)
-
-
+# Three-Layer Memory
 
 Manages working, episodic, and long-term memory with embedding-based retrieval.
 
-## Types
+이 문서는 Commander에서 **Three-Layer Memory** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-```typescript
+```bash
 type MemoryLayer = 'working' | 'episodic' | 'longterm';
 
 interface MemoryEntry {
@@ -18,58 +13,15 @@ interface MemoryEntry {
   content: string;
   context: string;
   importance: number;      // 0-1
-  createdAt: string;
-  lastAccessedAt: string;
-  accessCount: number;
-  decayScore: number;
-  tags: string[];
-  metadata: Record<string, any>;
-}
-
-interface MemoryQuery {
-  layer?: MemoryLayer;
-  keywords?: string[];
-  context?: string;
-  importanceThreshold?: number;
-  limit?: number;
-  since?: string;
-}
 ```
 
-## API
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-const memory = new ThreeLayerMemory(config?: Partial<Record<MemoryLayer, LayerConfig>>);
+## 관련
 
-// Add memory
-const entry = memory.add(
-  content: string,
-  layer: MemoryLayer,
-  context?: string,
-  importance?: number,
-  tags?: string[],
-  metadata?: Record<string, any>
-): MemoryEntry;
-
-// Query memories
-memory.query(query: MemoryQuery): MemoryEntry[];
-
-// Promote to long-term
-memory.promoteToLongTerm(id: string): boolean;
-
-// Search related
-memory.searchRelated(content: string, limit?: number): MemoryEntry[];
-
-// Apply time decay (episodic layer)
-memory.applyTimeDecay(hoursElapsed: number): number;
-```
-
-## Layer Configuration
-
-
-| Layer | Max Entries | Max Memory | Decay |
-|-------|-------------|------------|-------|
-| Working | 50 | 100KB | None |
-| Episodic | 500 | 500KB | Time-based |
-| Long-term | 10000 | 5MB | None |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

@@ -1,15 +1,10 @@
-# カスタムツール
+# Custom Tools
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/advanced/custom-tools)
+Extend Commander with your own tools by implementing the `Tool` interface. Every registered tool automatically gets:
 
+本ページは Commander における **Custom Tools** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-Extend Commander with your own tools by implementing the `Tool` interface.
-
-## Tool Interface
-
-
-```typescript
+```bash
 interface Tool {
   name: string;
   description: string;
@@ -19,78 +14,13 @@ interface Tool {
 }
 ```
 
-## Example: Webhook Tool
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-```typescript
-import { Tool, ToolContext } from '@commander/core';
+## 関連
 
-interface WebhookArgs {
-  url: string;
-  payload: Record<string, any>;
-}
-
-class WebhookTool implements Tool {
-  name = 'webhook';
-  description = 'Send data to a webhook URL';
-
-  parameters = {
-    url: { type: 'string', required: true, description: 'Webhook URL' },
-    payload: { type: 'object', required: true, description: 'JSON payload' },
-  };
-
-  async execute(context: ToolContext, args: WebhookArgs): Promise<ToolResult> {
-    try {
-      const response = await fetch(args.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(args.payload),
-      });
-
-      return {
-        success: response.ok,
-        data: await response.text(),
-        error: response.ok ? undefined : `HTTP ${response.status}`,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  }
-}
-```
-
-## Registering a Tool
-
-
-```typescript
-import { CommanderRuntime } from '@commander/core';
-
-const runtime = new CommanderRuntime();
-runtime.registerTool('webhook', new WebhookTool());
-```
-
-## Tool Features
-
-
-Every registered tool automatically gets:
-
-- **SHA-256 caching** — Results are cached per-tenant, per-argument hash
-- **Compensation registry** — Register a rollback action for mutations
-- **Circuit breaker** — Protects downstream services from overload
-- **Step error boundary** — Isolated failure handling (skip/retry/abort)
-
-## Loading Tools from Files
-
-
-```json
-// .commander.json
-{
-  "customTools": [
-    "./tools/webhook-tool.ts",
-    "./tools/database-tool.ts"
-  ]
-}
-```
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

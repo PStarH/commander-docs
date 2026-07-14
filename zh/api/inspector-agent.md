@@ -1,15 +1,10 @@
 # 巡检代理
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/inspector-agent)
-
-
-
 System health monitoring and issue detection across all Commander components.
 
-## Types
+本文说明 **巡检代理** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```typescript
+```bash
 type IssueSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 type IssueCategory = 'performance' | 'reliability' | 'security' | 'memory' | 'coordination' | 'configuration';
 
@@ -18,66 +13,16 @@ interface Issue {
   category: IssueCategory;
   severity: IssueSeverity;
   title: string;
-  description: string;
-  status: 'open' | 'acknowledged' | 'resolved' | 'ignored';
-  suggestions: string[];
-}
-
-interface InspectionReport {
-  id: string;
-  timestamp: string;
-  overallHealth: number;
-  overallStatus: 'healthy' | 'degraded' | 'unhealthy';
-  components: ComponentHealth[];
-  openIssues: Issue[];
-  recommendations: string[];
-}
 ```
 
-## API
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-const inspector = new InspectorAgent();
+## 相关
 
-// Update component health status
-inspector.updateComponent(
-  name: string,
-  status: 'healthy' | 'degraded' | 'unhealthy',
-  score: number,
-  metrics?: Record<string, number>
-): void;
-
-// Detect an issue
-const issue = inspector.detectIssue(
-  category: IssueCategory,
-  severity: IssueSeverity,
-  title: string,
-  description: string,
-  suggestions?: string[]
-): Issue;
-
-// Auto-detect issues from metrics
-inspector.autoDetect(componentName: string, metrics: Record<string, number>): Issue[];
-
-// Run full inspection
-inspector.inspect(): InspectionReport;
-
-// Get health trend
-inspector.getHealthTrend(): {
-  trend: 'improving' | 'declining' | 'stable';
-  change: number;
-  history: Array<{ timestamp: string; health: number }>;
-};
-```
-
-## Auto-Detection Thresholds
-
-
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| Response Time | >1000ms | >5000ms |
-| Error Rate | >5% | >20% |
-| Memory Usage | >90% | >95% |
-| Queue Depth | >100 | >500 |
-| Success Rate | <80% | <50% |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

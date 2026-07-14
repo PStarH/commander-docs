@@ -1,15 +1,10 @@
 # Multi-Tenant Architecture
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/architecture/multi-tenancy)
-
-
-
 Commander supports multi-tenant isolation at every layer.
 
-## Request Flow
+本文说明 **Multi-Tenant Architecture** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```
+```bash
 Request → HttpServer
            │
            ├─ authenticate()           ← Bearer token → tenant mapping
@@ -18,49 +13,16 @@ Request → HttpServer
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
-                                        │
-                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
-                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
-                                        │
-                                        └─ Tenant-scoped instances:
-                                            ├─ SamplesStore(path/tenant_{id}/)
-                                            ├─ TraceStore(path/tenant_{id}/)
-                                            ├─ StateCheckpointer(path/tenant_{id}/)
-                                            ├─ ThreeLayerMemory(per-instance)
-                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
 ```
 
-## Isolation Layers
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-| Layer | Mechanism |
-|-------|-----------|
-| Rate limits | Per-tenant: requests/minute |
-| Concurrency | Per-tenant: max concurrent runs |
-| Storage | Per-tenant directory paths |
-| Memory | Per-instance ThreeLayerMemory |
-| Cache | SHA-256 key includes tenantId |
-| Metrics | Every counter/gauge/histogram has `tenant` label |
+## 相关
 
-## 提供商
-
-
-| Provider | Behavior |
-|----------|----------|
-| `NullTenantProvider` | No isolation, backward compatible (single-tenant) |
-| `SimpleTenantProvider` | Static config map of tenant → config |
-
-## Tenant Config
-
-
-```typescript
-interface TenantConfig {
-  tenantId: string;
-  tokenBudget: number;
-  maxConcurrency: number;
-  maxRunsPerMinute: number;
-  enabled: boolean;
-  workspacePath?: string;
-}
-```
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

@@ -1,99 +1,20 @@
 # タスク実行
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/usage/running-tasks)
+Commander offers multiple ways to execute tasks depending on your needs. For simple requests where you want an immediate answer:
 
-
-
-Commander offers multiple ways to execute tasks depending on your needs.
-
-> **CLI from source** (monorepo): `npx tsx packages/core/src/cliEntry.ts …`  
-> **After build**: `commander …`  
-> All examples below use the monorepo form.
-
-## Quick Task
-
-
-For simple requests where you want an immediate answer:
+本ページは Commander における **タスク実行** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts "what does this function do?"
 ```
 
-Commander analyzes the task, selects the optimal topology, executes, and returns the result — all in one step.
+## 要点
 
-## Full Execution Pipeline
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
+## 関連
 
-For complex multi-step tasks:
-
-```bash
-npx tsx packages/core/src/cliEntry.ts run "implement user authentication with JWT"
-```
-
-The `run` command activates the full pipeline:
-1. **Deliberation** — analyze task complexity and dependencies
-2. **Effort scaling** — determine how many agents to allocate
-3. **Topology routing** — select the optimal execution pattern
-4. **Atomization** — decompose into subtasks
-5. **Execution** — multi-agent orchestration with tool calls
-6. **Verification** — 5 quality gates (hallucination, consistency, completeness, accuracy, safety)
-
-## プランモード
-
-
-Preview the execution plan before any changes are made:
-
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module"
-```
-
-Plan mode shows:
-- Task complexity score and level
-- Selected topology
-- Number of agents and their roles
-- Provider selection and fallback chain
-- Estimated token budget
-
-## Watch Mode (SSE)
-
-
-Execute with real-time streaming events:
-
-```bash
-npx tsx packages/core/src/cliEntry.ts watch "debug the failing test"
-```
-
-Watch mode streams every event via SSE:
-- Agent deliberation steps
-- Tool calls and results  
-- Verification checkpoints
-- Token usage in real-time
-
-## Batch Processing
-
-
-```bash
-# Process multiple tasks from a file
-npx tsx packages/core/src/cliEntry.ts run --file tasks.json
-
-# Format:
-# [{"task": "analyze module A"}, {"task": "test module B"}]
-```
-
-## Approval Modes
-
-
-| Mode | Behavior | Use Case |
-|------|----------|----------|
-| `plan` | Show plan only | Review before execution |
-| `read-only` | Read files only | Code review, analysis |
-| `auto-edit` | Auto-approve edits | Development workflow |
-| `full-auto` | Fully autonomous | CI/CD, batch processing |
-| `suggest` | Suggest, wait for approval | Learning, tutorials |
-
-Set the mode via:
-```bash
-export COMMANDER_MODE=auto-edit
-# Or at runtime:
-npx tsx packages/core/src/cliEntry.ts mode auto-edit
-```
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

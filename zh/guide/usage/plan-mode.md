@@ -1,23 +1,8 @@
 # 计划模式
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/usage/plan-mode)
+Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes. - **Safety** — Review the full plan before any files are modified
 
-
-
-Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes.
-
-## Why Use Plan Mode
-
-
-- **Safety** — Review the full plan before any files are modified
-- **Learning** — Understand how Commander decomposes and approaches tasks
-- **Debugging** — See which topology, agents, and tools will be used
-- **Collaboration** — Share and iterate on the plan with team members
-
-## 用法
-
-
-> From monorepo source; after build use `commander` instead of `npx tsx packages/core/src/cliEntry.ts`.
+本文说明 **计划模式** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
 ```bash
 # Set plan mode
@@ -30,30 +15,14 @@ npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
 
-## Plan Output
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-When you run a task in plan mode, Commander shows:
+## 相关
 
-```
-┃ → Deliberating task...
-┃ → Complexity: HIGH (score: 72/100)
-┃ → Topology: ORCHESTRATOR
-┃ → Agents: 4 (1 lead + 3 specialists)
-┃ → Provider: deepseek (fallback: openai → anthropic)
-┃ → Token budget: 100,000
-┃
-┃ → Subtasks:
-┃   1. Analyze existing database schema
-┃   2. Design migration plan
-┃   3. Implement changes (parallel: 2 agents)
-┃   4. Verify and test
-┃
-┃ → Estimated duration: 45s
-┃ → Total tools calls: ~12
-```
-
-## Visual Indicator
-
-
-The terminal shows a **plan mode indicator** in the lower-right corner when active, so you always know whether Commander is in plan or execution mode.
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

@@ -1,15 +1,10 @@
 # 三层记忆
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/three-layer-memory)
-
-
-
 Manages working, episodic, and long-term memory with embedding-based retrieval.
 
-## Types
+本文说明 **三层记忆** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```typescript
+```bash
 type MemoryLayer = 'working' | 'episodic' | 'longterm';
 
 interface MemoryEntry {
@@ -18,58 +13,16 @@ interface MemoryEntry {
   content: string;
   context: string;
   importance: number;      // 0-1
-  createdAt: string;
-  lastAccessedAt: string;
-  accessCount: number;
-  decayScore: number;
-  tags: string[];
-  metadata: Record<string, any>;
-}
-
-interface MemoryQuery {
-  layer?: MemoryLayer;
-  keywords?: string[];
-  context?: string;
-  importanceThreshold?: number;
-  limit?: number;
-  since?: string;
-}
 ```
 
-## API
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-const memory = new ThreeLayerMemory(config?: Partial<Record<MemoryLayer, LayerConfig>>);
+## 相关
 
-// Add memory
-const entry = memory.add(
-  content: string,
-  layer: MemoryLayer,
-  context?: string,
-  importance?: number,
-  tags?: string[],
-  metadata?: Record<string, any>
-): MemoryEntry;
-
-// Query memories
-memory.query(query: MemoryQuery): MemoryEntry[];
-
-// Promote to long-term
-memory.promoteToLongTerm(id: string): boolean;
-
-// Search related
-memory.searchRelated(content: string, limit?: number): MemoryEntry[];
-
-// Apply time decay (episodic layer)
-memory.applyTimeDecay(hoursElapsed: number): number;
-```
-
-## Layer Configuration
-
-
-| Layer | Max Entries | Max Memory | Decay |
-|-------|-------------|------------|-------|
-| Working | 50 | 100KB | None |
-| Episodic | 500 | 500KB | Time-based |
-| Long-term | 10000 | 5MB | None |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

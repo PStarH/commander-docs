@@ -1,67 +1,21 @@
 # 프로바이더
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/providers)
+Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider. Commander uses a `modelRouter.ts` to select the optimal provider based on:
 
-
-
-Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider.
-
-| Variable | Provider |
-|----------|----------|
-| `OPENAI_API_KEY` | OpenAI / DeepSeek / GLM / MiMo (fallback chain) |
-| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
-| `ANTHROPIC_API_KEY` | Anthropic Claude |
-| `GOOGLE_API_KEY` | Google Gemini |
-| `DEEPSEEK_API_KEY` | DeepSeek (dedicated) |
-| `ZHIPU_API_KEY` | GLM (Zhipu AI) |
-| `MIMO_API_KEY` | MiMo (dedicated) |
-| `XIAOMI_API_KEY` | Xiaomi MiMo |
-| `GROQ_API_KEY` | Groq (fast inference) |
-| `TOGETHER_API_KEY` | Together AI |
-| `PERPLEXITY_API_KEY` | Perplexity |
-| `FIREWORKS_API_KEY` | Fireworks AI |
-| `REPLICATE_API_TOKEN` | Replicate |
-| `MISTRAL_API_KEY` | Mistral AI |
-| `CO_API_KEY` | Cohere |
-| `OPENROUTER_API_KEY` | OpenRouter (200+ models) |
-| `OLLAMA_BASE_URL` / `OLLAMA_API_KEY` | Ollama (local) |
-| `VLLM_BASE_URL` / `VLLM_API_KEY` | vLLM (local) |
-| `AWS_ACCESS_KEY_ID` | AWS Bedrock |
-| `XAI_API_KEY` | xAI (Grok) |
-| `ANYSCALE_API_KEY` | Anyscale |
-| `DEEPINFRA_API_KEY` | DeepInfra |
-| `AGNES_API_KEY` | Agnes |
-| `STEPFUN_API_KEY` | StepFun |
-| `MINIMAX_API_KEY` | MiniMax |
-
-## Provider Selection
-
-
-Commander uses a `modelRouter.ts` to select the optimal provider based on:
-
-- **Task complexity** — harder tasks route to stronger models
-- **Cost constraints** — simpler tasks use cheaper providers
-- **Latency requirements** — time-sensitive tasks use faster inference (Groq, Together)
-- **Fallback chain** — if primary provider fails, Commander automatically falls back
+이 문서는 Commander에서 **프로바이더** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 # The simplest setup—just one key lets Commander auto-select
 export OPENAI_API_KEY=sk-...
 ```
 
-## 커스텀 프로바이더
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-Implement the `LLMProvider` interface and register it:
+## 관련
 
-```typescript
-import { BaseLLMProvider } from '@commander/core';
-
-class MyProvider extends BaseLLMProvider {
-  async call(messages, options) {
-    // Your implementation
-  }
-}
-
-runtime.registerProvider('my-provider', new MyProvider());
-```
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

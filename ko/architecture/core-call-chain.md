@@ -1,13 +1,8 @@
 # 핵심 호출 체인
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/core-call-chain)
+Every Commander execution follows a structured pipeline: The deliberation engine analyzes the task's complexity, dependency graph, and domain requirements to determine the optimal execution strategy.
 
-
-
-Every Commander execution follows a structured pipeline:
-
-## 1. Deliberation
-
+이 문서는 Commander에서 **핵심 호출 체인** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 CLI / HTTP / API
@@ -16,76 +11,13 @@ CLI / HTTP / API
   │   └─ TaskComplexityAnalyzer
 ```
 
-The deliberation engine analyzes the task's complexity, dependency graph, and domain requirements to determine the optimal execution strategy.
+## 요점
 
-## 2. Effort Scaling
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
+## 관련
 
-```bash
-  ├─ effortScaler.ts     ← "How many agents?"
-```
-
-Based on complexity, Commander scales across 1–20 agents. Simple tasks get a single agent; complex research tasks get a team.
-
-## 3. Topology Routing
-
-
-```bash
-  ├─ topologyRouter.ts   ← "Which topology fits?"
-```
-
-Selects the optimal execution topology from 5 canonical options:
-
-- **SINGLE** — Simple tasks, one agent
-- **CHAIN** — Dependent steps, chain-of-thought (legacy: SEQUENTIAL)
-- **DISPATCH** — Independent subtasks, max throughput (legacy: PARALLEL)
-- **ORCHESTRATOR** — Lead agent delegates to specialists (legacy: HIERARCHICAL / HYBRID)
-- **REVIEW** — Generate → critique → refine loop (legacy: DEBATE / ENSEMBLE / EVALUATOR-OPT)
-
-## 4. Atomization
-
-
-```bash
-  ├─ atomizer.ts         ← "Break into subtasks"
-```
-
-ROMA-style decomposition splits the task into atomic, dependency-aware subtasks.
-
-## 5. Execution
-
-
-```bash
-  ├─ agentRuntime.ts.execute(ctx)
-      │
-      ├─ acquireSlot()              ← Concurrency semaphore
-      ├─ [Tenant check]             ← Rate limit + concurrency quota
-      ├─ resolve tenant storage     ← Per-tenant isolation
-      │
-      ├─ [Retry loop: 0..maxRetries]
-      │   ├─ callWithTimeout()      ← LLM provider call
-      │   ├─ [Tool execution loop]
-      │   │   ├─ toolCache.get()    ← SHA-256 hash lookup
-      │   │   ├─ planner.plan()     ← Dependency-aware plan
-      │   │   ├─ executeTool()      ← StepErrorBoundary
-      │   │   └─ toolCache.set()    ← Cache result
-      │   ├─ verification.check()   ← 5 quality gates
-      │   └─ checkpoint()           ← Atomic state save
-      │
-      └─ → AgentExecutionResult
-```
-
-## 6. Quality Gates
-
-
-After execution, results pass through 5 verification gates:
-
-- Hallucination detection
-- Consistency check
-- Completeness verification
-- Accuracy validation
-- Safety check
-
-## 7. Completion
-
-
-Results are flushed to trace store, metrics are recorded, and the execution summary is returned.
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

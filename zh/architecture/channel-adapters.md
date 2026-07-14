@@ -1,17 +1,10 @@
-# 通道适配器
+# Channel Adapters
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/architecture/channel-adapters)
+Commander supports multiple communication channels through its adapter system, allowing agents to interact with users across different platforms. Channel adapters implement the `ChannelAdapter` interface:
 
+本文说明 **Channel Adapters** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-Commander supports multiple communication channels through its adapter system, allowing agents to interact with users across different platforms.
-
-## Architecture
-
-
-Channel adapters implement the `ChannelAdapter` interface:
-
-```typescript
+```bash
 interface ChannelAdapter {
   readonly name: string;
   send(message: OutboundMessage): Promise<void>;
@@ -21,68 +14,14 @@ interface ChannelAdapter {
 }
 ```
 
-## Telegram Adapter
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-Built-in Telegram support for interacting with Commander agents via chat:
+## 相关
 
-```typescript
-import { TelegramAdapter } from '@commander/core';
-
-const adapter = new TelegramAdapter({
-  botToken: process.env.TELEGRAM_BOT_TOKEN,
-  allowedChatIds: ['chat-1', 'chat-2'],
-});
-
-adapter.onMessage(async (msg) => {
-  const result = await runtime.execute(msg.text);
-  await adapter.send({
-    chatId: msg.chatId,
-    text: result.summary,
-  });
-});
-
-await adapter.connect();
-```
-
-## Creating Custom Adapters
-
-
-```typescript
-import { ChannelAdapter, InboundMessage, OutboundMessage } from '@commander/core';
-
-class DiscordAdapter implements ChannelAdapter {
-  readonly name = 'discord';
-
-  async connect(): Promise<void> {
-    // Initialize Discord client
-  }
-
-  async send(message: OutboundMessage): Promise<void> {
-    // Send message to Discord channel
-  }
-
-  onMessage(handler: (msg: InboundMessage) => void): void {
-    // Register Discord message handler
-  }
-
-  async disconnect(): Promise<void> {
-    // Cleanup
-  }
-}
-
-runtime.registerChannelAdapter('discord', new DiscordAdapter());
-```
-
-## Built-in Adapters
-
-
-| Adapter | Status | Features |
-|---------|--------|----------|
-| Terminal | ✅ Built-in | Full interaction, streaming, plan mode |
-| HTTP (REST) | ✅ Built-in | Execute, plan, watch endpoints |
-| SSE | ✅ Built-in | Real-time event streaming |
-| Telegram | ✅ Built-in | Async agent interaction via chat |
-| Discord | 🔲 Planned | Server/channel-based interaction |
-| Slack | 🔲 Planned | Workspace integration |
-| WebSocket | 🔲 Planned | Bidirectional real-time communication |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

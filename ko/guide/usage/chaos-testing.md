@@ -1,13 +1,8 @@
-# 카오스 테스트
+# Chaos Testing
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/usage/chaos-testing)
+Commander includes a built-in chaos engineering framework that injects faults across 4 layers and verifies recovery. Use it to validate that your agent deployment can survive real-world failures. Every chaos run calls `RecoveryBootstrapper.bootstrap()` after fault injection. If recovery fails, the run is marked failed in the report.
 
-
-
-Commander includes a built-in chaos engineering framework that injects faults across 4 layers and verifies recovery. Use it to validate that your agent deployment can survive real-world failures.
-
-## 빠른 시작
-
+이 문서는 Commander에서 **Chaos Testing** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 # Run a single-layer chaos test
@@ -20,123 +15,13 @@ npx tsx packages/core/src/cli/commands/chaos.ts --layers=L1,L2,L3 --tenant=ci-st
 npx tsx packages/core/src/cli/commands/chaos.ts --layers=L1,L2 --tenant=ci-staging
 ```
 
-## Chaos Layers
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-| Layer | Name | What it injects |
-|-------|------|----------------|
-| **L1** | LLM | Provider-level faults: rate limits, timeouts, context window overflow, malformed responses |
-| **L2** | Tool | 10 failure modes: `http_5xx`, `http_4xx`, `disk_full`, `oom`, `process_crash`, `state_corrupt`, `dependency_unavailable`, `time_drift`, `auth_expired`, `http_timeout` |
-| **L3** | System | Process/disk/CPU/memory faults: CPU throttle, memory pressure, disk full simulation |
-| **L4** | Tenant | Multi-tenant blast radius enforcement: cross-tenant access attempts, resource exhaustion |
+## 관련
 
-## Running Chaos Tests
-
-
-### Single Layer
-
-
-```bash
-# LLM provider faults only
-npx tsx packages/core/src/cli/commands/chaos.ts --layers=L1
-
-# Tool failure injection
-npx tsx packages/core/src/cli/commands/chaos.ts --layers=L2
-
-# System-level faults
-npx tsx packages/core/src/cli/commands/chaos.ts --layers=L3
-
-# Tenant isolation testing (requires --tenant)
-npx tsx packages/core/src/cli/commands/chaos.ts --layers=L4 --tenant=ci-staging
-```
-
-### Multi-Layer
-
-
-```bash
-# Full stack chaos
-npx tsx packages/core/src/cli/commands/chaos.ts --layers=L1,L2,L3,L4 --tenant=ci-staging --duration=120
-```
-
-### Options
-
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--layers` | required | Comma-separated layers: `L1`, `L2`, `L3`, `L4` |
-| `--tenant` | — | Tenant ID (required for L4) |
-| `--duration` | `30` | Test duration in seconds |
-| `--fault-types` | all | Comma-separated fault types to inject |
-| `--no-recovery` | false | Skip recovery verification |
-
-## Recovery Verification
-
-
-Every chaos run calls `RecoveryBootstrapper.bootstrap()` after fault injection. If recovery fails, the run is marked failed in the report.
-
-The recovery verifier checks:
-1. **Zombie detection** — No orphaned execution processes
-2. **Checkpoint integrity** — SQLite WAL is consistent
-3. **Circuit breaker state** — Breakers reset after fault window
-4. **DLQ drain** — Dead letter queue is empty or draining
-5. **Compensation completeness** — All in-progress mutations are resolved
-
-## Adding New Scenarios
-
-
-1. Add fault config to the appropriate layer module:
-   - `packages/core/src/chaos/l1LlmLayer.ts`
-   - `packages/core/src/chaos/l2ToolLayer.ts`
-   - `packages/core/src/chaos/l3SystemLayer.ts`
-   - `packages/core/src/chaos/l4TenantLayer.ts`
-
-2. Write a test in `tests/chaos/`
-
-3. Add to `ChaosOrchestrator.runLayer()` dispatcher
-
-## Programmatic API
-
-
-```typescript
-import { ChaosOrchestrator } from '@commander/core';
-
-const orchestrator = new ChaosOrchestrator({
-  bootstrap: async () => { /* recovery bootstrap */ },
-  delayMs: 1000,
-});
-
-const results = await orchestrator.run({
-  layers: ['L1', 'L2'],
-  tenantId: 'ci-staging',
-  durationSec: 60,
-  verifyRecovery: true,
-});
-
-for (const result of results) {
-  console.log(`${result.layer}/${result.faultType}: ${result.recovery.status}`);
-}
-```
-
-## CI Integration
-
-
-Add chaos testing to your CI pipeline:
-
-```yaml
-# .github/workflows/chaos.yml
-name: Chaos Tests
-on:
-  schedule:
-    - cron: '0 2 * * 1'  # Weekly on Monday at 2am
-
-jobs:
-  chaos:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pnpm install
-      - name: Run chaos tests
-        run: |
-          npx tsx packages/core/src/cli/commands/chaos.ts \
-            --layers=L1,L2,L3 --tenant=ci-staging --duration=60
-```
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

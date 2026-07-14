@@ -1,96 +1,21 @@
 # 프로덕션 준비
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/production-readiness)
+Commander is designed for production from day one. Every component includes observability, safety, and reliability features. After 5 consecutive failures, the circuit opens for 30 seconds, then transitions to half-open for recovery. The `CircuitBreakerRegistry` manages breakers for all active providers.
 
+이 문서는 Commander에서 **프로덕션 준비** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-Commander is designed for production from day one. Every component includes observability, safety, and reliability features.
-
-## Feature Matrix
-
-
-| Capability | Commander Status |
-|------------|-----------------|
-| **Type safety** | TypeScript strict mode, **zero** `as any` / `@ts-ignore` (ESLint error) |
-| **Error handling** | **Zero** empty catch blocks across 100+ modules |
-| **Metrics** | Unified MetricsCollector with Prometheus/OpenMetrics counters, gauges, histograms + tenant labels |
-| **Tracing** | Span-based execution with persistent trace store, OpenTelemetry export |
-| **Crash safety** | Atomic SQLite WAL checkpoints at every step + event sourcing hash chain |
-| **Circuit breaker** | 5 failures → 30s open → half-open recovery, per-provider registry |
-| **Dead letter queue** | 7 categories, 15 failure modes, persistent storage with replay support |
-| **Multi-tenancy** | Per-tenant rate limits, concurrency quota, storage isolation, cache isolation |
-| **Security** | 7-layer EnterpriseSecurityGateway, DLP, capability tokens, Bearer auth, CORS, rate limiting |
-| **Observability** | Health check, readiness probe, OpenAPI spec, SSE streaming, Grafana dashboards |
-| **Event sourcing** | WAL with SHA-256 hash chain, snapshot recovery, deterministic replay |
-| **Plugin sandboxing** | Third-party plugins restricted via sandboxed load context; permissions never exceed main system |
-
-## Safety Mechanisms
-
-
-### Circuit Breaker
-
-After 5 consecutive failures, the circuit opens for 30 seconds, then transitions to half-open for recovery. The `CircuitBreakerRegistry` manages breakers for all active providers.
-
-### Dead Letter Queue
-
-Unrecoverable errors are persisted across 7 categories (llm, tool, execution, verification, circuit_breaker, compensation, semantic_drift) with 15 standardized failure modes. Supports replay after root cause is fixed.
-
-### Compensation Registry
-
-Failed mutation tools trigger automatic rollback via registered compensation actions. Integrated with Saga coordinator for distributed transactions.
-
-### State Checkpointer
-
-Every step saves an atomic checkpoint using SQLite with WAL mode (synchronous=NORMAL, busy_timeout=5000). Resume from any failure without data loss.
-
-### Event Sourcing Engine
-
-Write-Ahead Log with SHA-256 hash chain provides tamper-proof event logging. All non-deterministic inputs (timestamps, random values, LLM responses, tool results) are recorded for deterministic replay.
-
-### Recovery Bootstrapper
-
-On process startup, scans for zombie runs (EXECUTING/VERIFYING/PAUSED states), acquires fencing lease, and either resumes from checkpoint or aborts with compensation.
-
-## Observability
-
-
-### Metrics (Prometheus / OpenMetrics)
-
-```typescript
+```bash
 getMetricsCollector().exportOpenMetrics()
 // Exports: counters, gauges, histograms with tenant labels
 ```
 
-### Tracing
+## 요점
 
-Span-based execution traces with persistent storage in `TraceStore`. OpenTelemetry export with PII redaction (auto-strips `gen_ai.prompt`, `gen_ai.completion`, `gen_ai.tool.call.arguments` from spans).
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-### Health Endpoints
+## 관련
 
-- `/health` — Liveness probe
-- `/ready` — Readiness probe
-- `/metrics` — Prometheus metrics
-- `/health/detailed` — Component-level health (circuit breaker, DLQ, compensation, event bus, provider, event sourcing)
-
-### Grafana Dashboards
-
-Pre-configured dashboards for two audiences:
-- **Developer view**: Run success rate, P95 latency, token cost, active runs, tool call success rate
-- **Mechanistic view**: WAL write latency, WAL file size, DLQ backlog, circuit breaker state, event backlog ratio, SQLite lock contention, compensation execution rate
-
-## Testing
-
-
-Commander maintains **zero tolerance for failures**:
-
-- 6700+ tests across unit, integration, chaos, and e2e
-- Chaos-monkey tests for fault injection
-- Multi-tenant isolation tests (28 scenarios)
-- Plugin permission tests (47 scenarios for sandbox enforcement)
-- Stress tests: 10K messages, 50 concurrent calls
-- Coverage thresholds: statements 60%, functions 70%, lines 60%
-
-```
-npx tsx --test tests/*.test.ts   # All green, # fail 0
-npx tsc --noEmit                  # Zero type errors
-```
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

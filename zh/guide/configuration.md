@@ -1,86 +1,10 @@
 # 配置
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/configuration)
+Commander is configured through environment variables and configuration files. Commander supports a `.commander.json` config file in your project root:
 
+本文说明 **配置** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-Commander is configured through environment variables and configuration files.
-
-## Environment Variables
-
-
-### Core
-
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COMMANDER_MODE` | `auto-edit` | Approval mode: `plan`, `read-only`, `auto-edit`, `full-auto`, `suggest` |
-| `COMMANDER_DEBUG` | `false` | Enable verbose debug logging |
-| `COMMANDER_LOG_LEVEL` | `info` | Log level: `debug`, `info`, `warn`, `error` |
-| `COMMANDER_LOG_PERSIST` | `false` | Enable log persistence to disk (auto-degrades to Error-only when backlog >10000) |
-| `COMMANDER_MAX_CONCURRENCY` | `5` | Maximum concurrent agent executions |
-| `COMMANDER_TIMEOUT_MS` | `120000` | Default execution timeout (ms) |
-
-### Server
-
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `4000` | HTTP server port |
-| `HOST` | `0.0.0.0` | HTTP server host |
-| `CORS_ORIGIN` | `*` | CORS allowed origins |
-| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window (ms) |
-| `RATE_LIMIT_MAX` | `100` | Max requests per window |
-
-### 多租户
-
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `TENANT_PROVIDER` | `null` | `null` (single-tenant) or `simple` (multi-tenant) |
-| `TENANT_PROVIDER_CONFIG` | — | JSON config for tenant mapping |
-
-### 安全
-
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COMMANDER_SECURITY_PROFILE` | `standard` | Sandbox profile: `strict`, `standard`, `permissive`, `hardened` |
-| `COMMANDER_EVENT_SOURCING_WAL` | `.commander_state/event-sourcing.wal` | Event sourcing WAL file path |
-| `WARROOM_STORAGE` | `memory` | War Room storage backend: `memory` or `sqlite` |
-
-### Observability
-
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | — | OpenTelemetry OTLP endpoint |
-| `OTEL_SERVICE_NAME` | `commander` | OpenTelemetry service name |
-
-## CLI Configuration
-
-
-Commander supports a `.commander.json` config file in your project root:
-
-```json
-{
-  "provider": "auto",
-  "model": "auto",
-  "mode": "balanced",
-  "topology": "auto",
-  "budget": "auto",
-  "mcpServers": [],
-  "a2a": {
-    "server": {
-      "enabled": false,
-      "port": 3002,
-      "host": "127.0.0.1"
-    },
-    "remoteAgents": []
-  }
-}
-```
-
+```bash
 | Field | Default | Description |
 |-------|---------|-------------|
 | `provider` | `auto` | Primary LLM provider |
@@ -89,19 +13,16 @@ Commander supports a `.commander.json` config file in your project root:
 | `topology` | `auto` | Orchestration topology: `auto`, `single`, `chain`, `dispatch`, `orchestrator`, `review` |
 | `budget` | `auto` | Token budget (integer ≥1000 or `auto`) |
 | `mcpServers` | `[]` | MCP server configurations |
-| `a2a` | — | Agent-to-Agent server and remote agent config |
-
-API keys are never stored in the config file — they remain in environment variables or system keychain.
-
-## Provider Config
-
-
-Set **any single** provider key. Commander auto-detects and chains fallbacks:
-
-```bash
-export OPENAI_API_KEY=sk-...        # Primary: OpenAI | Fallback: DeepSeek → GLM → MiMo
-export ANTHROPIC_API_KEY=sk-ant-... # Anthropic Claude
-export GOOGLE_API_KEY=...           # Google Gemini
 ```
 
-See the full [providers list](/zh/guide/providers).
+## 要点
+
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
+
+## 相关
+
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

@@ -1,15 +1,10 @@
-# 인스펙터 에이전트
-
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/inspector-agent)
-
-
+# Inspector Agent
 
 System health monitoring and issue detection across all Commander components.
 
-## Types
+이 문서는 Commander에서 **Inspector Agent** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-```typescript
+```bash
 type IssueSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 type IssueCategory = 'performance' | 'reliability' | 'security' | 'memory' | 'coordination' | 'configuration';
 
@@ -18,66 +13,15 @@ interface Issue {
   category: IssueCategory;
   severity: IssueSeverity;
   title: string;
-  description: string;
-  status: 'open' | 'acknowledged' | 'resolved' | 'ignored';
-  suggestions: string[];
-}
-
-interface InspectionReport {
-  id: string;
-  timestamp: string;
-  overallHealth: number;
-  overallStatus: 'healthy' | 'degraded' | 'unhealthy';
-  components: ComponentHealth[];
-  openIssues: Issue[];
-  recommendations: string[];
-}
 ```
 
-## API
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-const inspector = new InspectorAgent();
+## 관련
 
-// Update component health status
-inspector.updateComponent(
-  name: string,
-  status: 'healthy' | 'degraded' | 'unhealthy',
-  score: number,
-  metrics?: Record<string, number>
-): void;
-
-// Detect an issue
-const issue = inspector.detectIssue(
-  category: IssueCategory,
-  severity: IssueSeverity,
-  title: string,
-  description: string,
-  suggestions?: string[]
-): Issue;
-
-// Auto-detect issues from metrics
-inspector.autoDetect(componentName: string, metrics: Record<string, number>): Issue[];
-
-// Run full inspection
-inspector.inspect(): InspectionReport;
-
-// Get health trend
-inspector.getHealthTrend(): {
-  trend: 'improving' | 'declining' | 'stable';
-  change: number;
-  history: Array<{ timestamp: string; health: number }>;
-};
-```
-
-## Auto-Detection Thresholds
-
-
-| Metric | Warning | Critical |
-|--------|---------|----------|
-| Response Time | >1000ms | >5000ms |
-| Error Rate | >5% | >20% |
-| Memory Usage | >90% | >95% |
-| Queue Depth | >100 | >500 |
-| Success Rate | <80% | <50% |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

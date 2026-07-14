@@ -1,94 +1,21 @@
 # Backpressure Controller
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/backpressure)
+The backpressure controller implements **unified admission control** for the Commander runtime, preventing overload when demand exceeds capacity. It uses a three-stage pipeline: Token Bucket → Ring Buffer → Circuit Breaker. 1. **Token Bucket** — Requests consume a token. When the bucket is empty, requests spill to the ring buffer.
 
+이 문서는 Commander에서 **Backpressure Controller** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-The backpressure controller implements **unified admission control** for the Commander runtime, preventing overload when demand exceeds capacity. It uses a three-stage pipeline: Token Bucket → Ring Buffer → Circuit Breaker.
-
-## Architecture
-
-
-```
+```bash
 Producer → [Token Bucket] → [Ring Buffer] → [Circuit Breaker] → Consumer
               rate-limit       absorb bursts     protect when overwhelmed
 ```
 
-| Stage | Purpose | Pattern |
-|-------|---------|---------|
-| **Token Bucket** | Rate-limits admission (tokens per second) | Leaky bucket |
-| **Ring Buffer** | Absorbs burst traffic (fixed-size, O(1) insert/evict) | LMAX Disruptor |
-| **Circuit Breaker** | Protects consumer when overwhelmed | Hystrix 3-state |
+## 요점
 
-## How It Works
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
+## 관련
 
-1. **Token Bucket** — Requests consume a token. When the bucket is empty, requests spill to the ring buffer.
-2. **Ring Buffer** — Fixed-size buffer absorbs bursts. When full, oldest entry is evicted (counted as spilled).
-3. **Circuit Breaker** — When spill rate exceeds threshold, the breaker opens and requests are dropped until half-open.
-
-## 구성
-
-
-```typescript
-import { BackpressureController } from '@commander/core';
-
-const controller = new BackpressureController({
-  tokenBucket: {
-    maxTokens: 100,
-    refillRatePerSecond: 50,
-  },
-  ringBuffer: {
-    capacity: 200,
-  },
-  circuitBreaker: {
-    failureThreshold: 0.5,    // 50% failure rate opens breaker
-    recoveryTimeoutMs: 30000, // Wait 30s before half-open
-    halfOpenMaxRequests: 10,  // Probe requests in half-open
-  },
-});
-```
-
-## 사용법
-
-
-```typescript
-// Check if a request should be admitted
-const admission = controller.tryAdmit();
-
-if (admission.allowed) {
-  // Process the request
-  const result = await processRequest(request);
-  controller.recordSuccess();
-} else {
-  // Request rejected — return 429 or queue
-  return { status: 429, reason: admission.reason };
-}
-```
-
-## Lock-Free Design
-
-
-The controller uses lock-free CAS (Compare-And-Swap) via atomic counter operations. Concurrent reads never block writes, satisfying constraint NFR-PERF-05.
-
-## Metrics
-
-
-| Metric | Description |
-|--------|-------------|
-| `backpressure_tokens_available` | Current tokens in bucket |
-| `backpressure_ring_buffer_occupancy` | Ring buffer fill ratio |
-| `backpressure_circuit_breaker_state` | `CLOSED`, `OPEN`, or `HALF_OPEN` |
-| `backpressure_requests_admitted_total` | Total admitted requests |
-| `backpressure_requests_rejected_total` | Total rejected requests |
-| `backpressure_requests_spilled_total` | Total spilled from ring buffer |
-
-## When to Tune
-
-
-| Symptom | Adjustment |
-|---------|------------|
-| Too many 429 errors | Increase `maxTokens` or `refillRatePerSecond` |
-| Memory pressure | Decrease ring buffer `capacity` |
-| Cascading failures | Lower `failureThreshold` to open breaker earlier |
-| Slow recovery | Increase `recoveryTimeoutMs` |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

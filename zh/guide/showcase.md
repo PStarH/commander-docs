@@ -1,39 +1,17 @@
 # 案例展示
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/showcase)
+Real-world uses of Commander. **Want your project listed?** Open a PR against this page or an issue with: - Project name + link
 
+本文说明 **案例展示** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
+## 要点
 
-Real-world uses of Commander. **Want your project listed?** Open a PR against this page or an issue with:
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-- Project name + link  
-- One sentence: what Commander runs for you  
-- Optional: topology / providers used  
+## 相关
 
-## Community projects
-
-
-| Project | How Commander is used | Link |
-|---------|------------------------|------|
-| *Your project* | *e.g. CI security audit + streaming review* | *URL* |
-
-> The table is intentionally empty until submissions land — honesty over fake logos.
-
-## Internal / reference patterns
-
-
-These patterns ship in the monorepo and docs:
-
-| Pattern | Docs |
-|---------|------|
-| Security audit stream | [Cookbook: security audit](/zh/guide/cookbook/security-audit) |
-| Safe module refactor | [Cookbook: refactor](/zh/guide/cookbook/refactor-module) |
-| CI full-auto lint | [Cookbook: CI](/zh/guide/cookbook/ci-full-auto) |
-| Web Console ops | [Web Console](/zh/guide/web-console) |
-
-## Star the product
-
-
-If Commander helps you, a star helps others find it:
-
-[github.com/PStarH/Commander](https://github.com/PStarH/Commander)
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

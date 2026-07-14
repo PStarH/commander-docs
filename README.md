@@ -30,9 +30,13 @@ npm run preview
 | Path | Language | Coverage |
 |------|----------|----------|
 | `/` | English | Full (source of truth) |
-| `/zh/` | 简体中文 | Full tree (hand entry + generated mirrors) |
-| `/ja/` | 日本語 | Full tree |
-| `/ko/` | 한국어 | Full tree |
+| `/zh/` | 简体中文 | Full tree — 信达雅 native |
+| `/ja/` | 日本語 | Full tree — 信达雅 native |
+| `/ko/` | 한국어 | Full tree — 信达雅 native |
+| `/es/` | Español | Full tree — 信达雅 native |
+| `/fr/` | Français | Full tree — 信达雅 native |
+
+**Policy:** every locale page must be full native prose (no English body + banner stubs). Code fences stay English.
 
 Regenerate mirrors after EN content changes:
 

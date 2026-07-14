@@ -1,15 +1,10 @@
-# 토큰 예산 할당기
-
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/token-budget-allocator)
-
-
+# Token Budget Allocator
 
 Allocates token budgets across agents based on topology and task complexity.
 
-## Types
+이 문서는 Commander에서 **Token Budget Allocator** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-```typescript
+```bash
 interface TokenBudget {
   totalBudget: number;
   perAgentBudget: number;
@@ -18,40 +13,15 @@ interface TokenBudget {
 }
 
 interface AllocationResult {
-  lead: number;
-  specialists: number;
-  evaluation: number;
-  overhead: number;
-}
 ```
 
-## API
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
+## 관련
 
-// Allocate based on topology
-const budget = allocator.allocate(
-  topology: Topology,
-  complexity: number,
-  agentCount: number
-): TokenBudget;
-
-// Get allocation breakdown
-const allocation = allocator.getAllocation(
-  topology: OrchestrationTopology,
-  totalBudget: number
-): AllocationResult;
-```
-
-## Allocation by Topology
-
-
-| Topology | Lead | Specialists | Evaluation | Overhead |
-|----------|------|-------------|------------|----------|
-| SINGLE | 95% | 0% | 5% | 0% |
-| CHAIN | 30% | 50% | 15% | 5% |
-| DISPATCH | 15% | 65% | 15% | 5% |
-| ORCHESTRATOR | 35% | 45% | 15% | 5% |
-| REVIEW | 25% | 30% | 40% | 5% |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

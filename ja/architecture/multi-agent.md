@@ -1,77 +1,16 @@
 # マルチエージェント編成
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/multi-agent)
+Commander's core differentiator is its ability to orchestrate multiple agents across **5 canonical topologies**, aligned with Anthropic's "Building effective agents" ontology. Nine legacy topology names remain as aliases for backward compatibility during a 2-version migration window. The deliberation engine (`deliberation.ts`) classifies every task and selects the optimal topology:
 
+本ページは Commander における **マルチエージェント編成** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
+## 要点
 
-Commander's core differentiator is its ability to orchestrate multiple agents across **5 canonical topologies**, aligned with Anthropic's "Building effective agents" ontology. Nine legacy topology names remain as aliases for backward compatibility during a 2-version migration window.
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-## Canonical Topologies
+## 関連
 
-
-| Topology | Description | Legacy Alias |
-|----------|-------------|--------------|
-| **SINGLE** | One agent handles the entire task | — |
-| **CHAIN** | Sequential pipeline, each agent builds on previous output | SEQUENTIAL |
-| **DISPATCH** | Independent subtasks run concurrently, results synthesized | PARALLEL |
-| **ORCHESTRATOR** | Lead agent decomposes and delegates to specialists | HIERARCHICAL / HYBRID |
-| **REVIEW** | Generate → critique → refine loop | DEBATE / ENSEMBLE / EVALUATOR-OPT |
-
-## Topology Selection
-
-
-The deliberation engine (`deliberation.ts`) classifies every task and selects the optimal topology:
-
-| Complexity | Dependencies | Selected Topology |
-|------------|-------------|-------------------|
-| Trivial | None | SINGLE |
-| Low | Sequential | CHAIN |
-| Low | Independent | DISPATCH |
-| Medium | Mixed | ORCHESTRATOR |
-| High | Mixed | ORCHESTRATOR |
-| High-risk | Any | REVIEW |
-| Critical | Any | REVIEW |
-| Iterative | Any | REVIEW |
-
-## Topology Details
-
-
-### SINGLE
-
-One agent handles the entire task. Best for simple, well-scoped requests.
-
-### CHAIN
-
-Agents execute in order, each building on the previous output via artifact references. Best for multi-step transformations.
-
-### DISPATCH
-
-Independent subtasks run concurrently via sub-agents. Results are synthesized at the end. Best for parallelizable work.
-
-### ORCHESTRATOR
-
-A lead agent decomposes the task and delegates subtasks to specialist agents, then synthesizes results. Adaptive rerouting allows mixed parallel/sequential execution.
-
-### REVIEW
-
-Multiple agents independently produce solutions, then cross-validate and refine. Includes debate (cross-validation), ensemble (weighted voting), and evaluator-optimizer (generate-critique-refine) patterns.
-
-## Agent Scaling
-
-
-The `effortScaler.ts` module scales the number of agents dynamically:
-
-- **Simple tasks**: 1 agent
-- **Moderate tasks**: 2–5 agents
-- **Complex tasks**: 5–10 agents
-- **Research tasks**: 10–20 agents
-
-## Agent Communication
-
-
-Agents communicate through:
-
-- **Message bus** (`messageBus.ts`): Pub/sub for inter-agent and system events
-- **Agent handoff** (`agentHandoff.ts`): Direct agent-to-agent handoff with persistent inbox
-- **Artifact system** (`artifactSystem.ts`): Reference-based communication to prevent information loss
-- **Three-layer memory**: Shared working/episodic/long-term memory for context across agents
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

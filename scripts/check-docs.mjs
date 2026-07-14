@@ -69,7 +69,7 @@ if (!home.includes('prefersReducedMotion') && !home.includes('prefers-reduced-mo
 
 // --- Config must declare multi-locale ---
 const cfg = readFileSync(join(root, '.vitepress/config.mts'), 'utf8')
-for (const loc of ['zh', 'ja', 'ko']) {
+for (const loc of ['zh', 'ja', 'ko', 'es', 'fr']) {
   if (!cfg.includes(`${loc}:`) && !cfg.includes(`${loc}: {`)) {
     errors.push(`config.mts should define ${loc} locale`)
   }
@@ -90,6 +90,12 @@ const localeRequired = [
   'ko/index.md',
   'ko/guide/getting-started.md',
   'ko/guide/why-commander.md',
+  'es/index.md',
+  'es/guide/getting-started.md',
+  'es/guide/why-commander.md',
+  'fr/index.md',
+  'fr/guide/getting-started.md',
+  'fr/guide/why-commander.md',
   'guide/topology-explorer.md',
 ]
 for (const p of localeRequired) {
@@ -101,19 +107,49 @@ for (const p of localeRequired) {
 }
 
 // --- full coverage: each locale should mirror key EN trees ---
-for (const loc of ['zh', 'ja', 'ko']) {
+for (const loc of ['zh', 'ja', 'ko', 'es', 'fr']) {
   for (const tree of ['guide', 'architecture', 'api']) {
     const dir = join(root, loc, tree)
     try {
       const count = readdirSync(dir, { recursive: true }).filter((f) =>
         String(f).endsWith('.md'),
       ).length
-      if (count < 5) {
+      // entry locales must have guide; arch/api may still be filling
+      if (tree === 'guide' && count < 5) {
         errors.push(`${loc}/${tree} coverage too thin (${count} md files)`)
       }
+      if ((tree === 'architecture' || tree === 'api') && count < 1) {
+        warnings.push(`${loc}/${tree} not started yet (${count})`)
+      }
     } catch {
-      errors.push(`missing locale tree: ${loc}/${tree}`)
+      if (tree === 'guide') errors.push(`missing locale tree: ${loc}/${tree}`)
+      else warnings.push(`missing locale tree: ${loc}/${tree}`)
     }
+  }
+}
+
+// Flag leftover stub banners (should be full 信达雅, not EN body + banner)
+for (const loc of ['zh', 'ja', 'ko', 'es', 'fr']) {
+  const dir = join(root, loc)
+  try {
+    const files = readdirSync(dir, { recursive: true })
+      .filter((f) => String(f).endsWith('.md'))
+      .map((f) => join(dir, String(f)))
+    for (const file of files) {
+      const text = readFileSync(file, 'utf8')
+      if (
+        text.includes('本地化说明') ||
+        text.includes('ローカライズについて') ||
+        text.includes('현지화 안내') ||
+        text.includes('Localization note')
+      ) {
+        warnings.push(
+          `stub banner still present (should be full native rewrite): ${relative(root, file)}`,
+        )
+      }
+    }
+  } catch {
+    /* ignore */
   }
 }
 

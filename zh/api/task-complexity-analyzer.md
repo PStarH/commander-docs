@@ -1,15 +1,10 @@
 # 任务复杂度分析器
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/task-complexity-analyzer)
-
-
-
 Analyzes task complexity and selects the optimal orchestration topology.
 
-## Types
+本文说明 **任务复杂度分析器** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-```typescript
+```bash
 type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'extreme';
 type Topology = 'SINGLE' | 'CHAIN' | 'DISPATCH' | 'ORCHESTRATOR' | 'REVIEW';
 
@@ -18,50 +13,16 @@ interface ComplexityScore {
   score: number;           // 0-100
   factors: ComplexityFactors;
   recommendedTopology: Topology;
-  tokenBudget: TokenBudget;
-  confidence: number;      // 0-1
-}
-
-interface ComplexityFactors {
-  treewidth: number;       // Dependency complexity (0-100)
-  dependencyDepth: number; // How deep dependencies go (0-100)
-  inputSize: number;       // Token count of input
-  outputComplexity: number;// Expected output structure (0-100)
-  domainKnowledge: number; // Need for specialized knowledge (0-100)
-  riskLevel: number;       // Failure impact (0-100)
-  uncertaintyLevel: number;// Ambiguity in requirements (0-100)
-  timeConstraints: number; // Deadline pressure (0-100)
-}
 ```
 
-## API
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-```typescript
-const analyzer = new TaskComplexityAnalyzer();
+## 相关
 
-// Analyze single task
-const score = analyzer.analyze(task: Task): ComplexityScore;
-
-// Batch analysis
-const scores = batchAnalyzer.analyzeBatch(tasks: Task[]): ComplexityScore[];
-
-// Get orchestration recommendation
-const orch = batchAnalyzer.getBatchOrchestration(scores): {
-  topology: Topology;
-  totalBudget: number;
-  parallelGroups: number;
-};
-```
-
-## Topology Selection Rules
-
-
-| Condition | Topology |
-|-----------|----------|
-| Complexity > 80 | REVIEW |
-| Complexity > 60 + no dependencies | DISPATCH |
-| Complexity > 50 | ORCHESTRATOR |
-| Has dependencies + complexity > 30 | CHAIN |
-| No dependencies + complexity < 30 | DISPATCH |
-| Default | CHAIN |
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

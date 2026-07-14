@@ -1,15 +1,10 @@
-# コンセンサスチェッカー
-
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/api/consensus-checker)
-
-
+# Consensus Checker
 
 Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
 
-## Types
+本ページは Commander における **Consensus Checker** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-```typescript
+```bash
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
 
 interface ConsensusConfig {
@@ -18,52 +13,15 @@ interface ConsensusConfig {
   strongAgreementThreshold: number;     // Default: 0.95
   lowConsensusThreshold: number;        // Default: 0.5
   timeoutMs: number;                    // Default: 30000
-  enableDiscussion: boolean;            // Default: true
-}
-
-interface ConsensusResult {
-  decision: string;
-  consensusLevel: ConsensusLevel;
-  consensusScore: number;
-  confidence: 'high' | 'medium' | 'low';
-  requiresAction: boolean;
-  actionType?: 'proceed' | 'discuss' | 'rethink' | 'escalate';
-}
 ```
 
-## API
+## 要点
 
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-```typescript
-const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
+## 関連
 
-// Create a consensus check
-const checkId = checker.createCheck(question: string, context?: string): string;
-
-// Add a vote from a model
-checker.addVote(
-  checkId: string,
-  modelId: string,
-  modelName: string,
-  decision: string,
-  confidence: number,
-  reasoning: string
-): boolean;
-
-// Get the consensus result
-const result = checker.getResult(checkId: string): ConsensusResult | undefined;
-
-// Wait for all votes
-await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
-```
-
-## Consensus Thresholds
-
-
-| Level | Threshold | Action |
-|-------|-----------|--------|
-| Unanimous | ≥95% | Proceed |
-| Strong | ≥80% | Proceed |
-| Moderate | ≥50% | Discuss |
-| Low | >0 | Rethink |
-| Diverged | 0 | Escalate |
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

@@ -1,15 +1,10 @@
-# 커스텀 도구
+# Custom Tools
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/advanced/custom-tools)
+Extend Commander with your own tools by implementing the `Tool` interface. Every registered tool automatically gets:
 
+이 문서는 Commander에서 **Custom Tools** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-Extend Commander with your own tools by implementing the `Tool` interface.
-
-## Tool Interface
-
-
-```typescript
+```bash
 interface Tool {
   name: string;
   description: string;
@@ -19,78 +14,13 @@ interface Tool {
 }
 ```
 
-## Example: Webhook Tool
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-import { Tool, ToolContext } from '@commander/core';
+## 관련
 
-interface WebhookArgs {
-  url: string;
-  payload: Record<string, any>;
-}
-
-class WebhookTool implements Tool {
-  name = 'webhook';
-  description = 'Send data to a webhook URL';
-
-  parameters = {
-    url: { type: 'string', required: true, description: 'Webhook URL' },
-    payload: { type: 'object', required: true, description: 'JSON payload' },
-  };
-
-  async execute(context: ToolContext, args: WebhookArgs): Promise<ToolResult> {
-    try {
-      const response = await fetch(args.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(args.payload),
-      });
-
-      return {
-        success: response.ok,
-        data: await response.text(),
-        error: response.ok ? undefined : `HTTP ${response.status}`,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-  }
-}
-```
-
-## Registering a Tool
-
-
-```typescript
-import { CommanderRuntime } from '@commander/core';
-
-const runtime = new CommanderRuntime();
-runtime.registerTool('webhook', new WebhookTool());
-```
-
-## Tool Features
-
-
-Every registered tool automatically gets:
-
-- **SHA-256 caching** — Results are cached per-tenant, per-argument hash
-- **Compensation registry** — Register a rollback action for mutations
-- **Circuit breaker** — Protects downstream services from overload
-- **Step error boundary** — Isolated failure handling (skip/retry/abort)
-
-## Loading Tools from Files
-
-
-```json
-// .commander.json
-{
-  "customTools": [
-    "./tools/webhook-tool.ts",
-    "./tools/database-tool.ts"
-  ]
-}
-```
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

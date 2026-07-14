@@ -1,15 +1,10 @@
-# 합의 검사기
-
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/consensus-checker)
-
-
+# Consensus Checker
 
 Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
 
-## Types
+이 문서는 Commander에서 **Consensus Checker** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-```typescript
+```bash
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
 
 interface ConsensusConfig {
@@ -18,52 +13,15 @@ interface ConsensusConfig {
   strongAgreementThreshold: number;     // Default: 0.95
   lowConsensusThreshold: number;        // Default: 0.5
   timeoutMs: number;                    // Default: 30000
-  enableDiscussion: boolean;            // Default: true
-}
-
-interface ConsensusResult {
-  decision: string;
-  consensusLevel: ConsensusLevel;
-  consensusScore: number;
-  confidence: 'high' | 'medium' | 'low';
-  requiresAction: boolean;
-  actionType?: 'proceed' | 'discuss' | 'rethink' | 'escalate';
-}
 ```
 
-## API
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
+## 관련
 
-// Create a consensus check
-const checkId = checker.createCheck(question: string, context?: string): string;
-
-// Add a vote from a model
-checker.addVote(
-  checkId: string,
-  modelId: string,
-  modelName: string,
-  decision: string,
-  confidence: number,
-  reasoning: string
-): boolean;
-
-// Get the consensus result
-const result = checker.getResult(checkId: string): ConsensusResult | undefined;
-
-// Wait for all votes
-await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
-```
-
-## Consensus Thresholds
-
-
-| Level | Threshold | Action |
-|-------|-----------|--------|
-| Unanimous | ≥95% | Proceed |
-| Strong | ≥80% | Proceed |
-| Moderate | ≥50% | Discuss |
-| Low | >0 | Rethink |
-| Diverged | 0 | Escalate |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

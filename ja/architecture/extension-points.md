@@ -1,31 +1,10 @@
-# 拡張ポイント
+# Extension Points
 
-> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/extension-points)
+Commander is designed to be extended at every layer. Hooks can block, modify, or observe the execution.
 
+本ページは Commander における **Extension Points** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
-
-Commander is designed to be extended at every layer.
-
-## Plugin System (19 Hook Points)
-
-
-| Hook | When It Fires |
-|------|---------------|
-| `beforeLLMCall` | Before every LLM request |
-| `afterLLMCall` | After every LLM request |
-| `beforeToolCall` | Before every tool execution |
-| `afterToolCall` | After every tool execution |
-| `onAgentComplete` | Agent run finished |
-| `onError` | Run failed |
-
-Hooks can block, modify, or observe the execution.
-
-## Extension Interfaces
-
-
-### Custom LLM Provider
-
-```typescript
+```bash
 class MyProvider implements LLMProvider {
   async call(messages: Message[], options: CallOptions): Promise<LLMResponse> {
     // Your implementation
@@ -34,47 +13,13 @@ class MyProvider implements LLMProvider {
 runtime.registerProvider('my-provider', new MyProvider());
 ```
 
-### Custom Tool
+## 要点
 
-```typescript
-class MyTool implements Tool {
-  name = 'my-tool';
-  async execute(ctx: ToolContext, args: any): Promise<ToolResult> {
-    // Your implementation
-  }
-}
-runtime.registerTool('my-tool', new MyTool());
-```
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
 
-### Custom Topology
+## 関連
 
-Add a new case in `topologyRouter.ts` to define a new orchestration pattern.
-
-### Channel Adapter
-
-```typescript
-class TelegramAdapter implements ChannelAdapter {
-  // Telegram integration
-}
-```
-
-### Plugin
-
-```typescript
-class MyPlugin implements CommanderPlugin {
-  hooks = {
-    beforeLLMCall: async (params) => { /* modify params */ },
-    afterToolCall: async (result) => { /* observe result */ },
-  };
-}
-getHookManager().register(new MyPlugin());
-```
-
-## Meta-Learner
-
-
-Commander includes a self-evolution system based on **Thompson Sampling + Reflexion**:
-
-- Tracks which strategies work best over time
-- Automatically adjusts topology selection
-- Learns from failures and successes across runs
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  
+- [API](/ja/api/overview)  

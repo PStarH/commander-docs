@@ -1,93 +1,21 @@
 # Watch Mode (SSE Streaming)
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/usage/watch-mode)
+Watch mode provides real-time streaming of every execution event via Server-Sent Events (SSE). This is ideal for monitoring long-running tasks, debugging agent behavior, or integrating with custom UIs. Every event in the execution pipeline is streamed:
 
-
-
-Watch mode provides real-time streaming of every execution event via Server-Sent Events (SSE). This is ideal for monitoring long-running tasks, debugging agent behavior, or integrating with custom UIs.
-
-## 사용법
-
+이 문서는 Commander에서 **Watch Mode (SSE Streaming)** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 # From monorepo source (or: commander watch "...")
 npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 ```
 
-## Streamed Events
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-Every event in the execution pipeline is streamed:
+## 관련
 
-| Event Type | Description |
-|------------|-------------|
-| `task.start` | Task started |
-| `deliberation` | Complexity analysis |
-| `topology.select` | Topology selected |
-| `agent.spawn` | Agent created |
-| `tool.call` | Tool execution started |
-| `tool.result` | Tool execution completed |
-| `subtask.complete` | Subtask finished |
-| `verification` | Quality gate check |
-| `checkpoint` | State checkpoint saved |
-| `task.complete` | Task finished |
-| `task.error` | Error occurred |
-
-## Event Format
-
-
-```json
-{
-  "type": "tool.call",
-  "data": {
-    "tool": "grep",
-    "args": { "pattern": "deprecated", "path": "./src" },
-    "agentId": "agent-3",
-    "timestamp": "2026-05-23T10:30:00Z"
-  }
-}
-```
-
-## Consuming Events
-
-
-### CLI
-
-```bash
-npx tsx packages/core/src/cliEntry.ts watch "debug" | jq '.type'
-```
-
-### JavaScript/TypeScript
-
-```typescript
-const client = new CommanderClient({ provider: 'openai' });
-await client.connect();
-
-const unsub = client.onEvent((event) => {
-  console.log(`[${event.type}]`, event.data);
-  if (event.type === 'task.complete') {
-    console.log('Result:', event.data.summary);
-  }
-});
-
-const result = await client.run('debug the failing test');
-await client.disconnect();
-```
-
-### HTTP (curl)
-
-```bash
-curl -N \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Accept: text/event-stream" \
-  -d '{"task": "debug the failing test", "stream": true}' \
-  http://localhost:4000/execute
-```
-
-## Use Cases
-
-
-- **CI/CD pipelines** — Stream events to build dashboards
-- **Custom UIs** — Build real-time agent monitoring interfaces
-- **Debugging** — Inspect every step of a complex multi-agent execution
-- **Logging** — Persist full execution traces for audit
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

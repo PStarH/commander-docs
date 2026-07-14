@@ -1,15 +1,10 @@
-# 작업 복잡도 분석기
-
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/task-complexity-analyzer)
-
-
+# Task Complexity Analyzer
 
 Analyzes task complexity and selects the optimal orchestration topology.
 
-## Types
+이 문서는 Commander에서 **Task Complexity Analyzer** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
-
-```typescript
+```bash
 type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'extreme';
 type Topology = 'SINGLE' | 'CHAIN' | 'DISPATCH' | 'ORCHESTRATOR' | 'REVIEW';
 
@@ -18,50 +13,15 @@ interface ComplexityScore {
   score: number;           // 0-100
   factors: ComplexityFactors;
   recommendedTopology: Topology;
-  tokenBudget: TokenBudget;
-  confidence: number;      // 0-1
-}
-
-interface ComplexityFactors {
-  treewidth: number;       // Dependency complexity (0-100)
-  dependencyDepth: number; // How deep dependencies go (0-100)
-  inputSize: number;       // Token count of input
-  outputComplexity: number;// Expected output structure (0-100)
-  domainKnowledge: number; // Need for specialized knowledge (0-100)
-  riskLevel: number;       // Failure impact (0-100)
-  uncertaintyLevel: number;// Ambiguity in requirements (0-100)
-  timeConstraints: number; // Deadline pressure (0-100)
-}
 ```
 
-## API
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-```typescript
-const analyzer = new TaskComplexityAnalyzer();
+## 관련
 
-// Analyze single task
-const score = analyzer.analyze(task: Task): ComplexityScore;
-
-// Batch analysis
-const scores = batchAnalyzer.analyzeBatch(tasks: Task[]): ComplexityScore[];
-
-// Get orchestration recommendation
-const orch = batchAnalyzer.getBatchOrchestration(scores): {
-  topology: Topology;
-  totalBudget: number;
-  parallelGroups: number;
-};
-```
-
-## Topology Selection Rules
-
-
-| Condition | Topology |
-|-----------|----------|
-| Complexity > 80 | REVIEW |
-| Complexity > 60 + no dependencies | DISPATCH |
-| Complexity > 50 | ORCHESTRATOR |
-| Has dependencies + complexity > 30 | CHAIN |
-| No dependencies + complexity < 30 | DISPATCH |
-| Default | CHAIN |
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  

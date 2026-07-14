@@ -1,15 +1,10 @@
 # 拓扑决策树
 
-> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/usage/topology-decision-tree)
+Not sure which orchestration topology to use? Follow this decision tree. **When**: Simple, well-scoped tasks
 
+本文说明 **拓扑决策树** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-
-Not sure which orchestration topology to use? Follow this decision tree.
-
-## Quick Reference
-
-
-```
+```bash
 Is the task simple and well-defined?
 ├── YES → SINGLE
 └── NO  → Are subtasks independent?
@@ -18,56 +13,16 @@ Is the task simple and well-defined?
         ├── YES → CHAIN
         └── NO  → Is there a clear lead agent?
             ├── YES → ORCHESTRATOR
-            └── NO  → REVIEW
 ```
 
-## Topology Details
+## 要点
 
+- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
+- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
+- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-### SINGLE
+## 相关
 
-**When**: Simple, well-scoped tasks
-**Example**: "Explain this function", "Format this file"
-**Agents**: 1
-
-### CHAIN
-
-**When**: Multi-step transformations where each step depends on the previous
-**Example**: "Read the file → analyze the code → generate a report"
-**Agents**: 2–3
-
-### DISPATCH
-
-**When**: Independent subtasks that can run simultaneously
-**Example**: "Search for bugs in all modules at once"
-**Agents**: 2–10
-
-### ORCHESTRATOR
-
-**When**: Complex task with a clear decomposition path
-**Example**: A lead architect decomposes the work and delegates to specialists
-**Agents**: 3–8
-
-### REVIEW
-
-**When**: High-risk decisions requiring cross-validation, iterative refinement, or consensus
-**Example**: "Is this security vulnerability real or a false positive?"
-**Agents**: 2–5
-
-## Complexity-Based Selection
-
-
-Commander automatically selects the topology based on task complexity:
-
-| Score | Auto-Selected Topology |
-|:-----:|:----------------------:|
-| 0–20 | SINGLE |
-| 20–40 | CHAIN |
-| 40–60 | DISPATCH |
-| 60–80 | ORCHESTRATOR |
-| 80–100 | REVIEW |
-
-Override the automatic selection:
-```bash
-npx tsx packages/core/src/cliEntry.ts run "task" --topology review
-```
+- [架构总览](/zh/architecture/overview)  
+- [快速开始](/zh/guide/getting-started)  
+- [API 概览](/zh/api/overview)  

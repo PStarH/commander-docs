@@ -1,21 +1,8 @@
 # Contributing to the docs
 
-> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/contributing)
+Thank you for improving Commander documentation. 1. **Metrics:** `25 providers` · `5 topologies` · `18 built-in tools` · `6700+ tests`
 
-
-
-Thank you for improving Commander documentation.
-
-## Repos
-
-
-| Repo | Role |
-|------|------|
-| [Commander](https://github.com/PStarH/Commander) | Product, CLI, SDK, tests |
-| [commander-docs](https://github.com/PStarH/commander-docs) | This VitePress site |
-
-## Local docs dev
-
+이 문서는 Commander에서 **Contributing to the docs** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 
 ```bash
 git clone https://github.com/PStarH/commander-docs.git
@@ -26,37 +13,13 @@ npm run check    # content guards
 npm run build
 ```
 
-## Content rules
+## 요점
 
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
 
-1. **Metrics:** `25 providers` · `5 topologies` · `18 built-in tools` · `6700+ tests`  
-2. **CLI from source:** `npx tsx packages/core/src/cliEntry.ts …`  
-3. **CLI after build:** `commander …`  
-4. **Vue internal links:** always `withBase()` (GH Pages base `/commander-docs/`)  
-5. **themeConfig.logo:** `/logo.svg` only — never hardcode `/commander-docs/`  
-6. **Localhost URLs** in install docs are fine; CI allows them as dead-link exceptions  
+## 관련
 
-## i18n
-
-
-- English is the source of truth under `/guide`, `/architecture`, `/api`  
-- Chinese entry path: `/zh/` (Quick Start, Why, FAQ, cookbook samples)  
-- When you change EN quick-start commands, update `zh/guide/getting-started.md` if applicable  
-
-## PR checklist
-
-
-- [ ] `npm run check` passes  
-- [ ] `npm run build` passes  
-- [ ] No new `cli.ts` / wrong provider counts / 17-tools strings  
-- [ ] Screenshots or demos use accurate product claims  
-
-## 보안
-
-
-Do **not** open public issues for vulnerabilities. See [Security](/ko/guide/security).
-
-## Product code contributions
-
-
-Use the main [Commander](https://github.com/PStarH/Commander) repository for runtime, tools, and providers. Docs-only changes belong here.
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  
+- [API](/ko/api/overview)  
