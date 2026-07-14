@@ -1,17 +1,24 @@
-# Web コンソール
+# Web Console
 
-可視化コントロール面：ストリーミングチャット、トポロジ、ガバナンス、運用ビュー。
+Commander の **Web Console** について、使い方と運用上の注意をまとめます。
+
+## クイック
 
 ```bash
+cd Commander
+pnpm install
+export OPENAI_API_KEY=sk-...   # or other provider
 pnpm gui
-# API http://localhost:4000 · Web 多くは :5173
 ```
 
-| 領域 | 用途 |
-|------|------|
-| Dashboard | レポート、トークン、トポロジ |
-| Chat | リアルタイムエージェント対話 |
-| Governance | 承認・ポリシー・監査 |
-| DLQ | デッドレターの確認と再生 |
 
-[英語 Web Console](/guide/web-console)
+## ポイント
+
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
+
+## 関連
+
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  

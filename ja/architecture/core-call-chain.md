@@ -1,8 +1,8 @@
-# コア呼び出しチェーン
+# Core Call Chain
 
-Every Commander execution follows a structured pipeline: The deliberation engine analyzes the task's complexity, dependency graph, and domain requirements to determine the optimal execution strategy.
+Commander の **Core Call Chain** について、使い方と運用上の注意をまとめます。
 
-本ページは Commander における **コア呼び出しチェーン** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## クイック
 
 ```bash
 CLI / HTTP / API
@@ -11,13 +11,14 @@ CLI / HTTP / API
   │   └─ TaskComplexityAnalyzer
 ```
 
-## 要点
 
+## ポイント
+
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
 - 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
 
 ## 関連
 
 - [アーキテクチャ](/ja/architecture/overview)  
 - [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  

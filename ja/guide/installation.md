@@ -1,28 +1,23 @@
-# インストール
+# Installation
 
-## 前提
+Commander の **Installation** について、使い方と運用上の注意をまとめます。
 
-- Node.js 18+  
-- pnpm 8+  
-- LLM API キー 1 つ  
-
-## ローカル
+## クイック
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
-export OPENAI_API_KEY=sk-...
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
 
-## Docker
 
-```bash
-export COMMANDER_API_KEY="your-secret-key"
-export OPENAI_API_KEY="sk-..."
-docker compose up -d
-# API :4000 · Web :3000
-```
+## ポイント
 
-[英語 Deployment](/deployment) · [クイックスタート](/ja/guide/getting-started)
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
+- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
+
+## 関連
+
+- [アーキテクチャ](/ja/architecture/overview)  
+- [クイックスタート](/ja/guide/getting-started)  

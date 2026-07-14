@@ -1,8 +1,8 @@
 # Three-Layer Memory
 
-Manages working, episodic, and long-term memory with embedding-based retrieval.
+Commander의 **Three-Layer Memory** 사용법과 운영 포인트를 정리합니다.
 
-이 문서는 Commander에서 **Three-Layer Memory** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
+## 빠른 시작
 
 ```bash
 type MemoryLayer = 'working' | 'episodic' | 'longterm';
@@ -13,15 +13,20 @@ interface MemoryEntry {
   content: string;
   context: string;
   importance: number;      // 0-1
+  createdAt: string;
+  lastAccessedAt: string;
+  accessCount: number;
+  decayScore: number;
 ```
 
-## 요점
 
+## 포인트
+
+- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
 - 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 실행 예시는 [빠른 시작](/ko/guide/getting-started) 의 `cliEntry.ts` 경로를 사용  
+- 정확한 동작은 monorepo 소스를 기준으로 합니다  
 
 ## 관련
 
 - [아키텍처](/ko/architecture/overview)  
 - [빠른 시작](/ko/guide/getting-started)  
-- [API](/ko/api/overview)  

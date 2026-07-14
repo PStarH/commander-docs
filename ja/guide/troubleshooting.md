@@ -1,20 +1,21 @@
-# トラブルシューティング
+# Troubleshooting
 
-Common issues and their solutions. **Solution:** Run from the monorepo root and install all workspaces:
+Commander の **Troubleshooting** について、使い方と運用上の注意をまとめます。
 
-本ページは Commander における **トラブルシューティング** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## クイック
 
 ```bash
 Error: Cannot find module '@commander/core'
 ```
 
-## 要点
 
+## ポイント
+
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
 - 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
 
 ## 関連
 
 - [アーキテクチャ](/ja/architecture/overview)  
 - [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  

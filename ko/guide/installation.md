@@ -1,27 +1,23 @@
-# 설치
+# Installation
 
-## 사전 요구
+Commander의 **Installation** 사용법과 운영 포인트를 정리합니다.
 
-- Node.js 18+  
-- pnpm 8+  
-- LLM API 키 하나  
-
-## 로컬
+## 빠른 시작
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
-export OPENAI_API_KEY=sk-...
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
 
-## Docker
 
-```bash
-export COMMANDER_API_KEY="your-secret-key"
-export OPENAI_API_KEY="sk-..."
-docker compose up -d
-```
+## 포인트
 
-[영문 Deployment](/deployment) · [빠른 시작](/ko/guide/getting-started)
+- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+
+## 관련
+
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  

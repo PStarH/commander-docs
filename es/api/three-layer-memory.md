@@ -1,18 +1,76 @@
 # Memoria de tres capas
 
-Working, episodic y long-term con importancia y tags.
+Documentación en español de **Memoria de tres capas**, alineada con el monorepo y la guía inglesa.
 
-> Capa 2 del runtime (`@commander/core`). Para la mayoría de apps usa [`CommanderClient`](/es/guide/sdk).
-
-## Uso típico
+## Entrada rápida
 
 ```typescript
-import { /* symbol componente */ } from '@commander/core';
+type MemoryLayer = 'working' | 'episodic' | 'longterm';
+
+interface MemoryEntry {
+  id: string;
+  layer: MemoryLayer;
+  content: string;
+  context: string;
+  importance: number;      // 0-1
+  createdAt: string;
+  lastAccessedAt: string;
+  accessCount: number;
+  decayScore: number;
+  tags: string[];
+  metadata: Record<string, any>;
+}
+
+interface MemoryQuery {
+  layer?: MemoryLayer;
+  keywords?: string[];
+  context?: string;
+  importanceThreshold?: number;
+  limit?: number;
+  since?: string;
+}
 ```
 
-Consulta el código fuente del monorepo y la [visión general de API](/es/api/overview) para firmas exactas y accessors globales.
+```typescript
+const memory = new ThreeLayerMemory(config?: Partial<Record<MemoryLayer, LayerConfig>>);
+
+// Add memory
+const entry = memory.add(
+  content: string,
+  layer: MemoryLayer,
+  context?: string,
+  importance?: number,
+  tags?: string[],
+  metadata?: Record<string, any>
+): MemoryEntry;
+
+// Query memories
+memory.query(query: MemoryQuery): MemoryEntry[];
+
+// Promote to long-term
+memory.promoteToLongTerm(id: string): boolean;
+
+// Search related
+memory.searchRelated(content: string, limit?: number): MemoryEntry[];
+
+// Apply time decay (episodic layer)
+memory.applyTimeDecay(hoursElapsed: number): number;
+```
+
+| Layer | Max Entries | Max Memory | Decay |
+|-------|-------------|------------|-------|
+| Working | 50 | 100KB | None |
+| Episodic | 500 | 500KB | Time-based |
+| Long-term | 10000 | 5MB | None |
+
+
+## Notas
+
+- CLI monorepo: `cliEntry.ts` · tras build: `commander`  
+- Métricas: 25 proveedores · 5 topologías · 18 tools · 6700+ tests  
+- Firmas API exactas: monorepo / [API overview](/es/api/overview)  
 
 ## Relacionado
 
-- [API overview](/es/api/overview)  
 - [Arquitectura](/es/architecture/overview)  
+- [Inicio rápido](/es/guide/getting-started)  

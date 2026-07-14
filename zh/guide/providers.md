@@ -1,22 +1,32 @@
 # 提供商
 
-Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider. Commander uses a `modelRouter.ts` to select the optimal provider based on:
+本页说明 Commander 中 **提供商** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
 
-本文说明 **提供商** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
+## 快速入口
 
 ```bash
 # The simplest setup—just one key lets Commander auto-select
 export OPENAI_API_KEY=sk-...
 ```
 
-## 要点
 
-- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
-- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
-- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
+## 说明
+
+### Provider Selection
+
+（对应英文文档章节 **Provider Selection** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+
+### Custom Providers
+
+（对应英文文档章节 **Custom Providers** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+
+
+## 指标口径
+
+25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
 
 ## 相关
 
 - [架构总览](/zh/architecture/overview)  
 - [快速开始](/zh/guide/getting-started)  
-- [API 概览](/zh/api/overview)  
+- [命令](/zh/guide/commands)  

@@ -1,13 +1,25 @@
-# 커뮤니티
+# Community
 
-Commander는 MIT 오픈소스입니다.
+Commander의 **Community** 사용법과 운영 포인트를 정리합니다.
 
-| 채널 | 상태 | 링크 |
-|------|------|------|
-| GitHub | 활성 | [PStarH/Commander](https://github.com/PStarH/Commander) |
-| Docs | 활성 | 이 사이트 |
-| Discord / Twitter | 예정 | 저장소 공지 |
+## 빠른 시작
 
-보안 취약점은 공개 이슈가 아니라 [Security](/guide/security)를 따르세요.
+```bash
+git clone https://github.com/PStarH/Commander.git
+cd Commander
+pnpm install
+# Prefer project scripts when available:
+pnpm test:all   # or: cd packages/core && npx tsx --test tests/*.test.ts
+```
 
-한국어 입구: [빠른 시작](/ko/guide/getting-started)
+
+## 포인트
+
+- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
+- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
+- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+
+## 관련
+
+- [아키텍처](/ko/architecture/overview)  
+- [빠른 시작](/ko/guide/getting-started)  

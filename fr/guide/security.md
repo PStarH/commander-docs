@@ -1,8 +1,8 @@
 # Sécurité
 
-**Vulnérabilités :** pas d’issues publiques — **sampan090611@gmail.com** (accusé ~48 h).
+Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Sécurité**.
 
-## Contrôles
+## Entrée rapide
 
 ```bash
 export COMMANDER_MODE=read-only
@@ -10,6 +10,29 @@ export COMMANDER_API_KEY="long-random-secret"
 export OLLAMA_BASE_URL=http://localhost:11434
 ```
 
-Mitigations : scan d’injection, DLP, breakers, failover, isolation multi-tenant, npm audit.
+```bash
+pnpm benchmark:redteam
+pnpm benchmark:agentdojo
+```
 
-[Gateway](/fr/architecture/security-gateway) · [Sandbox](/fr/architecture/sandbox)
+| Amenaza | Mitigación |
+|---------|------------|
+| Inyección | Escaneo de tools, sanitizers, gates de irreversibilidad |
+| Secretos | DLP, logs sin secretos |
+| Agentes desbocados | Modos de aprobación, tokens, timeouts, breakers |
+| Proveedor caído | Failover, rate limits, cuotas |
+| Cross-tenant | Aislamiento de storage/memoria/caché |
+| Supply chain | npm audit; keys fuera del git |
+
+
+## Notes
+
+- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
+- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
+- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+
+## Lié
+
+- [Vue d’architecture](/fr/architecture/overview)  
+- [Démarrage rapide](/fr/guide/getting-started)  
+- [Commandes](/fr/guide/commands)  

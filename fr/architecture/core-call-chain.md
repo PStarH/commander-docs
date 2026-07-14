@@ -1,30 +1,30 @@
 # Chaîne d’appels core
 
-Chemin d’une requête de l’entrée jusqu’au résultat vérifié.
+Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Chaîne d’appels core**.
 
-## Entrées
+## Entrée rapide
 
-CLI · SDK · HTTP (`/execute`, V2 `/v1/runs`)
+```bash
+npx tsx packages/core/src/cliEntry.ts plan "your task"
+npx tsx packages/core/src/cliEntry.ts run "your task" --stream
+```
 
-## Étapes
-
-1. Environnement (keys, mode, tenant)  
-2. Délibération (classe, complexité)  
-3. Scale d’effort (1–20 agents)  
-4. Routeur de topologie  
-5. Atomisation  
-6. Runtime agents (LLM ↔ tools)  
-7. Vérification (5 portes)  
-8. Synthèse  
-9. Persistance / métriques  
-
-## Récupération
-
-| Échec | Mécanisme |
+| Fallo | Mecanismo |
 |-------|-----------|
-| Fournisseur down | Fallback + circuit breaker |
-| Tool mutante | Compensation / saga |
-| Crash | Checkpoint WAL + resume |
-| Mauvaise qualité | Retry avec contexte de gate |
+| Proveedor caído | Cadena de fallback + circuit breaker |
+| Tool mutante fallida | Compensación / saga |
+| Crash de proceso | Checkpoint SQLite WAL + resume |
+| Salida de mala calidad | Reintento con contexto de gate |
 
-[Runtime](/fr/architecture/agent-runtime) · [Multi-agents](/fr/architecture/multi-agent)
+
+## Notes
+
+- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
+- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
+- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+
+## Lié
+
+- [Vue d’architecture](/fr/architecture/overview)  
+- [Démarrage rapide](/fr/guide/getting-started)  
+- [Commandes](/fr/guide/commands)  

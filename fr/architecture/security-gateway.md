@@ -1,5 +1,24 @@
 # Gateway de sécurité
 
-Défense en profondeur : auth, validation, DLP, politique tools, sandbox, scan de sorties, audit.
+Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Gateway de sécurité**.
 
-[Guide sécurité](/fr/guide/security)
+## Entrée rapide
+
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+curl http://localhost:4000/health/detailed
+```
+
+
+
+## Notes
+
+- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
+- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
+- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+
+## Lié
+
+- [Vue d’architecture](/fr/architecture/overview)  
+- [Démarrage rapide](/fr/guide/getting-started)  
+- [Commandes](/fr/guide/commands)  

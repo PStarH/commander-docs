@@ -1,8 +1,8 @@
-# デプロイ
+# Deployment
 
-Commander supports multiple deployment options for different environments. The Docker setup features:
+Commander の **Deployment** について、使い方と運用上の注意をまとめます。
 
-本ページは Commander における **デプロイ** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## クイック
 
 ```bash
 export COMMANDER_API_KEY="your-secret-key"
@@ -13,13 +13,14 @@ docker compose up -d
 # Dev GUI: http://localhost:5173   (pnpm gui, no Docker)
 ```
 
-## 要点
 
+## ポイント
+
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
 - 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
 
 ## 関連
 
 - [アーキテクチャ](/ja/architecture/overview)  
 - [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  

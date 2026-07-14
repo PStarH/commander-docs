@@ -1,8 +1,8 @@
 # Reflection Engine
 
-Post-execution self-reflection and pattern detection for continuous improvement.
+Commander の **Reflection Engine** について、使い方と運用上の注意をまとめます。
 
-本ページは Commander における **Reflection Engine** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## クイック
 
 ```bash
 type ReflectionType = 'post_execution' | 'pre_planning' | 'error_analysis' | 'pattern_detection';
@@ -13,15 +13,20 @@ interface Reflection {
   context: string;
   question: string;
   answer?: string;
+  quality: number;         // 0-1
+  actionable: boolean;
+  insights: string[];
+  recommendations: string[];
 ```
 
-## 要点
 
+## ポイント
+
+- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
 - 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+- 詳細な挙動は runtime / monorepo ソースを正とする  
 
 ## 関連
 
 - [アーキテクチャ](/ja/architecture/overview)  
 - [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
