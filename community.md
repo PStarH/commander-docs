@@ -62,3 +62,8 @@ pnpm test:all   # or: cd packages/core && npx tsx --test tests/*.test.ts
 - Star [Commander](https://github.com/PStarH/Commander)
 - Watch [changelog](/guide/changelog) for release notes
 - Open an issue when something in the docs is wrong — we treat that as a first-class bug
+- Security reports: [Security](/guide/security) (private email — not public issues)
+
+## Docs for AI assistants
+
+Machine-readable index: [`llms.txt`](https://pstarh.github.io/commander-docs/llms.txt)

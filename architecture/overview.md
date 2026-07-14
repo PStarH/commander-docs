@@ -2,6 +2,18 @@
 
 Commander is a multi-agent orchestration engine that transforms a single task description into a structured execution plan across multiple agents, tools, and LLM providers.
 
+## Read these five first
+
+If you are new, this is enough to understand the system:
+
+1. **This page** — high-level flow and package map  
+2. [Core Call Chain](/architecture/core-call-chain) — request → result path  
+3. [Multi-Agent Orchestration](/architecture/multi-agent) — topologies and coordination  
+4. [Agent Runtime](/architecture/agent-runtime) — LLM → tools → verify → retry  
+5. [Verification Pipeline](/architecture/verification) — five quality gates  
+
+Everything else (reliability, security, systems) is optional depth — collapsed in the sidebar.
+
 ## High-Level Flow
 
 ```

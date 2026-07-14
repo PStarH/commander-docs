@@ -78,9 +78,22 @@ const whyCards = [
 
 const quickLinks = [
   { text: 'Get started', to: '/guide/getting-started', theme: 'brand' },
-  { text: 'Architecture', to: '/architecture/overview', theme: 'alt' },
-  { text: 'API', to: '/api/overview', theme: 'alt' },
+  { text: 'Why Commander', to: '/guide/why-commander', theme: 'alt' },
+  { text: 'Cookbook', to: '/guide/cookbook/', theme: 'alt' },
   { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
+]
+
+const demoLines = [
+  { cls: 'cmd-demo-muted', text: '$ commander run "audit this repo" --stream' },
+  { cls: 'cmd-demo-dim', text: '┌─ Deliberation ─────────────────────────────' },
+  { cls: '', text: '│ Classification: ANALYSIS · Complexity: 7/10' },
+  { cls: '', text: '│ Topology: DISPATCH (3 agents)' },
+  { cls: 'cmd-demo-dim', text: '├─ Agent α (security-scanner) ───────────────' },
+  { cls: 'cmd-demo-ok', text: '│ [tool] npm audit · 2 critical, 5 moderate' },
+  { cls: 'cmd-demo-ok', text: '│ [gate] ACCURACY ✓ · COMPLETENESS ✓' },
+  { cls: 'cmd-demo-dim', text: '├─ Synthesizer ──────────────────────────────' },
+  { cls: 'cmd-demo-accent', text: '│ Leader synthesis · 4 findings, 2 critical' },
+  { cls: 'cmd-demo-dim', text: '└────────────────────────────────────────────' },
 ]
 
 /** Prefix site base for internal paths (required on GitHub Pages /commander-docs/). */
@@ -109,6 +122,13 @@ function playAnimations() {
       .from('.cmd-hero .cmd-actions .cmd-btn', { y: 12, opacity: 0, duration: 0.4, stagger: 0.08 }, '-=0.45')
       .from('.cmd-hero .cmd-mockup', { y: 32, opacity: 0, duration: 0.9, ease: 'power2.out' }, '-=0.55')
       .from('.cmd-hero .cmd-stat', { y: 12, opacity: 0, duration: 0.4, stagger: 0.08 }, '-=0.5')
+
+    gsap.from('.cmd-demo-strip', {
+      y: 16,
+      opacity: 0,
+      duration: 0.5,
+      scrollTrigger: { trigger: '.cmd-demo-strip', start: 'top 90%', once: true },
+    })
 
     gsap.from('.cmd-features .cmd-feature', {
       y: 28,
@@ -199,6 +219,42 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <!-- DEMO — copy-paste success path + stream preview -->
+    <section class="cmd-demo-strip" aria-label="Live stream demo">
+      <div class="cmd-demo-grid">
+        <div class="cmd-demo-copy">
+          <h2>See every decision</h2>
+          <p>
+            Deliberation, topology, tools, and quality gates stream live — not after the fact.
+            Copy, set a key, and watch agents work.
+          </p>
+          <pre class="cmd-demo-code" tabindex="0"><code>git clone https://github.com/PStarH/Commander.git
+cd Commander && pnpm install
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre>
+          <div class="cmd-actions">
+            <a :href="hrefFor('/guide/getting-started')" class="cmd-btn cmd-btn--brand">5-minute checklist</a>
+            <a :href="hrefFor('/guide/cookbook/')" class="cmd-btn cmd-btn--alt">Cookbook recipes</a>
+          </div>
+        </div>
+        <div class="cmd-demo-terminal" role="img" aria-label="Example Commander stream output">
+          <div class="cmd-demo-chrome">
+            <span class="cmd-demo-dot cmd-demo-dot--r" />
+            <span class="cmd-demo-dot cmd-demo-dot--y" />
+            <span class="cmd-demo-dot cmd-demo-dot--g" />
+            <span class="cmd-demo-chrome-title">commander · stream</span>
+          </div>
+          <div class="cmd-demo-body">
+            <div
+              v-for="(line, i) in demoLines"
+              :key="i"
+              :class="['cmd-demo-line', line.cls]"
+            >{{ line.text }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- FEATURES — non-symmetric bento grid -->
     <section class="cmd-features">
       <div class="cmd-section-head">
@@ -247,17 +303,17 @@ onBeforeUnmount(() => {
           <p>Clone, set one key, stream a multi-agent run in under two minutes.</p>
           <span class="cmd-feature-arrow">Quick start →</span>
         </a>
+        <a :href="hrefFor('/guide/web-console')" class="cmd-path-card">
+          <span class="cmd-path-kicker">02 · Console</span>
+          <h3>Open the Web Console</h3>
+          <p><code>pnpm gui</code> — chat, topology, DLQ, governance.</p>
+          <span class="cmd-feature-arrow">Web Console →</span>
+        </a>
         <a :href="hrefFor('/guide/sdk')" class="cmd-path-card">
-          <span class="cmd-path-kicker">02 · SDK</span>
+          <span class="cmd-path-kicker">03 · SDK</span>
           <h3>Embed in TypeScript</h3>
           <p><code>CommanderClient.run()</code> with events, memory, and plan mode.</p>
           <span class="cmd-feature-arrow">Agent SDK →</span>
-        </a>
-        <a :href="hrefFor('/deployment')" class="cmd-path-card">
-          <span class="cmd-path-kicker">03 · Deploy</span>
-          <h3>Ship with Docker</h3>
-          <p>API + Web Console on any Linux host. Health, metrics, prod overlay.</p>
-          <span class="cmd-feature-arrow">Deployment →</span>
         </a>
       </div>
     </section>
@@ -572,6 +628,98 @@ onBeforeUnmount(() => {
   transform: translateX(2px);
 }
 
+/* DEMO STRIP */
+.cmd-demo-strip {
+  padding: 8px 0 40px;
+}
+
+.cmd-demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+.cmd-demo-copy h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--vp-c-text-1);
+  margin: 0 0 10px;
+}
+
+.cmd-demo-copy > p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+  margin: 0 0 16px;
+  max-width: 440px;
+}
+
+.cmd-demo-code {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--vp-c-border);
+  background: #09090b;
+  color: #e4e4e7;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.cmd-demo-terminal {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-border);
+  background: #09090b;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.cmd-demo-chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #27272a;
+  background: #111113;
+}
+
+.cmd-demo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.cmd-demo-dot--r { background: #ef4444; }
+.cmd-demo-dot--y { background: #eab308; }
+.cmd-demo-dot--g { background: #22c55e; }
+
+.cmd-demo-chrome-title {
+  margin-left: 8px;
+  font-size: 0.7rem;
+  color: #71717a;
+  font-family: var(--vp-font-family-mono);
+}
+
+.cmd-demo-body {
+  padding: 14px 16px 18px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: #d4d4d8;
+  flex: 1;
+}
+
+.cmd-demo-line { white-space: pre-wrap; word-break: break-word; }
+.cmd-demo-muted { color: #a1a1aa; }
+.cmd-demo-dim { color: #52525b; }
+.cmd-demo-ok { color: #4ade80; }
+.cmd-demo-accent { color: #fafafa; font-weight: 500; }
+
 /* WHY */
 .cmd-why {
   padding: 24px 0 16px;
@@ -726,6 +874,7 @@ onBeforeUnmount(() => {
     grid-row: span 1;
   }
   .cmd-paths-grid { grid-template-columns: 1fr; }
+  .cmd-demo-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -738,5 +887,6 @@ onBeforeUnmount(() => {
   .cmd-why-grid { grid-template-columns: 1fr; }
   .cmd-section-head h2 { font-size: 1.5rem; }
   .cmd-cta h2 { font-size: 1.4rem; }
+  .cmd-demo-code { font-size: 0.65rem; }
 }
 </style>

@@ -52,6 +52,8 @@ community.md     Contributing & roadmap
 - **CLI after build:** `commander …`
 - **Internal links in Vue:** always use `withBase()` — raw `/guide/...` breaks on GH Pages
 - **themeConfig.logo:** `/logo.svg` (VitePress prefixes `base` automatically — do not hardcode `/commander-docs/`)
+- **OG image:** `public/og.png` (1200×630) + head meta in `config.mts`
+- **P0 pages:** why-commander, cookbook, web-console, security, migration-v2
 
 ## Related
 

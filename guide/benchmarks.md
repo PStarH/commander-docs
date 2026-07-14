@@ -1,6 +1,32 @@
 # Benchmarks
 
-Commander is benchmarked across reliability, performance, chaos resilience, and topology efficiency. This page documents our benchmark methodology and results.
+Commander is benchmarked across **security, reliability, performance, chaos, and capability**. Numbers below are from the product README / monorepo scripts — re-run them yourself for current baselines.
+
+## Headline matrix (product README)
+
+| Suite | Coverage | Result (as documented) |
+|-------|----------|------------------------|
+| Chaos Engineering | 255 synthetic + 55 mutation | 55.7% pass rate |
+| Red Team | 47 scenarios, 8 attack categories | 100% defense |
+| AgentDojo | 12 security test cases | 100% defense |
+| RealWorld | 50 production-like cases | 96% pass rate |
+| GAIA Spine | Core capability | Running daily |
+| SLO | API success / latency | Measured daily |
+
+**Source of truth:** monorepo [`BENCHMARK.md`](https://github.com/PStarH/Commander/blob/master/BENCHMARK.md).
+
+### Reproduce (from Commander repo)
+
+```bash
+pnpm benchmark:all          # multi-suite readiness
+pnpm benchmark:redteam      # 47 scenarios
+pnpm benchmark:agentdojo    # injection suite
+pnpm benchmark:chaos        # chaos (simulated default)
+pnpm bench:slo              # SLO baseline
+pnpm check:readiness        # baseline freshness
+```
+
+Individual scripts and baseline paths are listed in `BENCHMARK.md`. Prefer CI artifacts over marketing screenshots.
 
 ## Reliability SLO Targets
 

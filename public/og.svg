@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#18181b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="48" y="48" width="1104" height="534" rx="24" fill="#111113" stroke="#27272a" stroke-width="2"/>
+  <circle cx="96" cy="100" r="8" fill="#ef4444"/>
+  <circle cx="128" cy="100" r="8" fill="#eab308"/>
+  <circle cx="160" cy="100" r="8" fill="#22c55e"/>
+  <text x="96" y="200" fill="#fafafa" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="56" font-weight="700">Commander</text>
+  <text x="96" y="270" fill="#a1a1aa" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">Multi-agent orchestration, built for production.</text>
+  <text x="96" y="360" fill="#71717a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22">25 providers  ·  5 topologies  ·  18 tools  ·  6700+ tests</text>
+  <text x="96" y="430" fill="#52525b" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20">$ commander run "audit this repo" --stream</text>
+  <text x="96" y="520" fill="#3f3f46" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18">docs · github.com/PStarH/Commander</text>
+</svg>

@@ -1,0 +1,23 @@
+# Commander
+> Production-grade multi-agent orchestration engine.
+
+Commander classifies tasks, picks a topology (SINGLE/CHAIN/DISPATCH/ORCHESTRATOR/REVIEW), runs agents with tools, and streams every decision with quality gates.
+
+## Docs
+- https://pstarh.github.io/commander-docs/
+- https://pstarh.github.io/commander-docs/guide/getting-started.html
+- https://pstarh.github.io/commander-docs/guide/why-commander.html
+- https://pstarh.github.io/commander-docs/guide/cookbook/
+- https://pstarh.github.io/commander-docs/architecture/overview.html
+- https://pstarh.github.io/commander-docs/api/overview.html
+- https://pstarh.github.io/commander-docs/guide/security.html
+
+## Source
+- https://github.com/PStarH/Commander
+
+## Key facts
+- 25 LLM providers with auto-failover
+- 5 canonical topologies
+- 18 built-in tools
+- 6700+ tests
+- MIT license
