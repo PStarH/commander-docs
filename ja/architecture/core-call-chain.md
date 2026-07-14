@@ -1,69 +1,56 @@
-# Core Call Chain
+# コア呼び出しチェーン
 
-**Core Call Chain.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+すべての Commander 実行は構造化パイプラインに従います。
 
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
+## 1. 審議 (Deliberation)
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
-
-## 主な内容
-
-### 1. Deliberation
-
-運用では **1. Deliberation** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 2. Effort Scaling
-
-運用では **2. Effort Scaling** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 3. Topology Routing
-
-運用では **3. Topology Routing** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 4. Atomization
-
-運用では **4. Atomization** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 5. Execution
-
-運用では **5. Execution** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 6. Quality Gates
-
-運用では **6. Quality Gates** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-### 7. Completion
-
-運用では **7. Completion** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
-
-## 例（コードは英語のまま）
-
-```bash
-CLI / HTTP / API
-  │
-  ├─ deliberation.ts     ← "What kind of task is this?"
-  │   └─ TaskComplexityAnalyzer
+```
+CLI / HTTP / API → deliberation.ts → TaskComplexityAnalyzer
 ```
 
-```bash
-  ├─ effortScaler.ts     ← "How many agents?"
+複雑度・依存・ドメインから実行戦略を決めます。
+
+## 2. 努力スケーリング
+
+```
+effortScaler.ts  ← エージェント数 1–20
 ```
 
-```bash
-  ├─ topologyRouter.ts   ← "Which topology fits?"
+## 3. トポロジ・ルーティング
+
+```
+topologyRouter.ts  ← SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW
 ```
 
-## 運用
+## 4. 原子化
+
+```
+atomizer.ts  ← ROMA 風のサブタスク分解
+```
+
+## 5. 実行
+
+```
+agentRuntime.execute
+  → slot / tenant / storage
+  → retry: LLM → tools → 5 gates → checkpoint
+  → release / traces
+```
+
+## 6. 検証と合成
+
+ゲート通過後に合成。失敗時は再試行・DLQ・補償。
+
+## ローカルで追う
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [アーキテクチャ概要](/ja/architecture/overview)  
+- [マルチエージェント](/ja/architecture/multi-agent)  
+- [エージェントランタイム](/ja/architecture/agent-runtime)  
+- [検証](/ja/architecture/verification)  

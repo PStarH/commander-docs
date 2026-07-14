@@ -1,64 +1,46 @@
-# Multi-Tenant Architecture
+# Architecture multi-tenant
 
-**Multi-Tenant Architecture.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Commander isole les tenants **à chaque couche**.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
-
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
-
-## Référence
-
-| Layer | Mechanism |
-|-------|-----------|
-| Rate limits | Per-tenant: requests/minute |
-| Concurrency | Per-tenant: max concurrent runs |
-| Storage | Per-tenant directory paths |
-| Memory | Per-instance ThreeLayerMemory |
-| Cache | SHA-256 key includes tenantId |
-| Metrics | Every counter/gauge/histogram has `tenant` label |
-
-
-## Contenu principal
-
-### Request Flow
-
-En pratique, **Request Flow** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/multi-tenancy) pour le détail exhaustif.
-
-### Isolation Layers
-
-En pratique, **Isolation Layers** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/multi-tenancy) pour le détail exhaustif.
-
-### Providers
-
-En pratique, **Providers** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/multi-tenancy) pour le détail exhaustif.
-
-### Tenant Config
-
-En pratique, **Tenant Config** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/multi-tenancy) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+## Flux de requête
 
 ```
 Request → HttpServer
            │
-           ├─ authenticate()           ← Bearer token → tenant mapping
+           ├─ authenticate()           ← Bearer → mapping tenant
            ├─ resolveTenantFromAuth()  ← API key → tenantId
            │
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
+                                        │   → tokenBudget, maxConcurrency, maxRunsPerMinute
                                         │
-                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
-                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
+                                        ├─ Rate limit / Concurrency
                                         │
-                                        └─ Tenant-scoped instances:
-                                            ├─ SamplesStore(path/tenant_{id}/)
-                                            ├─ TraceStore(path/tenant_{id}/)
-                                            ├─ StateCheckpointer(path/tenant_{id}/)
-                                            ├─ ThreeLayerMemory(per-instance)
-                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
+                                        └─ Instances scopées tenant :
+                                            SamplesStore / TraceStore / StateCheckpointer
+                                            ThreeLayerMemory / ToolResultCache(tenantId inclus)
 ```
+
+## Couches d’isolation
+
+| Couche | Mécanisme |
+|--------|-----------|
+| Rate limits | Req/min par tenant |
+| Concurrency | Runs concurrent max par tenant |
+| Storage | Répertoires par tenant |
+| Memory | ThreeLayerMemory par instance |
+| Cache | Clé SHA-256 avec tenantId |
+| Metrics | Label `tenant` partout |
+
+## Providers
+
+| Provider | Comportement |
+|----------|--------------|
+| `NullTenantProvider` | Pas d’isolation (mono-tenant) |
+| `SimpleTenantProvider` | Map statique tenant → config |
+
+## TenantConfig
 
 ```typescript
 interface TenantConfig {
@@ -71,17 +53,19 @@ interface TenantConfig {
 }
 ```
 
-## Opérations
+## Ops
 
 ```bash
+export COMMANDER_API_KEY="long-random-secret"
 npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+curl -s http://localhost:4000/health/detailed
 ```
+
+CLI local mono-machine : souvent `NullTenantProvider`. Prod partagée : Simple (ou custom) + quotas.
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Security Gateway](/fr/architecture/security-gateway)  
+- [Cache](/fr/architecture/caching)  
+- [Production readiness](/fr/architecture/production-readiness)  
+- [Sécurité](/fr/guide/security)  

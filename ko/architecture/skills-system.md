@@ -1,84 +1,47 @@
-# Skills System
+# 스킬 시스템
 
-**Skills System.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander 스킬 시스템은 에이전트가 필요할 때 로드하는 **도메인 전문 지식 패키지**입니다.
 
-## 참고 표
-
-| Metric | Description |
-|--------|-------------|
-| **Effectiveness** | How often using the skill improves outcomes |
-| **Precision** | How accurately the skill guides the agent |
-| **Completeness** | Whether the skill covers all necessary aspects |
-| **Safety** | No harmful or insecure instructions |
-| **Freshness** | How recently the skill was updated |
-
-
-## 주요 섹션
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### What is a Skill?
-
-**What is a Skill?** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Managing Skills
-
-**Managing Skills** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Skill Quality
-
-**Skill Quality** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Security Scanning
-
-**Security Scanning** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Creating a Skill
-
-**Creating a Skill** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 구조
 
 ```
 skills/
-├── skillManager.ts       ← Skill lifecycle management
-├── skillCurator.ts       ← Skill curation and organization
-├── skillInjector.ts      ← Inject skills into agent prompts
-├── skillStore.ts         ← Persistent skill storage
-├── skillQualityScorer.ts ← Quality scoring for skills
-├── skillSecurityScanner.ts ← Security scanning for skill content
-├── skillViewTool.ts      ← Tool for viewing/loading skills
-├── metaLearnerBridge.ts  ← Bridge to MetaLearner for skill optimization
-├── types.ts              ← Shared types
-└── index.ts              ← Public exports
+├── skillManager.ts / skillCurator.ts / skillInjector.ts
+├── skillStore.ts / skillQualityScorer.ts / skillSecurityScanner.ts
+├── skillViewTool.ts / metaLearnerBridge.ts
+├── types.ts / index.ts
 ```
+
+## 스킬이란?
+
+지시·예시·제약을 묶어 특정 작업 수행 방법을 가르치는 패키지입니다.
+
+- **Built-in** — 제품과 함께 제공  
+- **User-defined** — 사용자가 작성·공유  
+- **Community** — 레지스트리에서 다운로드  
+- **Learned** — MetaLearner가 자동 생성  
+
+## CLI
+
 ```bash
-# List available skills
 npx tsx packages/core/src/cliEntry.ts skill list
-
-# View a skill's content
 npx tsx packages/core/src/cliEntry.ts skill view <skill-name>
-
-# Create a new skill
 npx tsx packages/core/src/cliEntry.ts skill create <skill-name>
-
-# Pin a skill (always loaded)
 npx tsx packages/core/src/cliEntry.ts skill pin <skill-name>
 ```
 
-## 운영 체크
+빌드 후 `commander skill …` 도 가능합니다. monorepo 설치가 주 경로입니다.
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+## 품질 & 보안
+
+스킬은 자동 품질 점수와 콘텐츠 보안 스캔을 거칩니다. 주입 전 프롬프트 인젝션·시크릿 패턴을 검사합니다.
+
+## 런타임 주입
+
+`skillInjector`가 에이전트 프롬프트에 스킬을 붙입니다. pin된 스킬은 항상 로드됩니다. MetaLearner 브릿지가 성공 패턴을 스킬로 승격할 수 있습니다.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [자기 진화](/ko/architecture/self-evolution)  
+- [인텔리전스](/ko/architecture/intelligence)  
+- [CLI 명령](/ko/guide/commands)  

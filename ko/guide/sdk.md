@@ -2,7 +2,7 @@
 
 `@commander/sdk`로 앱에 Commander를 임베드합니다.
 
-> **상태:** 패키지는 monorepo의 `packages/sdk`에 있습니다. **npm 공개는 아직 주 설치 경로가 아닙니다** — monorepo를 클론하고 workspace를 빌드하세요.
+> **상태:** 패키지는 monorepo `packages/sdk`. **npm 공개는 아직 주 설치 경로가 아닙니다** — clone 후 workspace 빌드.
 
 ## 설치
 
@@ -37,7 +37,7 @@ console.log(result.status, result.summary);
 await client.disconnect();
 ```
 
-제로 설정 (환경에서 프로바이더 자동 감지):
+제로 설정:
 
 ```typescript
 import { createClient } from "@commander/sdk";
@@ -78,8 +78,44 @@ const client = new CommanderClient({
 });
 ```
 
-## 관련
+| 옵션 | 기본 | 설명 |
+|------|------|------|
+| `provider` | auto | `openai`, `anthropic`, `ollama`, … |
+| `apiKey` | env | 명시 키 |
+| `model` | provider default | 모델 오버라이드 |
+| `baseUrl` | provider default | OpenAI 호환 base URL |
+| `tokenBudget` | `64000` | 소프트 예산 |
+| `defaultTopology` | `SINGLE` | 폴백 토폴로지 |
+| `persistSessions` | `true` | 세션 요약 유지 |
 
-- [빠른 시작](/ko/guide/getting-started)
-- [Python SDK](/ko/guide/sdk-python)
-- [API 개요](/ko/api/overview)
+## 핵심 메서드
+
+| 메서드 | 설명 |
+|--------|------|
+| `connect` / `disconnect` | 런타임·이벤트 버스 연결 |
+| `run(task)` | 멀티 에이전트 실행 → `ExecutionResult` |
+| `plan(task)` | 심의만 |
+| `onEvent(handler)` | 라이프사이클 이벤트 |
+| `createAgent(config)` | 에이전트 프로필 |
+| `writeMemory` / `queryMemory` | 3계층 메모리 |
+
+## HTTP API (서버 모드)
+
+`docker compose` 또는 `pnpm gui` 시 REST + SSE:
+
+```bash
+curl http://localhost:4000/health
+
+curl -X POST http://localhost:4000/execute \
+  -H "Authorization: Bearer $COMMANDER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"analyze this repository","mode":"plan"}'
+```
+
+[배포](/ko/deployment) · [Python SDK](/ko/guide/sdk-python).
+
+## 다음
+
+- [Python SDK](/ko/guide/sdk-python)  
+- [명령](/ko/guide/commands)  
+- [API 개요](/ko/api/overview)  

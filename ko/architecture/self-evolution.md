@@ -1,68 +1,30 @@
-# Self-Evolution
+# 자기 진화 (Self-Evolution)
 
-**Self-Evolution.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 실행 결과로 에이전트 설정을 튜닝하는 **메타러닝**으로 시간이 갈수록 나아집니다. Thompson Sampling과 Reflexion을 결합해 토폴로지·프로바이더·파라미터를 최적화합니다.
 
-## 참고 표
-
-| Metric | Impact |
-|--------|--------|
-| Topology selection accuracy | +15-20% after 1000 runs |
-| Provider availability | Failover optimized for current latency |
-| Verification threshold tuning | False positives reduced by 30% |
-| Token efficiency | Budget allocation converges to task need |
-
-
-## 주요 섹션
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### MetaLearner
-
-**MetaLearner** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### TrajectoryAnalyzer
-
-**TrajectoryAnalyzer** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### EvolverAgent
-
-**EvolverAgent** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Reflexion
-
-**Reflexion** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Outcomes
-
-**Outcomes** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 구조
 
 ```
 Execution completes
   │
-  ├─ TrajectoryAnalyzer       ← Analyze execution patterns
-  │   └─ Extract features: duration, tokens, success rate
-  │
-  ├─ MetaLearner              ← Thompson Sampling
-  │   └─ Update Beta distributions per arm
-  │
-  └─ EvolverAgent             ← Cross-run optimization
-      └─ Propose configuration changes
+  ├─ TrajectoryAnalyzer   ← 실행 패턴 분석 (duration, tokens, success)
+  ├─ MetaLearner          ← Thompson Sampling (Beta arms)
+  └─ EvolverAgent         ← 크로스 런 설정 제안
 ```
+
+## MetaLearner
+
+탐색·활용 균형을 위해 Beta 분포 기반 Thompson Sampling을 씁니다.
+
 ```typescript
 interface Arm {
-  name: string;             // e.g., "topology:DISPATCH"
-  alpha: number;            // Success count
-  beta: number;             // Failure count
+  name: string;   // e.g. "topology:DISPATCH"
+  alpha: number;  // 성공
+  beta: number;   // 실패
 }
 
 class MetaLearner {
   selectArm(arms: Arm[]): Arm {
-    // Sample from each arm's Beta distribution
-    // Pick the arm with the highest sampled value
     return arms.reduce((best, arm) => {
       const sample = BetaDistribution.sample(arm.alpha, arm.beta);
       return sample > best.sample ? { ...arm, sample } : best;
@@ -76,17 +38,26 @@ class MetaLearner {
 }
 ```
 
-## 운영 체크
+토폴로지·프로바이더·재시도 전략 등이 각각 “팔(arm)”입니다. 수천 회 실행 후 작업 유형별 최적 설정으로 수렴합니다.
+
+## TrajectoryAnalyzer
+
+실행 트레이스에서 병목 스텝, 토큰 소비, 실패 모드를 추출해 MetaLearner에 피처를 제공합니다.
+
+## EvolverAgent
+
+크로스 런으로 설정 변경을 제안합니다. 보통 자동 적용되며, 프로덕션에서는 승인 모드·예산 게이트와 함께 씁니다.
+
+## 사용자 관점
+
+대부분 자동입니다. 5회 이상 경험이 쌓이면 자기 최적화가 더 잘 드러납니다(제품 카피의 “5+ experiences”와 정합).
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts status   # MetaLearner 통계 등
 ```
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [인텔리전스](/ko/architecture/intelligence)  
+- [멀티 에이전트](/ko/architecture/multi-agent)  
+- [Reflection engine](/ko/api/reflection-engine)  

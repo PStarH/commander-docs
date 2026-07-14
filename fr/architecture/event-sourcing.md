@@ -1,40 +1,14 @@
-# Event Sourcing & Recovery
+# Event sourcing & récupération
 
-**Event Sourcing & Recovery.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Le système d’event sourcing de Commander offre une exécution **tolérante aux crashs**, des pistes d’audit inviolables, un replay déterministe et la récupération automatique des runs zombies.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
+## EventSourcingEngine
 
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
+`EventSourcingEngine` implémente le contrat IEventSourcingEngine (Pillar I) avec un WAL (Write-Ahead Log) et une chaîne de hash SHA-256.
 
-## Référence
+### Write-Ahead Log
 
-| Metric | Degraded | Unhealthy |
-|--------|----------|-----------|
-| WAL write latency (p95) | 50ms | 200ms |
-| WAL file size | 100MB | 500MB |
-| Event backlog ratio | 1000 | 10000 |
-| Hash chain integrity | — | Any break |
-
-
-## Contenu principal
-
-### EventSourcingEngine
-
-En pratique, **EventSourcingEngine** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/event-sourcing) pour le détail exhaustif.
-
-### RecoveryBootstrapper
-
-En pratique, **RecoveryBootstrapper** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/event-sourcing) pour le détail exhaustif.
-
-### Recovery Strategy Priority
-
-En pratique, **Recovery Strategy Priority** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/event-sourcing) pour le détail exhaustif.
-
-### Integration Points
-
-En pratique, **Integration Points** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/event-sourcing) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+Chaque événement est append atomiquement dans `.commander_state/event-sourcing.wal` (chemin via `COMMANDER_EVENT_SOURCING_WAL`) :
 
 ```
 [event 1] → SHA256("") → hash_1
@@ -42,27 +16,87 @@ En pratique, **Integration Points** s’intègre au runtime avec les portes de q
 [event 3] → SHA256(hash_2 | type | id | timestamp | payload) → hash_3
 ```
 
+Un verrou d’écriture sérialise les appends pour ne pas corrompre la chaîne.
+
+### Intégrité de la chaîne
+
+Chaque hash inclut le précédent. `verifyIntegrity()` recalcule tout pour détecter une altération.
+
+### Entrées non déterministes
+
+Enregistrées pour le replay (pas de recomputation) :
+
+- Horodatages · aléas (UUID, salt) · réponses LLM · résultats de tools  
+
+Contrainte IF-05 : rejouer le log produit les mêmes transitions d’état.
+
+### Snapshot & compaction
+
+- `snapshot()` — restauration rapide sans replay complet  
+- `compact()` — retire les événements avant un snapshot, réécrit le WAL  
+- `readFrom(snapshotId)` — flux d’événements après le snapshot  
+
+### Santé
+
+| Métrique | Degraded | Unhealthy |
+|----------|----------|-----------|
+| WAL write latency (p95) | 50ms | 200ms |
+| WAL file size | 100MB | 500MB |
+| Event backlog ratio | 1000 | 10000 |
+| Hash chain integrity | — | Toute rupture |
+
+Exposé via `/health/detailed`.
+
+### EventSourcingSubscriber
+
+S’abonne au MessageBus sans envahir la boucle principale ; écriture WAL async ; dégradation gracieuse si WAL indisponible.
+
+## RecoveryBootstrapper
+
+Au démarrage, scan des runs zombies :
+
+1. **RunLedger** — EXECUTING / VERIFYING / PAUSED  
+2. **Lease** — baux expirés  
+3. **Fencing lease** — holder `recovery-{pid}`, TTL 30s  
+4. **Décision**  
+   - PAUSED + checkpoint récupérable → resume  
+   - EXECUTING/VERIFYING → abort + compensate  
+   - Déjà traité → skip  
+5. **DLQ** · événements MessageBus  
+
+### Idempotence
+
+Deux processus au démarrage : le second voit le lease et skip. `forceAbort` pour CI.
+
 ```typescript
 interface RecoveryResult {
-  scanned: number;      // Total zombie runs found
-  recovered: number;   // Successfully resumed
-  aborted: number;      // Aborted with compensation
-  skipped: number;      // Already handled by another process
+  scanned: number;
+  recovered: number;
+  aborted: number;
+  skipped: number;
   details: RecoveryDetail[];
 }
 ```
 
-## Opérations
+## Priorité de récupération
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+1. **Replay d’événements** (le plus exact)  
+2. **Checkpoint** (rapide, état récent éventuellement perdu)  
+3. **Abort + compensate** (fallback sûr)  
+
+## Intégrations
+
+| Composant | Rôle |
+|-----------|------|
+| `RunLedger` | Source de vérité des runs |
+| `LeaseManager` | Tokens de fencing |
+| `CheckpointStore` | Checkpoints SQLite |
+| `DeadLetterQueue` | Runs récupérés/abortés |
+| `MessageBus` | Événements de recovery |
+| `CompensationBridge` | Rollback des runs abortés |
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Production readiness](/fr/architecture/production-readiness)  
+- [Agent Runtime](/fr/architecture/agent-runtime)  
+- [Migration V2](/fr/guide/migration-v2)  

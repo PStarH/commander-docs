@@ -1,36 +1,17 @@
-# API Reference
+# API 레퍼런스
 
-**API Reference.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander API는 **두 계층**입니다. 대부분의 앱은 Layer 1만 필요합니다.
 
-## 참고 표
+## Layer 1 — 공개 통합 (여기서 시작)
 
-| Surface | Package / entry | Best for |
-|---------|-----------------|----------|
-| **CLI** | `commander` · `packages/core/src/cliEntry.ts` | Terminal, scripts, CI |
-| **TypeScript SDK** | `@commander/sdk` → `CommanderClient` | Embed in Node apps |
-| **HTTP API** | Server `:4000` | Polyglot clients, Web Console |
-| **Python SDK** | `commander-ai` (HTTP client) | Python against the API server |
+| 표면 | 패키지 / 엔트리 | 용도 |
+|------|-----------------|------|
+| **CLI** | `commander` · `packages/core/src/cliEntry.ts` | 터미널, 스크립트, CI |
+| **TypeScript SDK** | `@commander/sdk` → `CommanderClient` | Node 앱 임베드 |
+| **HTTP API** | 서버 `:4000` | 다언어 클라이언트, Web Console |
+| **Python SDK** | `commander-ai` (HTTP 클라이언트) | API 서버 대상 Python |
 
-
-## 주요 섹션
-
-### Layer 1 — Public integration (start here)
-
-**Layer 1 — Public integration (start here)** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Layer 2 — Runtime orchestration components
-
-**Layer 2 — Runtime orchestration components** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Architecture depth
-
-**Architecture depth** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Related guides
-
-**Related guides** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+### TypeScript SDK
 
 ```typescript
 import { CommanderClient, createClient } from '@commander/sdk';
@@ -41,11 +22,23 @@ const result = await client.run('audit this repo');
 console.log(result.status, result.summary);
 await client.disconnect();
 
-// or
 const c = await createClient();
 await c.run('explain the architecture');
 await c.disconnect();
 ```
+
+| 메서드 | 역할 |
+|--------|------|
+| `connect` / `disconnect` | 수명주기 |
+| `run(task)` | 전체 실행 → `ExecutionResult` |
+| `plan(task)` | 심의만 |
+| `onEvent(handler)` | 에이전트/도구 이벤트 스트림 |
+| `createAgent` / memory helpers | 고급 세션 |
+
+> **npm 상태:** monorepo 우선. 공개 npm은 진행 중. [Agent SDK](/ko/guide/sdk).
+
+### HTTP
+
 ```bash
 curl http://localhost:4000/health
 curl http://localhost:4000/metrics
@@ -56,17 +49,88 @@ curl -X POST http://localhost:4000/execute \
   -d '{"task":"analyze this repository","mode":"plan"}'
 ```
 
-## 운영 체크
+Architecture V2: `POST /v1/runs` — [V2 마이그레이션](/ko/guide/migration-v2).
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+### Python
+
+```python
+from commander import CommanderClient
+# thin httpx client → API server
 ```
+
+[Python SDK](/ko/guide/sdk-python).
+
+---
+
+## Layer 2 — 런타임 오케스트레이션 컴포넌트
+
+`@commander/core` 내부 모듈. **런타임을 확장**할 때만 사용하세요.
+
+| 컴포넌트 | 목적 |
+|----------|------|
+| [Task Complexity Analyzer](/ko/api/task-complexity-analyzer) | 점수 → 토폴로지 추천 |
+| [Adaptive Orchestrator](/ko/api/adaptive-orchestrator) | 멀티 에이전트 계획 |
+| [Token Budget Allocator](/ko/api/token-budget-allocator) | 예산 분배 |
+| [Three-Layer Memory](/ko/api/three-layer-memory) | working · episodic · long-term |
+| [Reflection Engine](/ko/api/reflection-engine) | 사후 평가 |
+| [Consensus Checker](/ko/api/consensus-checker) | 고위험 다중 모델 투표 |
+| [Inspector Agent](/ko/api/inspector-agent) | 헬스 / 이슈 탐지 |
+
+### Layer 2를 쓸 때
+
+- 커스텀 토폴로지·플래너  
+- 메모리·합의 연구/계측  
+- 서브시스템 단위 테스트  
+
+### 쓰지 말 때
+
+- “이 작업 실행”만 필요 → `CommanderClient`  
+- 원격 다언어 → HTTP  
+
+### 최소 예
+
+```typescript
+import {
+  TaskComplexityAnalyzer,
+  AdaptiveOrchestrator,
+  TokenBudgetAllocator,
+} from '@commander/core';
+
+const analyzer = new TaskComplexityAnalyzer();
+const complexity = analyzer.analyze({
+  id: 'task-1',
+  description: 'Build distributed logging system',
+  riskLevel: 'high',
+});
+
+const allocator = new TokenBudgetAllocator({ baseBudget: 100_000 });
+const budget = allocator.allocate(
+  complexity.recommendedTopology,
+  complexity.score,
+  3,
+);
+
+const orchestrator = new AdaptiveOrchestrator();
+orchestrator.registerAgent({
+  id: 'lead',
+  name: 'Lead',
+  role: 'architect',
+  capabilities: [],
+});
+
+const plan = orchestrator.createPlan(
+  [{ id: 'task-1', description: '...', complexity: complexity.score }],
+  complexity.recommendedTopology,
+);
+```
+
+### 전역 접근자
+
+`getGlobalTaskComplexityAnalyzer()` 등 프로세스 싱글톤이 있습니다. 공유 상태가 필요할 때만 쓰고, 기본은 `CommanderClient`를 선호하세요.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [CLI 명령](/ko/guide/commands)  
+- [Web Console](/ko/guide/web-console)  
+- [Cookbook](/ko/guide/cookbook/)  
+- [아키텍처 개요](/ko/architecture/overview)  

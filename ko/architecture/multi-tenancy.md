@@ -1,60 +1,51 @@
-# Multi-Tenant Architecture
+# 멀티 테넌트 아키텍처
 
-**Multi-Tenant Architecture.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 **모든 계층**에서 멀티 테넌트 격리를 지원합니다.
 
-## 참고 표
-
-| Layer | Mechanism |
-|-------|-----------|
-| Rate limits | Per-tenant: requests/minute |
-| Concurrency | Per-tenant: max concurrent runs |
-| Storage | Per-tenant directory paths |
-| Memory | Per-instance ThreeLayerMemory |
-| Cache | SHA-256 key includes tenantId |
-| Metrics | Every counter/gauge/histogram has `tenant` label |
-
-
-## 주요 섹션
-
-### Request Flow
-
-**Request Flow** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Isolation Layers
-
-**Isolation Layers** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Providers
-
-**Providers** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Tenant Config
-
-**Tenant Config** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 요청 흐름
 
 ```
 Request → HttpServer
            │
-           ├─ authenticate()           ← Bearer token → tenant mapping
+           ├─ authenticate()           ← Bearer → 테넌트 매핑
            ├─ resolveTenantFromAuth()  ← API key → tenantId
            │
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
+                                        │   → tokenBudget, maxConcurrency, maxRunsPerMinute
                                         │
                                         ├─ Rate limit check     → TENANT_RATE_LIMIT
                                         ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
                                         │
-                                        └─ Tenant-scoped instances:
+                                        └─ 테넌트 스코프 인스턴스:
                                             ├─ SamplesStore(path/tenant_{id}/)
                                             ├─ TraceStore(path/tenant_{id}/)
                                             ├─ StateCheckpointer(path/tenant_{id}/)
                                             ├─ ThreeLayerMemory(per-instance)
                                             └─ ToolResultCache(key = SHA256(tenantId + tool + args))
 ```
+
+## 격리 계층
+
+| 계층 | 메커니즘 |
+|------|----------|
+| Rate limits | 테넌트별 분당 요청 |
+| Concurrency | 테넌트별 최대 동시 런 |
+| Storage | 테넌트별 디렉터리 |
+| Memory | 인스턴스별 ThreeLayerMemory |
+| Cache | 키에 tenantId 포함 (SHA-256) |
+| Metrics | 모든 카운터/게이지/히스토그램에 `tenant` 라벨 |
+
+## 프로바이더
+
+| 프로바이더 | 동작 |
+|------------|------|
+| `NullTenantProvider` | 격리 없음, 단일 테넌트 호환 |
+| `SimpleTenantProvider` | tenant → config 정적 맵 |
+
+## TenantConfig
+
 ```typescript
 interface TenantConfig {
   tenantId: string;
@@ -66,17 +57,20 @@ interface TenantConfig {
 }
 ```
 
-## 운영 체크
+## 운영 팁
 
 ```bash
+export COMMANDER_API_KEY="long-random-secret"
+# 테넌트 매핑은 서버 설정 / TENANT_PROVIDER 에 따름
 npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+curl -s http://localhost:4000/health/detailed
 ```
+
+로컬 CLI 단일 머신 개발은 보통 `NullTenantProvider`로 충분합니다. 프로덕션 SaaS·공유 클러스터에서는 Simple(또는 커스텀) 프로바이더와 쿼터를 켜세요.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [보안 게이트웨이](/ko/architecture/security-gateway)  
+- [캐싱](/ko/architecture/caching)  
+- [프로덕션 준비](/ko/architecture/production-readiness)  
+- [보안 가이드](/ko/guide/security)  

@@ -1,70 +1,25 @@
-# Saga Transactions
+# Saga 트랜잭션
 
-**Saga Transactions.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 다단계 작업의 일관성을 위해 **사가 패턴**(단계별 보상 롤백)을 구현합니다.
 
-## 참고 표
-
-| Policy | Behavior |
-|--------|----------|
-| No retry | Fail immediately, begin compensation |
-| Fixed retries | Retry N times with fixed delay |
-| Exponential backoff | Retry with doubling delay, up to max |
-| Circuit breaker | Use shared circuit breaker state |
-
-
-## 주요 섹션
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### SagaBuilder
-
-**SagaBuilder** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Coordinator
-
-**Coordinator** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### WorkerPool
-
-**WorkerPool** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Checkpointer
-
-**Checkpointer** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### ApprovalManager
-
-**ApprovalManager** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### RetryController
-
-**RetryController** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Stores
-
-**Stores** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 구조
 
 ```
 SagaBuilder.define()
   │
-  ├─ Step 1: Create resource   → Compensation: Delete resource
-  ├─ Step 2: Update resource   → Compensation: Revert update
-  ├─ Step 3: Send notification → Compensation: Void notification
+  ├─ Step 1: Create resource   → Compensation: Delete
+  ├─ Step 2: Update resource   → Compensation: Revert
+  ├─ Step 3: Send notification → Compensation: Void
   │
   └─ Coordinator.execute(saga)
-       │
-       ├─ Step 1 → success
-       ├─ Step 2 → success
-       ├─ Step 3 → FAILURE
-       │
-       └─ Compensate
-            ├─ Undo Step 2 (revert update)
-            └─ Undo Step 1 (delete resource)
+       ├─ 성공 시 순차 진행
+       └─ 실패 시 역순 보상
 ```
+
+## SagaBuilder
+
+정방향 액션과 보상 롤백을 함께 정의합니다.
+
 ```typescript
 const saga = new SagaBuilder('deploy-service')
   .step('create-dir', async (ctx) => {
@@ -91,17 +46,32 @@ const saga = new SagaBuilder('deploy-service')
   .build();
 ```
 
-## 운영 체크
+## Coordinator
+
+- 순서대로 스텝 실행  
+- 실패 시 **역순** 보상  
+- 상태: PENDING · COMPLETED · COMPENSATING · FAILED  
+- 복구 불가 시 DLQ 연동  
+
+## WorkerPool
+
+독립 스텝은 워커 풀로 병렬화할 수 있습니다.
+
+```typescript
+const pool = new WorkerPool({ maxConcurrency: 5 });
+pool.execute(steps);
+```
+
+## 도구 연동
+
+mutation 도구는 Compensation Registry에 보상을 등록해 런타임 실패 시 자동 롤백합니다. CLI: `saga` / `compensation` / `undo` (빌드 후 `commander`, 소스에서는 `cliEntry.ts`).
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
 ```
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [프로덕션 준비](/ko/architecture/production-readiness)  
+- [Resilience](/ko/architecture/resilience)  
+- [도구](/ko/architecture/tools)  

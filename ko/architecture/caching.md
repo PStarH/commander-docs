@@ -1,43 +1,26 @@
-# Caching
+# 캐싱
 
-**Caching.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 LLM 호출을 줄이고 응답을 빠르게 하며 중복 계산을 막기 위해 **다층 캐시**를 둡니다. 모든 캐시는 **테넌트 단위로 격리**됩니다.
 
-## 주요 섹션
-
-### Cache Layers
-
-**Cache Layers** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### ToolResultCache
-
-**ToolResultCache** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### SemanticCache
-
-**SemanticCache** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### SingleFlightRequestCache
-
-**SingleFlightRequestCache** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Integration
-
-**Integration** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 캐시 계층
 
 ```
 Tool Call
   │
-  ├─ SingleFlightRequestCache  ── Deduplicates concurrent identical requests
-  │   (First request executes, subsequent wait for result)
+  ├─ SingleFlightRequestCache  ── 동일 동시 요청 중복 제거
+  │   (첫 요청만 실행, 나머지는 결과 대기)
   │
-  ├─ ToolResultCache           ── SHA-256 exact-match cache
-  │   (Deterministic tools: read file, search code, etc.)
+  ├─ ToolResultCache           ── SHA-256 정확 매칭
+  │   (결정적 도구: 파일 읽기, 코드 검색 등)
   │
-  └─ SemanticCache             ── Similarity-based semantic cache
-      (Non-deterministic LLM calls with similar meaning)
+  └─ SemanticCache             ── 의미 유사도 캐시
+      (의미가 비슷한 비결정적 LLM 호출)
 ```
+
+## ToolResultCache
+
+키는 `(tenantId + tool + args)` 의 SHA-256 해시입니다.
+
 ```typescript
 const cache = new ToolResultCache({ basePath: '/data/cache' });
 
@@ -50,17 +33,58 @@ const result = await executeTool(toolName, args);
 await cache.set(key, result);
 ```
 
-## 운영 체크
+- 결정적 도구(파일 읽기, 코드 검색, grep)에 적합  
+- 테넌트 키 격리로 크로스 테넌트 유출 방지  
+- TTL 설정 가능  
+- 스토리지 쿼터 초과 시 LRU 축출  
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+## SemanticCache
+
+비결정적 작업(LLM 호출)에는 임베딩 유사도를 씁니다.
+
+```typescript
+const semanticCache = new SemanticCache({ similarityThreshold: 0.95 });
+
+const similar = await semanticCache.find(input, tenantId);
+if (similar) return similar.result;
+
+await semanticCache.store(input, result, tenantId);
 ```
+
+- 코사인 유사도 비교  
+- 임계값↑ = 오탐↓ / 히트↓ · 임계값↓ = 히트↑  
+- TTL + LRU 조합 축출  
+
+## SingleFlightRequestCache
+
+동일 키의 **동시 중복 실행**(thundering herd)을 막습니다.
+
+```typescript
+const singleFlight = new SingleFlightRequestCache();
+
+const [a, b, c] = await Promise.all([
+  singleFlight.execute('key-1', () => expensiveOperation()),
+  singleFlight.execute('key-1', () => expensiveOperation()),
+  singleFlight.execute('key-1', () => expensiveOperation()),
+]);
+// expensiveOperation 은 한 번만 실행
+```
+
+여러 에이전트/런이 동시에 같은 도구·LLM을 요청할 때 특히 유용합니다.
+
+## 통합 순서
+
+도구 실행 파이프라인에서:
+
+1. **SingleFlight** — 진행 중 요청 중복 제거  
+2. **ToolResultCache** — 정확 매칭 히트  
+3. **SemanticCache** — 유사 의미 히트  
+4. 모두 미스일 때만 실제 LLM/도구 실행  
+
+패키지는 monorepo `packages/core` 기준입니다. 설치는 clone + `pnpm install` 이 주 경로입니다.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [멀티 테넌시](/ko/architecture/multi-tenancy)  
+- [에이전트 런타임](/ko/architecture/agent-runtime)  
+- [도구](/ko/architecture/tools)  

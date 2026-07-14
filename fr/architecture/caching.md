@@ -1,47 +1,25 @@
-# Caching
+# Cache
 
-**Caching.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Commander met en place un **cache multi-niveaux** pour réduire les appels LLM, accélérer les réponses et éviter le travail redondant. Chaque cache est **isolé par tenant**.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
-
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
-
-## Contenu principal
-
-### Cache Layers
-
-En pratique, **Cache Layers** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/caching) pour le détail exhaustif.
-
-### ToolResultCache
-
-En pratique, **ToolResultCache** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/caching) pour le détail exhaustif.
-
-### SemanticCache
-
-En pratique, **SemanticCache** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/caching) pour le détail exhaustif.
-
-### SingleFlightRequestCache
-
-En pratique, **SingleFlightRequestCache** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/caching) pour le détail exhaustif.
-
-### Integration
-
-En pratique, **Integration** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/caching) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+## Couches
 
 ```
 Tool Call
   │
-  ├─ SingleFlightRequestCache  ── Deduplicates concurrent identical requests
-  │   (First request executes, subsequent wait for result)
+  ├─ SingleFlightRequestCache  ── déduplique les requêtes concurrentes identiques
+  │   (la première exécute, les autres attendent le résultat)
   │
-  ├─ ToolResultCache           ── SHA-256 exact-match cache
-  │   (Deterministic tools: read file, search code, etc.)
+  ├─ ToolResultCache           ── cache exact SHA-256
+  │   (tools déterministes : lecture fichier, recherche code, etc.)
   │
-  └─ SemanticCache             ── Similarity-based semantic cache
-      (Non-deterministic LLM calls with similar meaning)
+  └─ SemanticCache             ── cache sémantique par similarité
+      (appels LLM non déterministes au sens proche)
 ```
+
+## ToolResultCache
+
+Clé = SHA-256 de `(tenantId + tool + args)` :
 
 ```typescript
 const cache = new ToolResultCache({ basePath: '/data/cache' });
@@ -55,28 +33,58 @@ const result = await executeTool(toolName, args);
 await cache.set(key, result);
 ```
 
+- Idéal pour tools déterministes  
+- Isolation par tenant → pas de fuite inter-tenant  
+- TTL configurable  
+- Éviction LRU au-delà du quota  
+
+## SemanticCache
+
+Pour les opérations non déterministes (LLM), similarité d’embeddings :
+
 ```typescript
 const semanticCache = new SemanticCache({ similarityThreshold: 0.95 });
 
-// Before LLM call
 const similar = await semanticCache.find(input, tenantId);
 if (similar) return similar.result;
 
-// After LLM call
 await semanticCache.store(input, result, tenantId);
 ```
 
-## Opérations
+- Similarité cosinus  
+- Seuil haut = moins de faux positifs, moins de hits  
+- Éviction TTL + LRU  
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+## SingleFlightRequestCache
+
+Évite le **thundering herd** (plusieurs exécutions concurrentes de la même clé) :
+
+```typescript
+const singleFlight = new SingleFlightRequestCache();
+
+const [a, b, c] = await Promise.all([
+  singleFlight.execute('key-1', () => expensiveOperation()),
+  singleFlight.execute('key-1', () => expensiveOperation()),
+  singleFlight.execute('key-1', () => expensiveOperation()),
+]);
+// une seule expensiveOperation
 ```
+
+Utile quand plusieurs agents demandent le même tool/LLM en même temps.
+
+## Intégration
+
+Dans le pipeline d’exécution des tools :
+
+1. **SingleFlight** — dédup in-flight  
+2. **ToolResultCache** — match exact  
+3. **SemanticCache** — sens similaire  
+4. Exécution réelle seulement en cas de miss total  
+
+Packages monorepo (`packages/core`). Install principal : clone + `pnpm install`.
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Multi-tenancy](/fr/architecture/multi-tenancy)  
+- [Agent Runtime](/fr/architecture/agent-runtime)  
+- [Tools](/fr/architecture/tools)  

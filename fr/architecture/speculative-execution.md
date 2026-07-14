@@ -1,115 +1,52 @@
-# Speculative Execution
+# Exécution spéculative
 
-**Speculative Execution.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Commander implémente une **exécution spéculative style PASTE** (Pattern-Aware Speculative Execution) : pendant que le LLM « réfléchit », les prochains appels d’outils probables sont pré-exécutés. La recherche rapporte jusqu’à ~48,5 % de réduction du temps de tâche.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
+## Fonctionnement
 
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
-
-## Référence
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `maxPatternLength` | `4` | Max n-gram length |
-| `maxTrackedPatterns` | `50` | Max patterns in memory |
-| `minConfidence` | `0.1` | Minimum confidence to predict |
-| `staleThresholdMs` | `300000` | Prune patterns older than 5 min |
-
-
-## Contenu principal
-
-### Fonctionnement
-
-En pratique, **How It Works** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### Safety
-
-En pratique, **Safety** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### Pattern Tracking
-
-En pratique, **Pattern Tracking** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### Configuration
-
-En pratique, **Configuration** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### Programmatic API
-
-En pratique, **Programmatic API** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### When Speculative Execution Helps Most
-
-En pratique, **When Speculative Execution Helps Most** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-### Monitoring
-
-En pratique, **Monitoring** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/speculative-execution) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+Pendant le thinking LLM, un Pattern Tracker prédit les tools suivants et les exécute à l’avance. Si le modèle les demande vraiment, le résultat est déjà là (attente nulle). Les mauvaises prédictions sont jetées sans effet de bord.
 
 ```
-┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  LLM Call   │────▶│ Pattern Tracker  │────▶│ Speculative     │
-│  (thinking) │     │ (predict next)   │     │ Executor        │
-└─────────────┘     └──────────────────┘     └────────┬────────┘
-                                                       │
-                         ┌─────────────────────────────┘
-                         ▼
-               ┌──────────────────┐
-               │  Pre-executed    │
-               │  Tool Results    │
-               │  (cached)        │
-               └──────────────────┘
+LLM Call → Pattern Tracker → Speculative Executor → résultats pré-exécutés (cache)
 ```
+
+## Sécurité
+
+Seuls les tools **en lecture seule** sont spéculés :
+
+- ex. `file.read`, `web.search`, `web.fetch`, `code.search`, `git.status`
+
+Les tools **mutateurs** ne le sont **jamais** :
+
+- ex. `file.write`, `file.edit`, `shell.execute`, `git.commit`, `apply_patch`
+
+## PatternTracker
 
 ```typescript
 import { PatternTracker } from '@commander/core';
 
 const tracker = new PatternTracker();
-
-// Record observed tool sequences
 tracker.recordSequence(['file.read', 'code.search', 'file.read']);
-
-// Predict next tool given partial sequence
 const predictions = tracker.predictNext(['file.read']);
 // → [{ toolName: 'code.search', confidence: 0.8 }]
 ```
 
-```typescript
-import { SpeculativeExecutor, PatternTracker } from '@commander/core';
+### Cycle de vie
 
-const tracker = new PatternTracker();
-const executor = new SpeculativeExecutor({ tracker });
+1. **Observation** — n-grammes (2, 3, 4)  
+2. **Confiance** — `min(1, frequency / 10)`  
+3. **Élagage** — &lt;2 occurrences ou inutilisé &gt;5 min  
 
-// During LLM thinking time
-const predictions = tracker.predictNext(currentToolSequence);
+## Ops
 
-// Pre-execute predicted tools (read-only only)
-const preExecuted = await executor.speculate(predictions);
-
-// When the model actually calls a tool, check if we already have the result
-const cached = executor.getCachedResult('file.read', { path: 'src/index.ts' });
-if (cached) {
-  // Use cached result — zero wait
-  return cached;
-} else {
-  // Execute normally
-  return await executeTool('file.read', { path: 'src/index.ts' });
-}
-```
-
-## Opérations
+Optimisation interne. L’utilisateur voit le stream normal :
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts run "explain this repo" --stream
 ```
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Agent Runtime](/fr/architecture/agent-runtime)  
+- [Tools](/fr/architecture/tools)  
+- [Cache](/fr/architecture/caching)  

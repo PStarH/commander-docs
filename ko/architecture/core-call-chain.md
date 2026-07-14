@@ -1,69 +1,69 @@
-# Core Call Chain
+# 코어 호출 체인
 
-**Core Call Chain.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
+모든 Commander 실행은 구조화된 파이프라인을 따릅니다.
 
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
+## 1. 심의 (Deliberation)
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
-
-## 주요 내용
-
-### 1. Deliberation
-
-운영 시 **1. Deliberation** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 2. Effort Scaling
-
-운영 시 **2. Effort Scaling** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 3. Topology Routing
-
-운영 시 **3. Topology Routing** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 4. Atomization
-
-운영 시 **4. Atomization** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 5. Execution
-
-운영 시 **5. Execution** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 6. Quality Gates
-
-운영 시 **6. Quality Gates** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-### 7. Completion
-
-운영 시 **7. Completion** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/architecture/core-call-chain)를 보세요.
-
-## 예제 (코드는 영어 유지)
-
-```bash
+```
 CLI / HTTP / API
   │
-  ├─ deliberation.ts     ← "What kind of task is this?"
+  ├─ deliberation.ts     ← "이 작업은 어떤 종류인가?"
   │   └─ TaskComplexityAnalyzer
 ```
 
-```bash
-  ├─ effortScaler.ts     ← "How many agents?"
+복잡도·의존 그래프·도메인을 분석해 실행 전략을 정합니다.
+
+## 2. 노력 스케일링
+
+```
+  ├─ effortScaler.ts     ← "에이전트 몇 명?"
 ```
 
-```bash
-  ├─ topologyRouter.ts   ← "Which topology fits?"
+1–20 에이전트로 스케일. 단순 작업은 1명, 복잡한 리서치는 팀.
+
+## 3. 토폴로지 라우팅
+
+```
+  ├─ topologyRouter.ts   ← "어떤 토폴로지?"
 ```
 
-## 운영
+5 정규 토폴로지: **SINGLE** · **CHAIN** · **DISPATCH** · **ORCHESTRATOR** · **REVIEW** (레거시 별칭 지원).
+
+## 4. 원자화
+
+```
+  ├─ atomizer.ts         ← "서브태스크로 분해"
+```
+
+ROMA 스타일 분해로 의존성 인식 원자 작업 생성.
+
+## 5. 실행
+
+```
+  ├─ agentRuntime.ts.execute(ctx)
+      ├─ acquireSlot / tenant check / storage
+      ├─ [Retry loop]
+      │   ├─ LLM callWithTimeout
+      │   ├─ ToolPlanner → executeTool → cache
+      │   ├─ verification (5 gates)
+      │   └─ checkpoint
+      └─ releaseSlot / flush traces
+```
+
+## 6. 검증 & 합성
+
+품질 게이트 통과 후 리드/합성기가 최종 결과를 만듭니다. 실패 시 재시도·DLQ·보상.
+
+## 로컬에서 따라가기
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [아키텍처 개요](/ko/architecture/overview)  
+- [멀티 에이전트](/ko/architecture/multi-agent)  
+- [에이전트 런타임](/ko/architecture/agent-runtime)  
+- [검증](/ko/architecture/verification)  

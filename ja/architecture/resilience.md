@@ -1,58 +1,28 @@
-# Resilience
+# レジリエンス (Resilience)
 
-**Resilience.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander は可用性・データ安全・復旧性のための **多層レジリエンス** を持ちます。
 
-## 参照表
+## Circuit Breaker
 
-| State | Behavior |
-|-------|----------|
-| **CLOSED** | Normal operation. Requests pass through. |
-| **OPEN** | After 5 consecutive failures. All requests are rejected immediately. Cooldown: 30 seconds. |
-| **HALF-OPEN** | After cooldown. One test request is allowed. Success → CLOSED, failure → OPEN again. |
+プロバイダーごとに 3 状態:
 
-
-## 主な節
-
-### Circuit Breaker
-
-**Circuit Breaker** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Provider Fallback Chain
-
-**Provider Fallback Chain** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Crash-Safe Checkpoints
-
-**Crash-Safe Checkpoints** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Dead Letter Queue
-
-**Dead Letter Queue** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Compensation Registry
-
-**Compensation Registry** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Event Sourcing Recovery
-
-**Event Sourcing Recovery** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Recovery Bootstrapper
-
-**Recovery Bootstrapper** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### ATR System
-
-**ATR System** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+| 状態 | 動作 |
+|------|------|
+| **CLOSED** | 通常通過 |
+| **OPEN** | 連続 5 失敗後。即拒否。クールダウン 30s |
+| **HALF-OPEN** | 試験 1 回。成功→CLOSED、失敗→OPEN |
 
 ```typescript
 const breaker = new CircuitBreaker({ threshold: 5, cooldownMs: 30000 });
-breaker.onSuccess();    // Resets failure count
-breaker.onFailure();    // Increments; opens circuit at threshold
-breaker.isAvailable();  // false when OPEN
+breaker.onSuccess();
+breaker.onFailure();
+breaker.isAvailable();
 ```
+
+`CircuitBreakerRegistry` が全プロバイダーを管理。
+
+## Provider Fallback Chain
+
 ```typescript
 const chain = new ProviderFallbackChain({
   providers: ['openai', 'anthropic', 'deepseek', 'groq'],
@@ -60,21 +30,30 @@ const chain = new ProviderFallbackChain({
 });
 
 const result = await chain.tryProviders(task);
-// Tries OpenAI → Anthropic → DeepSeek → Groq
-// Throws FallbackChainExhaustedError if all fail
 ```
 
-## 運用チェック
+`llmRetry.ts` が再試行可能 / 永続エラーを分類。
+
+## Crash-safe Checkpoints
+
+`StateCheckpointer` が各ステップを SQLite WAL で保存。テナント別ディレクトリ。
+
+```typescript
+const checkpointer = new StateCheckpointer({ basePath: '/data/checkpoints' });
+await checkpointer.checkpoint({ runId, phase, stepNumber, messages, tokenUsage });
+```
+
+## Dead Letter Queue
+
+**7 カテゴリ · 15 失敗モード**: `llm` · `tool` · `execution` · `verification` · `circuit_breaker` · `compensation` · `semantic_drift`。
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+npx tsx packages/core/src/cliEntry.ts doctor --reset
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [イベントソーシング](/ja/architecture/event-sourcing)  
+- [本番準備](/ja/architecture/production-readiness)  
+- [Saga](/ja/architecture/saga)  

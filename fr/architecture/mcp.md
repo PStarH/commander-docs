@@ -1,49 +1,23 @@
 # Model Context Protocol (MCP)
 
-**Model Context Protocol (MCP).** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Commander prend en charge le [Model Context Protocol](https://modelcontextprotocol.io) : connexion à des serveurs MCP externes et exposition des capacités Commander en services MCP.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
-
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
-
-## Contenu principal
-
-### Architecture
-
-En pratique, **Architecture** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-### MCP Client
-
-En pratique, **MCP Client** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-### MCP Server
-
-En pratique, **MCP Server** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-### Agent-to-Agent (A2A) Protocol
-
-En pratique, **Agent-to-Agent (A2A) Protocol** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-### MCP Tool Adapter
-
-En pratique, **MCP Tool Adapter** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-### Use Cases
-
-En pratique, **Use Cases** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/mcp) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+## Architecture
 
 ```
 mcp/
-├── client.ts        ← MCP client for connecting to external servers
-├── server.ts        ← MCP server for exposing Commander capabilities
-├── a2aClient.ts     ← Agent-to-Agent (A2A) protocol client
-├── a2aServer.ts     ← A2A protocol server
-├── a2aCompliance.ts ← A2A compliance validation
-├── types.ts         ← Shared MCP types
-└── index.ts         ← Public exports
+├── client.ts        ← client vers serveurs MCP externes
+├── server.ts        ← serveur MCP exposant Commander
+├── a2aClient.ts     ← client Agent-to-Agent (A2A)
+├── a2aServer.ts     ← serveur A2A
+├── a2aCompliance.ts ← validation de conformité A2A
+├── types.ts
+└── index.ts
 ```
+
+## Client MCP
+
+Étendre Commander avec des tools externes :
 
 ```typescript
 import { MCPClient } from '@commander/core';
@@ -54,37 +28,57 @@ const client = new MCPClient({
 });
 
 await client.connect();
-
-// List available tools from the MCP server
 const tools = await client.listTools();
-
-// Call an MCP tool
 const result = await client.callTool('external-tool', { arg: 'value' });
 ```
+
+## Serveur MCP
+
+Exposer des tools Commander à d’autres agents :
 
 ```typescript
 import { MCPServer } from '@commander/core';
 
 const server = new MCPServer({
   port: 8080,
-  tools: ['web_search', 'file_read', 'git'], // which tools to expose
+  tools: ['web_search', 'file_read', 'git'],
   auth: { apiKey: 'sk-...' },
 });
 
 await server.start();
 ```
 
-## Opérations
+## Agent-to-Agent (A2A)
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+Délégation directe inter-systèmes :
+
+```typescript
+import { A2AClient, A2AServer } from '@commander/core';
+
+const a2aServer = new A2AServer({
+  agent: myAgent,
+  capabilities: ['task_delegation', 'status_reporting'],
+});
+
+const a2aClient = new A2AClient({
+  remoteUrl: 'http://other-agent:8081/a2a',
+});
+const result = await a2aClient.delegateTask({
+  description: 'analyze this dataset',
+  context: { file: '/data/set.csv' },
+});
 ```
+
+## MCP Tool Adapter
+
+Monter les tools d’un serveur MCP comme tools natifs Commander (même pipeline topologie / portes qualité).
+
+> Packages monorepo `packages/core`. Install principal : clone + `pnpm install`.  
+> CLI : `npx tsx packages/core/src/cliEntry.ts`
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Tools](/fr/architecture/tools)  
+- [Agent teams](/fr/guide/advanced/agent-teams)  
+- [Custom tools](/fr/guide/advanced/custom-tools)  
+- [Sécurité](/fr/guide/security)  

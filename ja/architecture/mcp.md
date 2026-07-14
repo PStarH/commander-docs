@@ -1,27 +1,84 @@
 # Model Context Protocol (MCP)
 
-**Model Context Protocol (MCP).** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+Commander は [Model Context Protocol](https://modelcontextprotocol.io) をサポートします。外部 MCP サーバーへ接続し、Commander の能力を MCP サービスとして公開できます。
 
-本ページは Commander における **Model Context Protocol (MCP)** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 構造
 
-```bash
+```
 mcp/
-├── client.ts        ← MCP client for connecting to external servers
-├── server.ts        ← MCP server for exposing Commander capabilities
-├── a2aClient.ts     ← Agent-to-Agent (A2A) protocol client
-├── a2aServer.ts     ← A2A protocol server
-├── a2aCompliance.ts ← A2A compliance validation
-├── types.ts         ← Shared MCP types
-└── index.ts         ← Public exports
+├── client.ts        ← 外部 MCP クライアント
+├── server.ts        ← Commander を公開する MCP サーバー
+├── a2aClient.ts     ← Agent-to-Agent (A2A) クライアント
+├── a2aServer.ts     ← A2A サーバー
+├── a2aCompliance.ts ← A2A 準拠検証
+├── types.ts
+└── index.ts
 ```
 
-## 要点
+## MCP クライアント
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+外部ツールで Commander を拡張します。
+
+```typescript
+import { MCPClient } from '@commander/core';
+
+const client = new MCPClient({
+  serverUrl: 'http://localhost:8080/mcp',
+  capabilities: ['tools', 'resources'],
+});
+
+await client.connect();
+const tools = await client.listTools();
+const result = await client.callTool('external-tool', { arg: 'value' });
+```
+
+## MCP サーバー
+
+他の AI エージェント向けにツールを公開します。
+
+```typescript
+import { MCPServer } from '@commander/core';
+
+const server = new MCPServer({
+  port: 8080,
+  tools: ['web_search', 'file_read', 'git'],
+  auth: { apiKey: 'sk-...' },
+});
+
+await server.start();
+```
+
+## Agent-to-Agent (A2A)
+
+システム横断の直接委譲:
+
+```typescript
+import { A2AClient, A2AServer } from '@commander/core';
+
+const a2aServer = new A2AServer({
+  agent: myAgent,
+  capabilities: ['task_delegation', 'status_reporting'],
+});
+
+const a2aClient = new A2AClient({
+  remoteUrl: 'http://other-agent:8081/a2a',
+});
+const result = await a2aClient.delegateTask({
+  description: 'analyze this dataset',
+  context: { file: '/data/set.csv' },
+});
+```
+
+## MCP Tool Adapter
+
+MCP ツールをネイティブ Commander ツールとしてマウントし、トポロジ・品質ゲートと同じパイプラインに乗せます。
+
+> パッケージは monorepo `packages/core`。導入は clone + `pnpm install`。  
+> CLI: `npx tsx packages/core/src/cliEntry.ts`
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [ツール](/ja/architecture/tools)  
+- [エージェント・チーム](/ja/guide/advanced/agent-teams)  
+- [カスタムツール](/ja/guide/advanced/custom-tools)  
+- [セキュリティ](/ja/guide/security)  

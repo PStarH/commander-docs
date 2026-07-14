@@ -1,8 +1,12 @@
 # Agent SDK (TypeScript)
 
-**Agent SDK (TypeScript).** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Intégrez Commander avec `@commander/sdk`.
 
-## Entrée rapide
+> **Statut :** packages sous `packages/sdk` dans le monorepo. **npm n’est pas encore le chemin principal** — clonez et buildez le workspace.
+
+## Installation
+
+### Monorepo (recommandé aujourd’hui)
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
@@ -10,44 +14,105 @@ cd Commander && pnpm install
 pnpm --filter @commander/sdk build
 ```
 
-```typescript
-import { CommanderClient, createClient } from '@commander/sdk';
+`"@commander/sdk": "workspace:*"` ou import depuis `packages/sdk` en dev.
 
-const client = new CommanderClient({ provider: 'openai' });
-await client.connect();
-const result = await client.run('analyze this repository structure');
-console.log(result.status, result.summary);
-await client.disconnect();
+### Quand publié sur npm (à venir)
 
-const c = await createClient();
-await c.run('audit this repo');
-await c.disconnect();
+```bash
+# Après publish public seulement
+pnpm add @commander/sdk
 ```
 
+## Démarrage rapide
+
 ```typescript
-const plan = await client.plan('refactor the auth module');
-const unsub = client.onEvent((e) => console.log(e.type, e.data));
-await client.run('debug the failing test');
+import { CommanderClient } from "@commander/sdk";
+
+const client = new CommanderClient({ provider: "openai" });
+await client.connect();
+
+const result = await client.run("analyze this repository structure");
+console.log(result.status, result.summary);
+
+await client.disconnect();
+```
+
+Zéro config :
+
+```typescript
+import { createClient } from "@commander/sdk";
+
+const client = await createClient();
+const result = await client.run("audit this repo for security vulnerabilities");
+await client.disconnect();
+```
+
+## Plan sans exécuter
+
+```typescript
+const plan = await client.plan("refactor the auth module");
+console.log(plan);
+```
+
+## Événements temps réel
+
+```typescript
+const unsub = client.onEvent((event) => {
+  console.log(`[${event.type}]`, event.data);
+});
+
+await client.run("debug the failing test");
 unsub();
 ```
 
-| Método | Rol |
-|--------|-----|
-| `connect` / `disconnect` | Ciclo de vida |
-| `run` | Ejecución |
-| `plan` | Solo deliberación |
-| `onEvent` | Stream |
-| memoria / `createAgent` | Avanzado |
+## Configuration
 
+```typescript
+const client = new CommanderClient({
+  provider: "anthropic",
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: "claude-sonnet-4-20250514",
+  tokenBudget: 64_000,
+  defaultTopology: "SINGLE",
+  persistSessions: true,
+});
+```
 
-## Notes
+| Option | Défaut | Description |
+|--------|--------|-------------|
+| `provider` | auto | `openai`, `anthropic`, `ollama`, … |
+| `apiKey` | env | Clé explicite |
+| `model` | défaut provider | Override modèle |
+| `baseUrl` | défaut provider | Base URL compatible OpenAI |
+| `tokenBudget` | `64000` | Budget soft |
+| `defaultTopology` | `SINGLE` | Topologie de repli |
+| `persistSessions` | `true` | Résumés de session |
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+## Méthodes core
 
-## Lié
+| Méthode | Description |
+|---------|-------------|
+| `connect` / `disconnect` | Cycle de vie runtime |
+| `run(task)` | Exécution multi-agents → `ExecutionResult` |
+| `plan(task)` | Délibération seule |
+| `onEvent(handler)` | Événements agent/tool |
+| `createAgent` / memory | Contrôle avancé |
 
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
+## API HTTP
+
+```bash
+curl http://localhost:4000/health
+
+curl -X POST http://localhost:4000/execute \
+  -H "Authorization: Bearer $COMMANDER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"analyze this repository","mode":"plan"}'
+```
+
+[Déploiement](/fr/deployment) · [SDK Python](/fr/guide/sdk-python).
+
+## Suite
+
+- [SDK Python](/fr/guide/sdk-python)  
 - [Commandes](/fr/guide/commands)  
+- [Vue API](/fr/api/overview)  

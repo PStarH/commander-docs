@@ -1,68 +1,25 @@
-# Self-Evolution
+# 自己進化 (Self-Evolution)
 
-**Self-Evolution.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander は実行結果から設定をチューニングする **メタ学習** で時間とともに改善します。Thompson Sampling と Reflexion でトポロジ・プロバイダー・パラメータを最適化します。
 
-## 参照表
-
-| Metric | Impact |
-|--------|--------|
-| Topology selection accuracy | +15-20% after 1000 runs |
-| Provider availability | Failover optimized for current latency |
-| Verification threshold tuning | False positives reduced by 30% |
-| Token efficiency | Budget allocation converges to task need |
-
-
-## 主な節
-
-### Architecture
-
-**Architecture** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### MetaLearner
-
-**MetaLearner** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### TrajectoryAnalyzer
-
-**TrajectoryAnalyzer** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### EvolverAgent
-
-**EvolverAgent** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Reflexion
-
-**Reflexion** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Outcomes
-
-**Outcomes** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## 構造
 
 ```
 Execution completes
-  │
-  ├─ TrajectoryAnalyzer       ← Analyze execution patterns
-  │   └─ Extract features: duration, tokens, success rate
-  │
-  ├─ MetaLearner              ← Thompson Sampling
-  │   └─ Update Beta distributions per arm
-  │
-  └─ EvolverAgent             ← Cross-run optimization
-      └─ Propose configuration changes
+  → TrajectoryAnalyzer → MetaLearner (Thompson Sampling) → EvolverAgent
 ```
+
+## MetaLearner
+
 ```typescript
 interface Arm {
-  name: string;             // e.g., "topology:DISPATCH"
-  alpha: number;            // Success count
-  beta: number;             // Failure count
+  name: string;   // e.g. "topology:DISPATCH"
+  alpha: number;
+  beta: number;
 }
 
 class MetaLearner {
   selectArm(arms: Arm[]): Arm {
-    // Sample from each arm's Beta distribution
-    // Pick the arm with the highest sampled value
     return arms.reduce((best, arm) => {
       const sample = BetaDistribution.sample(arm.alpha, arm.beta);
       return sample > best.sample ? { ...arm, sample } : best;
@@ -76,17 +33,26 @@ class MetaLearner {
 }
 ```
 
-## 運用チェック
+トポロジ・プロバイダー・再試行戦略などが各 arm。数千回の実行でタスク種別に収束します。
+
+## TrajectoryAnalyzer
+
+ボトルネック、トークン消費、失敗モードを抽出して MetaLearner に渡します。
+
+## EvolverAgent
+
+クロスランで設定変更を提案。本番では承認モード・予算ゲートと併用。
+
+## ユーザー視点
+
+多くは自動。5 回以上の経験が溜まると自己最適化が効きやすくなります。
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
 npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [インテリジェンス](/ja/architecture/intelligence)  
+- [マルチエージェント](/ja/architecture/multi-agent)  
+- [Reflection engine](/ja/api/reflection-engine)  

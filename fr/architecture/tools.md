@@ -1,65 +1,76 @@
 # Tools
 
-**Tools.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Commander expose par défaut **18 tools intégrés** au LLM (davantage de classes existent dans le monorepo). Conception production : cache, erreurs, rollback.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
+## Filesystem
 
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
+| Tool | Nom interne | Rôle |
+|------|-------------|------|
+| `read` | `file_read` | Lecture (lignes/offset) |
+| `write` | `file_write` | Création / écrasement |
+| `edit` | `file_edit` | Remplacement exact |
+| `glob` / `file_search` | `file_search` | Découverte par motif |
+| `grep` / `file_list` | `file_list` | Recherche / listage |
 
-## Référence
+## Intelligence de code
 
-| Tool | Internal Name | Purpose |
-|------|--------------|---------|
-| `read` | `file_read` | File reading with line/offset support |
-| `write` | `file_write` | File creation and overwrite |
-| `edit` | `file_edit` | Exact string replacement |
-| `glob` / `file_search` | `file_search` | Pattern-based file discovery |
-| `grep` / `file_list` | `file_list` | Content search and directory listing |
+| Tool | Rôle |
+|------|------|
+| `ast_grep_search` | Recherche AST |
+| `patches` | Patches structurés |
+| `refine` / `fix` | Raffinement / fix IA |
+| `lsp_*` | Diagnostics, symboles, refs, rename |
 
+## Web & recherche
 
-## Contenu principal
+| Tool | Rôle |
+|------|------|
+| `websearch` / `webfetch` | Search & fetch |
+| `browser_*` | Rendu navigateur |
+| `context7_*` | Docs de librairies |
 
-### Filesystem Operations
+## Exécution
 
-En pratique, **Filesystem Operations** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
+| Tool | Rôle |
+|------|------|
+| `bash` / `shell_execute` | Shell sandboxé |
+| `python` / `execute_script` | Exécution isolée |
 
-### Code Intelligence
+## Mémoire & persistance
 
-En pratique, **Code Intelligence** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
+| Tool | Rôle |
+|------|------|
+| `memory_store` / `memory_recall` / `memory_list` | Mémoire persistante |
+| `knowledge_search` | Recherche RAG (builtin-rag) |
 
-### Web & Research
+## VCS · média
 
-En pratique, **Web & Research** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
+| Tool | Rôle |
+|------|------|
+| `git` | status, diff, log, commit |
+| `look_at` / `vision_analyze` | Vision |
+| `pdf_extract` / `screenshot` | PDF / capture |
 
-### Code Execution
+## Orchestration
 
-En pratique, **Code Execution** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
+| Tool | Rôle |
+|------|------|
+| `task` / `agent` | Délégation sous-agent |
+| `a2a_delegate` | Délégation A2A |
+| `skill` / `meta` / `verify` | Skills, meta, vérif |
+| `todowrite` / `question` | Suivi / clarification |
+| `mcp` / `saga` / `checkpoint` | MCP, saga, checkpoint |
 
-### Memory & Persistence
+## Fonctions production
 
-En pratique, **Memory & Persistence** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
+- Cache résultats SHA-256 (isolation tenant)  
+- Compensation registry  
+- Circuit breaker  
+- Step error boundary  
+- Tool call repair  
+- DLP sur 6 motifs d’entrée  
 
-### Version Control
-
-En pratique, **Version Control** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
-
-### Media & Analysis
-
-En pratique, **Media & Analysis** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
-
-### Orchestration
-
-En pratique, **Orchestration** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
-
-### Production Features
-
-En pratique, **Production Features** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
-
-### Custom Tools
-
-En pratique, **Custom Tools** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/tools) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+## Tools custom
 
 ```typescript
 import { Tool, ToolContext } from '@commander/core';
@@ -69,24 +80,19 @@ class MyCustomTool implements Tool {
   description = 'Does something useful';
 
   async execute(context: ToolContext, args: any) {
-    return { success: true, data: ... };
+    return { success: true, data: {} };
   }
 }
 
 runtime.registerTool('my-tool', new MyCustomTool());
 ```
 
-## Opérations
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+> Workspace monorepo en premier.  
+> CLI : `npx tsx packages/core/src/cliEntry.ts`
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Agent Runtime](/fr/architecture/agent-runtime)  
+- [Custom tools](/fr/guide/advanced/custom-tools)  
+- [MCP](/fr/architecture/mcp)  
+- [Sécurité](/fr/guide/security)  

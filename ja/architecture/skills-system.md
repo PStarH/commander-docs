@@ -1,27 +1,44 @@
-# Skills System
+# スキル・システム
 
-**Skills System.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+Commander のスキル・システムは、エージェントが必要に応じて読み込む **ドメイン専門知識パッケージ** です。
 
-本ページは Commander における **Skills System** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 構造
 
-```bash
+```
 skills/
-├── skillManager.ts       ← Skill lifecycle management
-├── skillCurator.ts       ← Skill curation and organization
-├── skillInjector.ts      ← Inject skills into agent prompts
-├── skillStore.ts         ← Persistent skill storage
-├── skillQualityScorer.ts ← Quality scoring for skills
-├── skillSecurityScanner.ts ← Security scanning for skill content
-├── skillViewTool.ts      ← Tool for viewing/loading skills
+├── skillManager / skillCurator / skillInjector
+├── skillStore / skillQualityScorer / skillSecurityScanner
+├── skillViewTool / metaLearnerBridge
+└── types / index
 ```
 
-## 要点
+## スキルとは
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+指示・例・制約を束ね、特定タスクのやり方を教えるパッケージです。
+
+- **Built-in** · **User-defined** · **Community** · **Learned**（MetaLearner）
+
+## CLI
+
+```bash
+npx tsx packages/core/src/cliEntry.ts skill list
+npx tsx packages/core/src/cliEntry.ts skill view <skill-name>
+npx tsx packages/core/src/cliEntry.ts skill create <skill-name>
+npx tsx packages/core/src/cliEntry.ts skill pin <skill-name>
+```
+
+ビルド後は `commander skill …`。monorepo 導入が主経路です。
+
+## 品質とセキュリティ
+
+自動スコアリングとコンテンツ・スキャン。注入前にインジェクションやシークレットを検査します。
+
+## ランタイム注入
+
+`skillInjector` がプロンプトへ注入。pin は常時ロード。MetaLearner が成功パターンをスキル化することもあります。
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [自己進化](/ja/architecture/self-evolution)  
+- [インテリジェンス](/ja/architecture/intelligence)  
+- [CLI コマンド](/ja/guide/commands)  

@@ -1,45 +1,24 @@
 # Model Context Protocol (MCP)
 
-**Model Context Protocol (MCP).** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
+Commander는 [Model Context Protocol](https://modelcontextprotocol.io) 을 지원합니다. 외부 MCP 서버에 연결하거나 Commander 능력을 MCP 서비스로 노출할 수 있습니다.
 
-## 주요 섹션
-
-### Architecture
-
-**Architecture** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### MCP Client
-
-**MCP Client** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### MCP Server
-
-**MCP Server** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Agent-to-Agent (A2A) Protocol
-
-**Agent-to-Agent (A2A) Protocol** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### MCP Tool Adapter
-
-**MCP Tool Adapter** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-### Use Cases
-
-**Use Cases** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
-
-## 예제
+## 구조
 
 ```
 mcp/
-├── client.ts        ← MCP client for connecting to external servers
-├── server.ts        ← MCP server for exposing Commander capabilities
-├── a2aClient.ts     ← Agent-to-Agent (A2A) protocol client
-├── a2aServer.ts     ← A2A protocol server
-├── a2aCompliance.ts ← A2A compliance validation
-├── types.ts         ← Shared MCP types
-└── index.ts         ← Public exports
+├── client.ts        ← 외부 MCP 서버 클라이언트
+├── server.ts        ← Commander 능력을 노출하는 MCP 서버
+├── a2aClient.ts     ← Agent-to-Agent (A2A) 클라이언트
+├── a2aServer.ts     ← A2A 서버
+├── a2aCompliance.ts ← A2A 준수 검증
+├── types.ts
+└── index.ts
 ```
+
+## MCP 클라이언트
+
+외부 도구로 Commander를 확장합니다.
+
 ```typescript
 import { MCPClient } from '@commander/core';
 
@@ -49,25 +28,57 @@ const client = new MCPClient({
 });
 
 await client.connect();
-
-// List available tools from the MCP server
 const tools = await client.listTools();
-
-// Call an MCP tool
 const result = await client.callTool('external-tool', { arg: 'value' });
 ```
 
-## 운영 체크
+## MCP 서버
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+다른 AI 에이전트가 쓸 수 있도록 Commander 도구를 노출합니다.
+
+```typescript
+import { MCPServer } from '@commander/core';
+
+const server = new MCPServer({
+  port: 8080,
+  tools: ['web_search', 'file_read', 'git'],
+  auth: { apiKey: 'sk-...' },
+});
+
+await server.start();
 ```
+
+## Agent-to-Agent (A2A)
+
+시스템 간 직접 에이전트 위임:
+
+```typescript
+import { A2AClient, A2AServer } from '@commander/core';
+
+const a2aServer = new A2AServer({
+  agent: myAgent,
+  capabilities: ['task_delegation', 'status_reporting'],
+});
+
+const a2aClient = new A2AClient({
+  remoteUrl: 'http://other-agent:8081/a2a',
+});
+const result = await a2aClient.delegateTask({
+  description: 'analyze this dataset',
+  context: { file: '/data/set.csv' },
+});
+```
+
+## MCP Tool Adapter
+
+MCP 서버 도구를 네이티브 Commander 도구로 마운트해 토폴로지·품질 게이트와 동일한 파이프라인을 타게 합니다.
+
+> 패키지는 monorepo `packages/core`. 설치는 clone + `pnpm install` 이 주 경로입니다.  
+> CLI: `npx tsx packages/core/src/cliEntry.ts`
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [도구](/ko/architecture/tools)  
+- [에이전트 팀](/ko/guide/advanced/agent-teams)  
+- [커스텀 도구](/ko/guide/advanced/custom-tools)  
+- [보안](/ko/guide/security)  

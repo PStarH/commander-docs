@@ -1,54 +1,22 @@
-# Intelligence Layer
+# Couche Intelligence
 
-**Intelligence Layer.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+La couche Intelligence regroupe des **systèmes automatiques** qui rendent Commander plus malin avec le temps. L’utilisateur voit le résultat, pas le mécanisme.
 
-Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
+## Composants
 
-CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
+| Composant | Rôle | Ce que voit l’utilisateur |
+|-----------|------|---------------------------|
+| **Cost Predictor** | Coût avant exécution | « ~$0.09, continuer ? » |
+| **Failure Pattern Learner** | Apprend des échecs | « Vous avez déjà vu ce problème » |
+| **Impact Analyzer** | Effets de bord | « 3 fichiers impactés » |
+| **Skill Extractor** | Patterns réutilisables | « Solution enregistrée » |
 
-## Référence
-
-| Component | Purpose | User sees |
-|-----------|---------|-----------|
-| **Cost Predictor** | Estimates task cost before execution | "Estimated $0.09, continue?" |
-| **Failure Pattern Learner** | Learns from past failures | "You've hit this issue before" |
-| **Impact Analyzer** | Predicts change side effects | "Changing this affects 3 files" |
-| **Skill Extractor** | Extracts reusable patterns from successes | "Solution saved for reuse" |
-
-
-## Contenu principal
-
-### Components
-
-En pratique, **Components** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-### Cost Predictor
-
-En pratique, **Cost Predictor** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-### Failure Pattern Learner
-
-En pratique, **Failure Pattern Learner** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-### Impact Analyzer
-
-En pratique, **Impact Analyzer** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-### Skill Extractor
-
-En pratique, **Skill Extractor** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-### Configuration
-
-En pratique, **Configuration** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/architecture/intelligence) pour le détail exhaustif.
-
-## Exemples (code inchangé)
+## Cost Predictor
 
 ```typescript
 import { getCostPredictor } from '@commander/core';
 
 const predictor = getCostPredictor();
-
 const estimate = await predictor.estimate({
   task: 'refactor the auth module',
   topology: 'ORCHESTRATOR',
@@ -57,51 +25,35 @@ const estimate = await predictor.estimate({
 });
 
 console.log(`Estimated cost: $${estimate.estimatedCostUsd}`);
-console.log(`Estimated duration: ${estimate.estimatedDurationMs}ms`);
-console.log(`Confidence: ${estimate.confidence}`);
 ```
 
-```
-┌─────────────────────────────────┐
-│         Total Estimate          │
-├─────────────────────────────────┤
-│  Deliberation:  $0.002         │
-│  Execution:     $0.06          │
-│  Synthesis:     $0.02          │
-│  Quality Gates: $0.008         │
-├─────────────────────────────────┤
-│  Total:         $0.09          │
-└─────────────────────────────────┘
-```
+Décomposition typique : Deliberation · Execution · Synthesis · Quality Gates.
+
+## Failure Pattern Learner
 
 ```typescript
 import { getFailurePatternLearner } from '@commander/core';
 
 const learner = getFailurePatternLearner();
-
-// Check for warnings before executing
 const warnings = learner.checkPatterns({
   task: 'deploy to production',
   context: 'after database migration',
 });
-
-for (const warning of warnings) {
-  console.log(`[${warning.severity}] ${warning.suggestion}`);
-  // "You've deployed without running migrations 3 times before"
-}
 ```
 
-## Opérations
+## Impact · Skill
+
+Estiment le blast radius et extraient des skills réutilisables pour la délibération suivante.
+
+## Ops
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+export COMMANDER_MODE=plan
+npx tsx packages/core/src/cliEntry.ts plan "refactor the auth module"
 ```
 
 ## Voir aussi
 
-- [Vue d’architecture](/fr/architecture/overview)
-- [Prêt production](/fr/architecture/production-readiness)
-- [Sécurité](/fr/guide/security)
-- [Démarrage rapide](/fr/guide/getting-started)
+- [Self-evolution](/fr/architecture/self-evolution)  
+- [Token budget allocator](/fr/api/token-budget-allocator)  
+- [Reflection engine](/fr/api/reflection-engine)  

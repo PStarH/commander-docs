@@ -1,53 +1,76 @@
-# Tools
+# ツール (Tools)
 
-**Tools.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander はコードベースにさらに多くのクラスがあっても、LLM には既定で **18 の組み込みツール** を公開します。キャッシュ・エラー処理・ロールバックを前提にした本番向け設計です。
 
-## 参照表
+## ファイルシステム
 
-| Tool | Internal Name | Purpose |
-|------|--------------|---------|
-| `read` | `file_read` | File reading with line/offset support |
-| `write` | `file_write` | File creation and overwrite |
-| `edit` | `file_edit` | Exact string replacement |
-| `glob` / `file_search` | `file_search` | Pattern-based file discovery |
-| `grep` / `file_list` | `file_list` | Content search and directory listing |
+| Tool | 内部名 | 用途 |
+|------|--------|------|
+| `read` | `file_read` | ファイル読み（行/オフセット） |
+| `write` | `file_write` | 作成・上書き |
+| `edit` | `file_edit` | 完全一致置換 |
+| `glob` / `file_search` | `file_search` | パターン検索 |
+| `grep` / `file_list` | `file_list` | 内容検索・一覧 |
 
+## コードインテリジェンス
 
-## 主な節
+| Tool | 用途 |
+|------|------|
+| `ast_grep_search` | AST 検索 |
+| `patches` | 構造化パッチ |
+| `refine` / `fix` | AI 洗練・修正 |
+| `lsp_*` | 診断・シンボル・参照・rename |
 
-### Filesystem Operations
+## Web & リサーチ
 
-**Filesystem Operations** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+| Tool | 用途 |
+|------|------|
+| `websearch` / `webfetch` | 検索・URL fetch |
+| `browser_*` | ブラウザ描画 |
+| `context7_*` | ライブラリ docs |
 
-### Code Intelligence
+## コード実行
 
-**Code Intelligence** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+| Tool | 用途 |
+|------|------|
+| `bash` / `shell_execute` | サンドボックスシェル |
+| `python` / `execute_script` | 隔離実行 |
 
-### Web & Research
+## メモリ & 永続化
 
-**Web & Research** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+| Tool | 用途 |
+|------|------|
+| `memory_store` / `memory_recall` / `memory_list` | 永続メモリ |
+| `knowledge_search` | RAG 検索（builtin-rag） |
 
-### Code Execution
+## VCS · メディア
 
-**Code Execution** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+| Tool | 用途 |
+|------|------|
+| `git` | status, diff, log, commit |
+| `look_at` / `vision_analyze` | 画像解析 |
+| `pdf_extract` / `screenshot` | PDF・画面 |
 
-### Memory & Persistence
+## オーケストレーション
 
-**Memory & Persistence** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+| Tool | 用途 |
+|------|------|
+| `task` / `agent` | サブエージェント委譲 |
+| `a2a_delegate` | A2A 委譲 |
+| `skill` / `meta` / `verify` | スキル・メタ・検証 |
+| `todowrite` / `question` | タスク追跡・質問 |
+| `mcp` / `saga` / `checkpoint` | MCP・サガ・チェックポイント |
 
-### Version Control
+## 本番機能
 
-**Version Control** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+- **SHA-256 結果キャッシュ**（テナント隔離）  
+- **Compensation registry**  
+- **Circuit breaker**  
+- **Step error boundary**  
+- **Tool call repair**  
+- **DLP スキャン**（入力 6 パターン）  
 
-### Media & Analysis
-
-**Media & Analysis** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Orchestration
-
-**Orchestration** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## カスタムツール
 
 ```typescript
 import { Tool, ToolContext } from '@commander/core';
@@ -57,24 +80,19 @@ class MyCustomTool implements Tool {
   description = 'Does something useful';
 
   async execute(context: ToolContext, args: any) {
-    return { success: true, data: ... };
+    return { success: true, data: {} };
   }
 }
 
 runtime.registerTool('my-tool', new MyCustomTool());
 ```
 
-## 運用チェック
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+> monorepo workspace が主経路。  
+> CLI: `npx tsx packages/core/src/cliEntry.ts`
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [エージェントランタイム](/ja/architecture/agent-runtime)  
+- [カスタムツール](/ja/guide/advanced/custom-tools)  
+- [MCP](/ja/architecture/mcp)  
+- [セキュリティ](/ja/guide/security)  

@@ -1,15 +1,15 @@
 # Référence API
 
-**Référence API.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+L’API Commander a **deux couches**. La plupart des apps n’ont besoin que de la Layer 1.
 
-## Couche 1 — Intégration publique (commencez ici)
+## Layer 1 — Intégration publique (commencez ici)
 
-| Surface | Paquet / entrée | Idéal pour |
-|---------|-----------------|------------|
+| Surface | Package / entrée | Usage |
+|---------|------------------|-------|
 | **CLI** | `commander` · `packages/core/src/cliEntry.ts` | Terminal, scripts, CI |
-| **SDK TypeScript** | `@commander/sdk` → `CommanderClient` | Embed dans des apps Node |
-| **API HTTP** | Serveur `:4000` | Clients polyglottes, console web |
-| **SDK Python** | `commander-ai` (client HTTP) | Python contre l’API server |
+| **SDK TypeScript** | `@commander/sdk` → `CommanderClient` | Apps Node |
+| **HTTP API** | Serveur `:4000` | Clients polyglottes, Console |
+| **SDK Python** | `commander-ai` (HTTP) | Python contre l’API |
 
 ### SDK TypeScript
 
@@ -21,10 +21,6 @@ await client.connect();
 const result = await client.run('audit this repo');
 console.log(result.status, result.summary);
 await client.disconnect();
-
-const c = await createClient();
-await c.run('explain the architecture');
-await c.disconnect();
 ```
 
 | Méthode | Rôle |
@@ -32,62 +28,55 @@ await c.disconnect();
 | `connect` / `disconnect` | Cycle de vie |
 | `run(task)` | Exécution complète → `ExecutionResult` |
 | `plan(task)` | Délibération seule |
-| `onEvent(handler)` | Stream d’événements agent/tool |
-| `createAgent` / mémoire | Contrôle de session avancé |
+| `onEvent(handler)` | Stream d’événements |
 
-> **Statut npm :** monorepo-first ; publication publique en cours. Voir [Agent SDK](/fr/guide/sdk).
+> **npm :** monorepo d’abord. Publish public en cours. [Agent SDK](/fr/guide/sdk).
 
-### HTTP (serveur)
+### HTTP
 
 ```bash
 curl http://localhost:4000/health
-curl http://localhost:4000/metrics
-
 curl -X POST http://localhost:4000/execute \
   -H "Authorization: Bearer $COMMANDER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"task":"analyze this repository","mode":"plan"}'
 ```
 
-API durable Architecture V2 : `POST /v1/runs` — voir [Migration V2](/fr/guide/migration-v2).
+V2 : `POST /v1/runs` — [Migration V2](/fr/guide/migration-v2).
 
 ### Python
 
 ```python
 from commander import CommanderClient
-# client httpx fin → API server
 ```
 
-[Python SDK](/fr/guide/sdk-python).
+[SDK Python](/fr/guide/sdk-python).
 
 ---
 
-## Couche 2 — Composants d’orchestration runtime
+## Layer 2 — Composants d’orchestration runtime
 
-Ces modules pilotent délibération, budget, mémoire et vérification dans `@commander/core`. Utilisez-les pour **étendre** le runtime — pas pour l’intégration produit courante.
+Modules internes `@commander/core`. Pour **étendre** le runtime uniquement.
 
 | Composant | Rôle |
 |-----------|------|
-| [Analyseur de complexité](/fr/api/task-complexity-analyzer) | Scorer la tâche → recommander une topologie |
-| [Orchestrateur adaptatif](/fr/api/adaptive-orchestrator) | Plan multi-agents + coordination |
-| [Budget de tokens](/fr/api/token-budget-allocator) | Répartition du budget |
-| [Mémoire à 3 couches](/fr/api/three-layer-memory) | Working · episodic · long-term |
-| [Moteur de réflexion](/fr/api/reflection-engine) | Évaluation post-run |
-| [Consensus](/fr/api/consensus-checker) | Votes multi-modèles à haut risque |
-| [Inspecteur](/fr/api/inspector-agent) | Santé / détection d’issues |
+| [Task Complexity Analyzer](/fr/api/task-complexity-analyzer) | Score → topologie |
+| [Adaptive Orchestrator](/fr/api/adaptive-orchestrator) | Plan multi-agents |
+| [Token Budget Allocator](/fr/api/token-budget-allocator) | Budget |
+| [Three-Layer Memory](/fr/api/three-layer-memory) | Mémoire 3 couches |
+| [Reflection Engine](/fr/api/reflection-engine) | Éval post-run |
+| [Consensus Checker](/fr/api/consensus-checker) | Votes multi-modèles |
+| [Inspector Agent](/fr/api/inspector-agent) | Santé / problèmes |
 
-### Quand utiliser la couche 2
+### Quand utiliser Layer 2
 
-- Construire une topologie ou un planner custom  
-- Rechercher mémoire et consensus  
-- Tests isolant un sous-système  
+Topologie custom, recherche mémoire/consensus, tests d’un sous-système.
 
-### Quand **ne pas** utiliser la couche 2
+### Quand ne pas
 
-- Features qui ont juste besoin de « lance cette tâche » → `CommanderClient`  
-- Clients distants multi-langues → HTTP  
+« Lancer une tâche » → `CommanderClient`. Clients distants → HTTP.
 
-### Exemple minimal couche 2
+### Exemple minimal
 
 ```typescript
 import {
@@ -111,28 +100,11 @@ const budget = allocator.allocate(
 );
 ```
 
-### Accesseurs globaux
+Préférez `CommanderClient` aux singletons `getGlobal…` sauf état partagé voulu.
 
-Certains composants exposent des singletons de process (utilisés par runtime/SDK) :
-
-- `getGlobalTaskComplexityAnalyzer()`
-- `getGlobalAdaptiveOrchestrator()`
-- `getGlobalTokenBudgetAllocator()`
-- `getGlobalThreeLayerMemory()`
-- `getGlobalReflectionEngine()`
-- `getGlobalConsensusChecker()`
-- `getGlobalInspectorAgent()`
-
-Préférez `CommanderClient` sauf besoin d’état partagé process-wide.
-
----
-
-## Profondeur architecture
-
-Conception des sous-systèmes : [Architecture](/fr/architecture/overview), [Runtime](/fr/architecture/agent-runtime), [Vérification](/fr/architecture/verification), [Sécurité](/fr/guide/security).
-
-## Guides liés
+## Voir aussi
 
 - [Commandes CLI](/fr/guide/commands)  
 - [Console web](/fr/guide/web-console)  
 - [Cookbook](/fr/guide/cookbook/)  
+- [Vue d’architecture](/fr/architecture/overview)  

@@ -1,36 +1,56 @@
 # Chaîne d’appels core
 
-**Chaîne d’appels core.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
+Chaque exécution Commander suit un pipeline structuré.
 
-## Entrées
+## 1. Délibération
 
-- CLI (`cliEntry.ts` / `commander`)  
-- SDK (`CommanderClient.run` / `plan`)  
-- HTTP (`/execute`, Architecture V2 `/v1/runs`)  
+```
+CLI / HTTP / API → deliberation.ts → TaskComplexityAnalyzer
+```
 
-## Étapes
+Complexité, dépendances et domaine → stratégie d’exécution.
 
-1. **Environnement** — keys, mode d’approbation, tenant  
-2. **Délibération** — classe la tâche, estime la complexité  
-3. **Scale d’effort** — 1 à 20 agents  
-4. **Routeur de topologie** — SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW  
-5. **Atomisation** — sous-tâches si besoin  
-6. **Runtime agents** — boucle LLM ↔ tools  
-7. **Vérification** — cinq portes de qualité  
-8. **Synthèse** — fusion multi-agents  
-9. **Persistance** — checkpoints, event log, métriques  
+## 2. Effort scaling
 
-## Échecs et recovery
+```
+effortScaler.ts  ← 1–20 agents
+```
 
-| Échec | Mécanisme |
-|-------|-----------|
-| Fournisseur down | Fallback + circuit breaker |
-| Tool mutante | Saga / compensation |
-| Crash process | Checkpoint SQLite WAL + resume |
-| Mauvaise qualité | Retry avec contexte de gate |
+## 3. Routage topologique
 
-## Lié
+```
+topologyRouter.ts  ← SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW
+```
 
-- [Runtime](/fr/architecture/agent-runtime)  
-- [Multi-agents](/fr/architecture/multi-agent)  
-- [Vérification](/fr/architecture/verification)
+## 4. Atomisation
+
+```
+atomizer.ts  ← décomposition style ROMA
+```
+
+## 5. Exécution
+
+```
+agentRuntime.execute
+  → slot / tenant / storage
+  → retry: LLM → tools → 5 portes → checkpoint
+  → release / traces
+```
+
+## 6. Vérification & synthèse
+
+Après les portes, synthèse du résultat. Échec → retry, DLQ, compensation.
+
+## Suivre en local
+
+```bash
+npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
+```
+
+## Voir aussi
+
+- [Vue d’architecture](/fr/architecture/overview)  
+- [Multi-agent](/fr/architecture/multi-agent)  
+- [Agent Runtime](/fr/architecture/agent-runtime)  
+- [Vérification](/fr/architecture/verification)  

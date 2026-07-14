@@ -1,50 +1,22 @@
-# Intelligence Layer
+# インテリジェンス層
 
-**Intelligence Layer.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+インテリジェンス層は、Commander を時間とともに賢くする **内部の自動システム** です。ユーザーは仕組みではなく結果を見ます。
 
-## 参照表
+## 構成要素
 
-| Component | Purpose | User sees |
-|-----------|---------|-----------|
-| **Cost Predictor** | Estimates task cost before execution | "Estimated $0.09, continue?" |
-| **Failure Pattern Learner** | Learns from past failures | "You've hit this issue before" |
-| **Impact Analyzer** | Predicts change side effects | "Changing this affects 3 files" |
-| **Skill Extractor** | Extracts reusable patterns from successes | "Solution saved for reuse" |
+| コンポーネント | 役割 | ユーザーが見るもの |
+|----------------|------|--------------------|
+| **Cost Predictor** | 実行前のコスト見積もり | 「約 $0.09、続けますか？」 |
+| **Failure Pattern Learner** | 過去の失敗から学習 | 「この問題は以前にも」 |
+| **Impact Analyzer** | 変更の副作用予測 | 「3 ファイルに影響」 |
+| **Skill Extractor** | 成功パターン抽出 | 「再利用用に保存」 |
 
-
-## 主な節
-
-### Components
-
-**Components** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Cost Predictor
-
-**Cost Predictor** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Failure Pattern Learner
-
-**Failure Pattern Learner** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Impact Analyzer
-
-**Impact Analyzer** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Skill Extractor
-
-**Skill Extractor** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Configuration
-
-**Configuration** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## Cost Predictor
 
 ```typescript
 import { getCostPredictor } from '@commander/core';
 
 const predictor = getCostPredictor();
-
 const estimate = await predictor.estimate({
   task: 'refactor the auth module',
   topology: 'ORCHESTRATOR',
@@ -53,33 +25,37 @@ const estimate = await predictor.estimate({
 });
 
 console.log(`Estimated cost: $${estimate.estimatedCostUsd}`);
-console.log(`Estimated duration: ${estimate.estimatedDurationMs}ms`);
-console.log(`Confidence: ${estimate.confidence}`);
-```
-```
-┌─────────────────────────────────┐
-│         Total Estimate          │
-├─────────────────────────────────┤
-│  Deliberation:  $0.002         │
-│  Execution:     $0.06          │
-│  Synthesis:     $0.02          │
-│  Quality Gates: $0.008         │
-├─────────────────────────────────┤
-│  Total:         $0.09          │
-└─────────────────────────────────┘
 ```
 
-## 運用チェック
+内訳例: Deliberation · Execution · Synthesis · Quality Gates。
+
+## Failure Pattern Learner
+
+```typescript
+import { getFailurePatternLearner } from '@commander/core';
+
+const learner = getFailurePatternLearner();
+const warnings = learner.checkPatterns({
+  task: 'deploy to production',
+  context: 'after database migration',
+});
+```
+
+## Impact · Skill
+
+変更範囲の推定、成功パターンのスキル化。いずれも審議・トポロジ選択にフィードバックされます。
+
+## 運用
+
+コストを厳しくしたい場合は予算と承認モードを使います。
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+export COMMANDER_MODE=plan
+npx tsx packages/core/src/cliEntry.ts plan "refactor the auth module"
 ```
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [Self-evolution](/ja/architecture/self-evolution)  
+- [Token budget allocator](/ja/api/token-budget-allocator)  
+- [Reflection engine](/ja/api/reflection-engine)  

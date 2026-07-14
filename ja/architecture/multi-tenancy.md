@@ -1,60 +1,47 @@
-# Multi-Tenant Architecture
+# マルチテナント・アーキテクチャ
 
-**Multi-Tenant Architecture.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
+Commander は **すべての層** でマルチテナント隔離をサポートします。
 
-## 参照表
-
-| Layer | Mechanism |
-|-------|-----------|
-| Rate limits | Per-tenant: requests/minute |
-| Concurrency | Per-tenant: max concurrent runs |
-| Storage | Per-tenant directory paths |
-| Memory | Per-instance ThreeLayerMemory |
-| Cache | SHA-256 key includes tenantId |
-| Metrics | Every counter/gauge/histogram has `tenant` label |
-
-
-## 主な節
-
-### Request Flow
-
-**Request Flow** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Isolation Layers
-
-**Isolation Layers** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Providers
-
-**Providers** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-### Tenant Config
-
-**Tenant Config** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
-
-## 例
+## リクエストフロー
 
 ```
 Request → HttpServer
            │
-           ├─ authenticate()           ← Bearer token → tenant mapping
+           ├─ authenticate()           ← Bearer → テナント対応
            ├─ resolveTenantFromAuth()  ← API key → tenantId
            │
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
+                                        │   → tokenBudget, maxConcurrency, maxRunsPerMinute
                                         │
-                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
-                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
+                                        ├─ Rate limit / Concurrency チェック
                                         │
-                                        └─ Tenant-scoped instances:
-                                            ├─ SamplesStore(path/tenant_{id}/)
-                                            ├─ TraceStore(path/tenant_{id}/)
-                                            ├─ StateCheckpointer(path/tenant_{id}/)
-                                            ├─ ThreeLayerMemory(per-instance)
-                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
+                                        └─ テナントスコープ:
+                                            SamplesStore / TraceStore / StateCheckpointer
+                                            ThreeLayerMemory / ToolResultCache(tenantId 込み)
 ```
+
+## 隔離レイヤ
+
+| 層 | 仕組み |
+|----|--------|
+| Rate limits | テナントごとの分あたりリクエスト |
+| Concurrency | テナントごとの最大同時 run |
+| Storage | テナント別ディレクトリ |
+| Memory | インスタンス別 ThreeLayerMemory |
+| Cache | キーに tenantId（SHA-256） |
+| Metrics | すべてに `tenant` ラベル |
+
+## プロバイダー
+
+| プロバイダー | 動作 |
+|--------------|------|
+| `NullTenantProvider` | 隔離なし（単一テナント互換） |
+| `SimpleTenantProvider` | tenant → config の静的マップ |
+
+## TenantConfig
+
 ```typescript
 interface TenantConfig {
   tenantId: string;
@@ -66,17 +53,19 @@ interface TenantConfig {
 }
 ```
 
-## 運用チェック
+## 運用
 
 ```bash
+export COMMANDER_API_KEY="long-random-secret"
 npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+curl -s http://localhost:4000/health/detailed
 ```
+
+ローカル単機 CLI は多くの場合 `NullTenantProvider` で十分。本番の共有クラスタでは Simple（またはカスタム）とクォータを有効にしてください。
 
 ## 関連
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+- [セキュリティゲートウェイ](/ja/architecture/security-gateway)  
+- [キャッシュ](/ja/architecture/caching)  
+- [本番準備](/ja/architecture/production-readiness)  
+- [セキュリティ](/ja/guide/security)  
