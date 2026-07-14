@@ -1,22 +1,37 @@
-# Frequently Asked Questions
+# FAQ
 
-Commander의 **Frequently Asked Questions** 사용법과 운영 포인트를 정리합니다.
+## Commander란?
 
-## 빠른 시작
+5개 정규 토폴로지로 여러 AI 에이전트를 조율하는 엔진입니다. 25 프로바이더, 18 내장 도구, 6700+ 테스트.
+
+## 일반 AI 코딩 도구와 차이는?
+
+단일 에이전트가 아니라 **자동 토폴로지·라이브 SSE·품질 게이트·프로덕션 인프라**를 제공합니다.
+
+## API 키가 여러 개 필요?
+
+아니요. **하나면 충분**합니다.
+
+## 오프라인?
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 npx tsx packages/core/src/cliEntry.ts run "analyze this code"
 ```
 
+## 파일 수정?
 
-## 포인트
+모드로 제어: `plan` / `read-only` / `suggest` / `auto-edit` / `full-auto`.
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+## CI?
 
-## 관련
+```bash
+export COMMANDER_MODE=full-auto
+npx tsx packages/core/src/cliEntry.ts run "fix all lint errors"
+```
 
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+## 5 토폴로지
+
+SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW — [결정 트리](/ko/guide/usage/topology-decision-tree)
+
+[문제 해결](/ko/guide/troubleshooting) · [보안](/ko/guide/security)

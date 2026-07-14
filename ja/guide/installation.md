@@ -1,23 +1,41 @@
-# Installation
+# インストール
 
-Commander の **Installation** について、使い方と運用上の注意をまとめます。
+## 前提
 
-## クイック
+- Node.js 18+（22 推奨）  
+- pnpm 8+  
+- LLM API キー 1 つ  
+
+## ローカル
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
 
+## Web コンソール
 
-## ポイント
+```bash
+pnpm gui
+# API :4000 · Web 開発は多くが :5173
+```
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
+## Docker
 
-## 関連
+```bash
+export COMMANDER_API_KEY="your-secret-key"
+export OPENAI_API_KEY="sk-..."
+docker compose up -d
+# API :4000 · Web :3000
+```
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+## 検証
+
+```bash
+curl http://localhost:4000/health
+```
+
+[クイックスタート](/ja/guide/getting-started) · [デプロイ](/ja/deployment)

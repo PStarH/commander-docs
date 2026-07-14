@@ -2,13 +2,24 @@
 
 Chaque événement d’exécution en temps réel via Server-Sent Events.
 
+## Usage
+
 ```bash
 npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 ```
 
 ## Événements
 
-`task.start` · `deliberation` · `topology.select` · `agent.spawn` · `tool.call` · `tool.result` · `verification` · `checkpoint` · `task.complete` · `task.error`
+| Type | Description |
+|------|-------------|
+| `task.start` | Début |
+| `deliberation` | Analyse de complexité |
+| `topology.select` | Topologie choisie |
+| `agent.spawn` | Agent créé |
+| `tool.call` / `tool.result` | Tool |
+| `verification` | Porte de qualité |
+| `checkpoint` | Checkpoint |
+| `task.complete` / `task.error` | Fin |
 
 ## Consommer
 
@@ -17,7 +28,7 @@ npx tsx packages/core/src/cliEntry.ts watch "debug" | jq '.type'
 ```
 
 ```typescript
-const unsub = client.onEvent((event) => console.log(event.type, event.data));
+const unsub = client.onEvent((e) => console.log(e.type, e.data));
 await client.run('debug the failing test');
 ```
 
@@ -26,6 +37,8 @@ curl -N -H "Accept: text/event-stream" -H "Authorization: Bearer $TOKEN" \
   -d '{"task":"debug","stream":true}' http://localhost:4000/execute
 ```
 
-Cas d’usage : CI dashboards, UIs custom, debug multi-agents, audit.
+Cas d’usage : dashboards CI, UIs custom, debug multi-agents, audit.
 
-[SDK](/fr/guide/sdk) · [Runtime](/fr/architecture/agent-runtime)
+## Lié
+
+- [SDK](/fr/guide/sdk) · [Runtime](/fr/architecture/agent-runtime)

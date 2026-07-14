@@ -1,18 +1,35 @@
 # Allocateur de budget tokens
 
-Répartition du budget entre agents et phases.
+Répartit le budget tokens entre agents, phases et topologie.
 
-> Couche 2 du runtime (`@commander/core`). Pour la plupart des apps, utilisez [`CommanderClient`](/fr/guide/sdk).
+> **Couche 2** du runtime (`@commander/core`). Pour la plupart des applications, préférez [`CommanderClient`](/fr/guide/sdk) (couche 1).
 
-## Usage typique
+## Rôle dans le pipeline
+
+1. La délibération / l’analyse peut s’appuyer sur ce composant  
+2. Le runtime orchestre ensuite agents et tools  
+3. Les résultats passent les portes de qualité  
+
+## Exemple d’orientation
 
 ```typescript
-import { /* composant */ } from '@commander/core';
+import { /* composant correspondant */ } from '@commander/core';
+// Voir monorepo pour les signatures exactes et getGlobal*()
 ```
 
-Voir le monorepo et la [vue d’ensemble API](/fr/api/overview) pour les signatures exactes.
+## Quand l’utiliser
+
+- Étendre le runtime ou instrumenter le planner  
+- Tests unitaires d’un sous-système  
+- Recherche / expérimentation  
+
+## Quand ne pas l’utiliser
+
+- « Lance simplement cette tâche » → `CommanderClient.run()`  
+- Client polyglotte distant → API HTTP  
 
 ## Lié
 
-- [API overview](/fr/api/overview)  
+- [Vue d’ensemble API](/fr/api/overview)  
 - [Architecture](/fr/architecture/overview)  
+- [Délibération / multi-agents](/fr/architecture/multi-agent)

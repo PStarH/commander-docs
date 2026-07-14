@@ -1,33 +1,18 @@
 # Fournisseurs
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Fournisseurs**.
+Commander prend en charge **25 fournisseurs LLM**. Une seule variable d’environnement suffit pour l’auto-détection.
 
-## Entrée rapide
-
-```bash
-export OPENAI_API_KEY=sk-...
-```
-
-```typescript
-import { BaseLLMProvider } from '@commander/core';
-class MyProvider extends BaseLLMProvider {
-  async call(messages, options) { /* ... */ }
-}
-runtime.registerProvider('my-provider', new MyProvider());
-```
-
-| Variable | Proveedor |
-|----------|-----------|
+| Variable | Fournisseur |
+|----------|-------------|
 | `OPENAI_API_KEY` | OpenAI / DeepSeek / GLM / MiMo |
 | `AZURE_OPENAI_API_KEY` | Azure OpenAI |
 | `ANTHROPIC_API_KEY` | Anthropic Claude |
 | `GOOGLE_API_KEY` | Google Gemini |
 | `DEEPSEEK_API_KEY` | DeepSeek |
 | `ZHIPU_API_KEY` | GLM (Zhipu) |
-| `MIMO_API_KEY` | MiMo |
-| `XIAOMI_API_KEY` | Xiaomi MiMo |
+| `MIMO_API_KEY` / `XIAOMI_API_KEY` | MiMo / Xiaomi |
 | `GROQ_API_KEY` | Groq |
-| `TOGETHER_API_KEY` | Together AI |
+| `TOGETHER_API_KEY` | Together |
 | `PERPLEXITY_API_KEY` | Perplexity |
 | `FIREWORKS_API_KEY` | Fireworks |
 | `REPLICATE_API_TOKEN` | Replicate |
@@ -44,15 +29,22 @@ runtime.registerProvider('my-provider', new MyProvider());
 | `STEPFUN_API_KEY` | StepFun |
 | `MINIMAX_API_KEY` | MiniMax |
 
+## Sélection
 
-## Notes
+`modelRouter.ts` choisit selon complexité, coût, latence et chaîne de fallback.
 
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
+```bash
+export OPENAI_API_KEY=sk-...
+```
 
-## Lié
+## Custom
 
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+```typescript
+import { BaseLLMProvider } from '@commander/core';
+class MyProvider extends BaseLLMProvider {
+  async call(messages, options) { /* ... */ }
+}
+runtime.registerProvider('my-provider', new MyProvider());
+```
+
+Liste exacte : monorepo `providerRegistry.ts` (25 registrations).

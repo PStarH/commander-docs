@@ -1,23 +1,25 @@
 # Agent SDK (TypeScript)
 
-Commander의 **Agent SDK (TypeScript)** 사용법과 운영 포인트를 정리합니다.
+```typescript
+import { CommanderClient, createClient } from '@commander/sdk';
 
-## 빠른 시작
+const client = new CommanderClient({ provider: 'openai' });
+await client.connect();
+const result = await client.run('analyze this repository structure');
+await client.disconnect();
 
-```bash
-git clone https://github.com/PStarH/Commander.git
-cd Commander && pnpm install
-pnpm --filter @commander/sdk build
+const c = await createClient();
+await c.run('audit this repo');
+await c.disconnect();
 ```
 
+| 메서드 | 역할 |
+|--------|------|
+| `connect` / `disconnect` | 생명주기 |
+| `run` | 전체 실행 |
+| `plan` | 심의만 |
+| `onEvent` | 이벤트 구독 |
 
-## 포인트
+npm 공개 진행 중 — monorepo 사용 권장.
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+[배포](/ko/deployment) · [Python SDK](/ko/guide/sdk-python)

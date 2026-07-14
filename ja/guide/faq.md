@@ -1,22 +1,37 @@
-# Frequently Asked Questions
+# FAQ
 
-Commander の **Frequently Asked Questions** について、使い方と運用上の注意をまとめます。
+## Commander とは？
 
-## クイック
+5 つの正規トポロジで複数 AI エージェントを編成するエンジンです。25 プロバイダー、18 組み込みツール、6700+ テスト。
+
+## 普通の AI コーディングツールとの違いは？
+
+単一エージェントではなく、**自動トポロジ・ライブ SSE・品質ゲート・本番向け基盤** を備えます。
+
+## API キーは複数必要？
+
+いいえ。**1 つで十分**。複数設定するとフェイルオーバーが働きます。
+
+## オフラインは？
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 npx tsx packages/core/src/cliEntry.ts run "analyze this code"
 ```
 
+## ファイルを編集する？
 
-## ポイント
+モードで制御: `plan` / `read-only` / `suggest` / `auto-edit` / `full-auto`。
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
+## CI では？
 
-## 関連
+```bash
+export COMMANDER_MODE=full-auto
+npx tsx packages/core/src/cliEntry.ts run "fix all lint errors"
+```
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+## 5 トポロジ
+
+SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW — [決定木](/ja/guide/usage/topology-decision-tree)
+
+[トラブルシューティング](/ja/guide/troubleshooting) · [セキュリティ](/ja/guide/security)

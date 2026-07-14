@@ -1,21 +1,31 @@
-# Troubleshooting
+# トラブルシューティング
 
-Commander の **Troubleshooting** について、使い方と運用上の注意をまとめます。
+> monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
 
-## クイック
+## プロバイダー不可
 
 ```bash
-Error: Cannot find module '@commander/core'
+echo $OPENAI_API_KEY
+npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
+## レート制限 / タイムアウト
 
-## ポイント
+- 待機、`COMMANDER_MAX_CONCURRENCY=1`、2 つ目のキー  
+- `COMMANDER_TIMEOUT_MS=120000`  
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
+## ハング / サーキットブレーカー
 
-## 関連
+```bash
+npx tsx packages/core/src/cliEntry.ts status
+npx tsx packages/core/src/cliEntry.ts doctor --reset
+```
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+## デバッグ
+
+```bash
+export COMMANDER_DEBUG=true
+npx tsx packages/core/src/cliEntry.ts run "task"
+```
+
+[FAQ](/ja/guide/faq) · [Issues](https://github.com/PStarH/Commander/issues)

@@ -1,21 +1,25 @@
-# CLI Commands
+# CLI 명령
 
-Commander의 **CLI Commands** 사용법과 운영 포인트를 정리합니다.
-
-## 빠른 시작
+빌드 후 `commander`. 소스:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts
 ```
 
+## 실행
 
-## 포인트
+| 명령 | 설명 |
+|------|------|
+| `run <task>` | 전체 multi-agent 실행 |
+| `plan <task>` | 심의 플랜 |
+| `run <task> --stream` | SSE 스트림 |
+| `run --file tasks.json` | 배치 |
+| `swarm` / `drive` / `goal` / `company` | 고급 모드 |
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+## UI · 설정
 
-## 관련
+`gui` · `tui` · `web` · `mode` · `config` · `doctor` · `budget` · `status` · `--debug`
 
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+## 승인 모드
+
+`plan` · `read-only` · `suggest` · `auto-edit` · `full-auto`

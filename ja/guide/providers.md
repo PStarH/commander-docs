@@ -1,22 +1,21 @@
-# Providers
+# プロバイダー
 
-Commander の **Providers** について、使い方と運用上の注意をまとめます。
+**25** の LLM プロバイダー。環境変数を 1 つ設定すれば自動検出します。
 
-## クイック
+主要キー: `OPENAI_API_KEY` · `ANTHROPIC_API_KEY` · `GOOGLE_API_KEY` · `DEEPSEEK_API_KEY` · `GROQ_API_KEY` · `OPENROUTER_API_KEY` · `XAI_API_KEY` · `OLLAMA_BASE_URL` · `VLLM_BASE_URL` · ほか monorepo `providerRegistry.ts` の 25 登録。
 
 ```bash
-# The simplest setup—just one key lets Commander auto-select
 export OPENAI_API_KEY=sk-...
 ```
 
+`modelRouter.ts` が複雑度・コスト・レイテンシ・フォールバックに基づき選択します。
 
-## ポイント
+## カスタム
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
-
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+```typescript
+import { BaseLLMProvider } from '@commander/core';
+class MyProvider extends BaseLLMProvider {
+  async call(messages, options) { /* ... */ }
+}
+runtime.registerProvider('my-provider', new MyProvider());
+```

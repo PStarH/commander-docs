@@ -1,24 +1,23 @@
-# Web Console
+# 웹 콘솔
 
-Commander의 **Web Console** 사용법과 운영 포인트를 정리합니다.
-
-## 빠른 시작
+스트리밍 채팅, 라이브 토폴로지, 거버넌스, 운영 뷰.
 
 ```bash
-cd Commander
-pnpm install
-export OPENAI_API_KEY=sk-...   # or other provider
 pnpm gui
 ```
 
+| 서비스 | URL |
+|--------|-----|
+| API | http://localhost:4000 |
+| Web (dev) | http://localhost:5173 |
+| Web (Docker) | http://localhost:3000 |
 
-## 포인트
+Dashboard · Chat · Governance · DLQ · Security · Execution · Agents
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+```bash
+curl http://localhost:4000/health
+```
 
-## 관련
+`COMMANDER_API_KEY` 사용 시 Bearer 필요.
 
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+[문제 해결](/ko/guide/troubleshooting)

@@ -1,22 +1,21 @@
-# Providers
+# 프로바이더
 
-Commander의 **Providers** 사용법과 운영 포인트를 정리합니다.
+**25**개 LLM 프로바이더. 환경 변수 하나만 설정하면 자동 감지합니다.
 
-## 빠른 시작
+주요 키: `OPENAI_API_KEY` · `ANTHROPIC_API_KEY` · `GOOGLE_API_KEY` · `GROQ_API_KEY` · `OPENROUTER_API_KEY` · `XAI_API_KEY` · `OLLAMA_BASE_URL` · `VLLM_BASE_URL` 등 (`providerRegistry.ts` 25개).
 
 ```bash
-# The simplest setup—just one key lets Commander auto-select
 export OPENAI_API_KEY=sk-...
 ```
 
+`modelRouter.ts`가 복잡도·비용·지연·폴백으로 선택합니다.
 
-## 포인트
+## 커스텀
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+```typescript
+import { BaseLLMProvider } from '@commander/core';
+class MyProvider extends BaseLLMProvider {
+  async call(messages, options) { /* ... */ }
+}
+runtime.registerProvider('my-provider', new MyProvider());
+```

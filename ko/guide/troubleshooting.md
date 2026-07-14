@@ -1,21 +1,30 @@
-# Troubleshooting
+# 문제 해결
 
-Commander의 **Troubleshooting** 사용법과 운영 포인트를 정리합니다.
+> monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
 
-## 빠른 시작
+## 프로바이더 없음
 
 ```bash
-Error: Cannot find module '@commander/core'
+echo $OPENAI_API_KEY
+npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
+## 레이트리밋 / 타임아웃
 
-## 포인트
+`COMMANDER_MAX_CONCURRENCY=1` · `COMMANDER_TIMEOUT_MS=120000` · 두 번째 키
 
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
+## 멈춤 / 서킷 브레이커
 
-## 관련
+```bash
+npx tsx packages/core/src/cliEntry.ts status
+npx tsx packages/core/src/cliEntry.ts doctor --reset
+```
 
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+## 디버그
+
+```bash
+export COMMANDER_DEBUG=true
+npx tsx packages/core/src/cliEntry.ts run "task"
+```
+
+[FAQ](/ko/guide/faq)

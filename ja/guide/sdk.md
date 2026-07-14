@@ -1,23 +1,28 @@
 # Agent SDK (TypeScript)
 
-Commander の **Agent SDK (TypeScript)** について、使い方と運用上の注意をまとめます。
+```typescript
+import { CommanderClient, createClient } from '@commander/sdk';
 
-## クイック
+const client = new CommanderClient({ provider: 'openai' });
+await client.connect();
+const result = await client.run('analyze this repository structure');
+console.log(result.status, result.summary);
+await client.disconnect();
 
-```bash
-git clone https://github.com/PStarH/Commander.git
-cd Commander && pnpm install
-pnpm --filter @commander/sdk build
+const c = await createClient(); // 環境から自動検出
+await c.run('audit this repo');
+await c.disconnect();
 ```
 
+## 主要メソッド
 
-## ポイント
+| メソッド | 役割 |
+|----------|------|
+| `connect` / `disconnect` | ライフサイクル |
+| `run` | フル実行 |
+| `plan` | 審議のみ |
+| `onEvent` | イベント購読 |
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
+npm 公開は進行中 — monorepo からの利用を推奨。
 
-## 関連
-
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+[デプロイ](/ja/deployment) · [Python SDK](/ja/guide/sdk-python)

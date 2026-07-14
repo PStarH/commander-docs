@@ -1,21 +1,15 @@
-# Security
+# 보안
 
-Commander의 **Security** 사용법과 운영 포인트를 정리합니다.
+**취약점 보고:** 공개 이슈 금지 — **sampan090611@gmail.com** (약 48시간 내 확인).
 
-## 빠른 시작
+## 제어
 
 ```bash
 export COMMANDER_MODE=read-only
+export COMMANDER_API_KEY="long-random-secret"
+export OLLAMA_BASE_URL=http://localhost:11434
 ```
 
+완화: 주입 스캔, DLP, 승인 모드, 서킷 브레이커, 페일오버, 멀티 테넌트 격리, npm audit.
 
-## 포인트
-
-- monorepo CLI: `cliEntry.ts` / 빌드 후 `commander`  
-- 지표: 25 프로바이더 · 5 토폴로지 · 18 도구 · 6700+ 테스트  
-- 정확한 동작은 monorepo 소스를 기준으로 합니다  
-
-## 관련
-
-- [아키텍처](/ko/architecture/overview)  
-- [빠른 시작](/ko/guide/getting-started)  
+[게이트웨이](/ko/architecture/security-gateway) · [샌드박스](/ko/architecture/sandbox)
