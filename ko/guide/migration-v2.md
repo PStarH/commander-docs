@@ -1,79 +1,77 @@
-# Architecture V2 Migration
+# Architecture V2 마이그레이션
 
-**Architecture V2 Migration.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
+레거시 V1 실행 경로에서 **Architecture V2** 내구성 커널로 이전합니다. 컨트롤 플레인이 작업을 스케줄하고, 워커가 스텝을 실행하며, 상태는 PostgreSQL에 둡니다.
 
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
+> 운영 상세는 monorepo [`docs/v2-migration-guide.md`](https://github.com/PStarH/Commander/blob/master/docs/v2-migration-guide.md). 이 페이지는 docs 사이트 요약입니다.
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
+## 멘탈 모델
 
-## 참고 표
+| 플레인             | 책임                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| **Gateway (제어)** | run 수락, WorkGraph 스케줄, lifecycle (pause/resume/cancel). 순수 V2에서는 에이전트를 실행하지 않음 |
+| **Worker (실행)**  | 스텝 claim, 에이전트/도구 실행, 결과 보고                                                           |
+| **Kernel storage** | runs / steps / events PostgreSQL 테이블                                                             |
 
-| Plane | Responsibility |
-|-------|----------------|
-| **Gateway (control)** | Accept runs, schedule WorkGraphs, lifecycle (pause/resume/cancel) — **does not** execute agents in pure V2 |
-| **Worker (execution)** | Claim steps, run agents/tools, report results |
-| **Kernel storage** | PostgreSQL tables for runs, steps, events |
+## 기능 플래그 / 환경 변수
 
+| 변수                         | 기본          | 의미                              |
+| ---------------------------- | ------------- | --------------------------------- |
+| `COMMANDER_V2_MODE`          | `0`           | `1`이면 V2 (레거시 라우트 비활성) |
+| `NODE_ENV=production`        | —             | 종종 V2 강제                      |
+| `COMMANDER_LEGACY_EXECUTION` | `0`           | 임시로 레거시 재활성              |
+| `DATABASE_URL`               | —             | V2 커널에 **필수**                |
+| `COMMANDER_WORKER_*`         | monorepo 참조 | worker 종류·동시성·인증·테넌트    |
 
-## 주요 내용
+## 라우트 매핑
 
-### Mental model
+| Legacy                           | V2                                   |
+| -------------------------------- | ------------------------------------ |
+| `POST /api/runtime/execute`      | `POST /v1/runs`                      |
+| `POST /api/orchestrator/execute` | `POST /v1/runs` (다단계 그래프)      |
+| `POST /api/chat`                 | `POST /v1/runs` (단일 에이전트)      |
+| pause / resume / cancel          | `/v1/runs/:id/{pause,resume,cancel}` |
 
-운영 시 **Mental model** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
+### 핵심 V2 엔드포인트
 
-### Feature flags / env
+- `POST /v1/runs` · `GET /v1/runs/:id` · steps · events
+- lifecycle · human-in-the-loop
+- `/health` · `/metrics` · `/v1/slo`
 
-운영 시 **Feature flags / env** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
+## 스토리지 마이그레이션
 
-### Route mapping
-
-운영 시 **Route mapping** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-### Storage migration
-
-운영 시 **Storage migration** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-### Worker sketch
-
-운영 시 **Worker sketch** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-### Rollout strategy
-
-운영 시 **Rollout strategy** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-### When you can stay on V1-style local CLI
-
-운영 시 **When you can stay on V1-style local CLI** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-### 관련
-
-운영 시 **Related** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/migration-v2)를 보세요.
-
-## 예제 (코드는 영어 유지)
+| Legacy            | V2                         |
+| ----------------- | -------------------------- |
+| SQLite / pod 로컬 | PostgreSQL `commander_*`   |
+| 인메모리 chat     | 이벤트 소싱 재구성         |
+| 구 체크포인트     | **이식 불가** — run 재제출 |
 
 ```bash
-# After setting DATABASE_URL
-pnpm db:migrate   # from monorepo — see product scripts
+# DATABASE_URL 설정 후
+pnpm db:migrate   # monorepo product scripts
 ```
+
+## Worker 스케치
 
 ```bash
 export DATABASE_URL=postgres://...
 export COMMANDER_WORKER_AUTH_TOKEN=...
 export COMMANDER_WORKER_KIND=agent
-# start worker process — see monorepo worker-plane package
+# monorepo worker-plane 패키지로 기동
 ```
 
-## 운영
+## 롤아웃
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+1. 스테이징 dual-run (`COMMANDER_LEGACY_EXECUTION=1` 필요 시)
+2. 카나리 테넌트를 `POST /v1/runs`로
+3. 레거시 비활성 (`COMMANDER_V2_MODE=1`)
+4. `/v1/slo` · DLQ · worker lease 모니터링
+
+## 언제 V1 스타일 로컬 CLI를 유지하나
+
+단일 머신 개발의 `cliEntry.ts` / SDK `CommanderClient`는 여전히 가장 빠릅니다. V2는 **내구성 멀티 레플리카 실행**과 gateway/worker 분리가 필요할 때입니다.
 
 ## 관련
 
-- [아키텍처 개요](/ko/architecture/overview)
+- [배포](/ko/deployment)
 - [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+- [이벤트 소싱](/ko/architecture/event-sourcing)

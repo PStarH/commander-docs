@@ -1,37 +1,70 @@
-# FAQ
+# Frequently Asked Questions
 
-## Commander とは？
+**Frequently Asked Questions.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
 
-5 つの正規トポロジで複数 AI エージェントを編成するエンジンです。25 プロバイダー、18 組み込みツール、6700+ テスト。
+## 参照表
 
-## 普通の AI コーディングツールとの違いは？
+| Topology | Use when |
+|----------|----------|
+| **SINGLE** | Simple, one-shot answers |
+| **CHAIN** | Sequential pipeline steps |
+| **DISPATCH** | Parallel specialists + synthesis |
+| **ORCHESTRATOR** | Lead agent delegates to workers |
+| **REVIEW** | Produce then critique / merge |
 
-単一エージェントではなく、**自動トポロジ・ライブ SSE・品質ゲート・本番向け基盤** を備えます。
 
-## API キーは複数必要？
+## 主な節
 
-いいえ。**1 つで十分**。複数設定するとフェイルオーバーが働きます。
+### General
 
-## オフラインは？
+**General** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Setup
+
+**Setup** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Usage
+
+**Usage** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Performance
+
+**Performance** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Enterprise
+
+**Enterprise** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Data & Privacy
+
+**Data & Privacy** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Related
+
+**Related** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+## 例
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 npx tsx packages/core/src/cliEntry.ts run "analyze this code"
 ```
-
-## ファイルを編集する？
-
-モードで制御: `plan` / `read-only` / `suggest` / `auto-edit` / `full-auto`。
-
-## CI では？
-
 ```bash
 export COMMANDER_MODE=full-auto
 npx tsx packages/core/src/cliEntry.ts run "fix all lint errors"
 ```
 
-## 5 トポロジ
+## 運用チェック
 
-SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW — [決定木](/ja/guide/usage/topology-decision-tree)
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
 
-[トラブルシューティング](/ja/guide/troubleshooting) · [セキュリティ](/ja/guide/security)
+## 関連
+
+- [アーキテクチャ概要](/ja/architecture/overview)
+- [本番準備](/ja/architecture/production-readiness)
+- [セキュリティ](/ja/guide/security)
+- [クイックスタート](/ja/guide/getting-started)

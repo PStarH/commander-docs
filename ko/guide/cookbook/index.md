@@ -1,23 +1,43 @@
-# 쿡북
+# Cookbook
 
-엔드투엔드 레시피입니다. 각 페이지 구성: **목표 → 명령 → 기대 신호 → 실패 모드**.
+**Cookbook.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
 
-| 레시피                                                       | 시간  | 연습하는 것                       |
-| ------------------------------------------------------------ | ----- | --------------------------------- |
-| [저장소 보안 감사](/ko/guide/cookbook/security-audit)        | ~10분 | DISPATCH형 분석, 스트리밍, 게이트 |
-| [모듈을 안전하게 리팩터](/ko/guide/cookbook/refactor-module) | ~15분 | Plan → run → review               |
-| [CI 풀오토 린트 수정](/ko/guide/cookbook/ci-full-auto)       | ~15분 | 비대화형 모드, exit code          |
+## 참고 표
 
-## 공통 전제
+| Recipe | Time | What you practice |
+|--------|------|-------------------|
+| [Security audit a repo](/guide/cookbook/security-audit) | ~10 min | DISPATCH-style analysis, streaming, gates |
+| [Refactor a module safely](/guide/cookbook/refactor-module) | ~15 min | Plan mode → run → review |
+| [CI full-auto lint fix](/guide/cookbook/ci-full-auto) | ~15 min | Non-interactive mode, exit codes |
 
-모든 레시피는 `pnpm install` 이후 Commander 모노레포 루트에 있고, API 키 하나가 export 되어 있다고 가정합니다.
+
+## 주요 섹션
+
+### Conventions
+
+**Conventions** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+## 예제
 
 ```bash
-# 소스 체크아웃
+# Source checkout
 npx tsx packages/core/src/cliEntry.ts <command>
 
-# @commander/core 빌드 후
+# After building @commander/core
 commander <command>
 ```
 
-Commander가 처음이라면 [빠른 시작](/ko/guide/getting-started)부터.
+## 운영 체크
+
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
+
+## 관련
+
+- [아키텍처 개요](/ko/architecture/overview)
+- [프로덕션 준비](/ko/architecture/production-readiness)
+- [보안](/ko/guide/security)
+- [빠른 시작](/ko/guide/getting-started)

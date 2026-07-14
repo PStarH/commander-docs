@@ -1,10 +1,40 @@
 # Multi-Tenant Architecture
 
-**Multi-Tenant Architecture.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+**Multi-Tenant Architecture.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
 
-本ページは Commander における **Multi-Tenant Architecture** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 参照表
 
-```bash
+| Layer | Mechanism |
+|-------|-----------|
+| Rate limits | Per-tenant: requests/minute |
+| Concurrency | Per-tenant: max concurrent runs |
+| Storage | Per-tenant directory paths |
+| Memory | Per-instance ThreeLayerMemory |
+| Cache | SHA-256 key includes tenantId |
+| Metrics | Every counter/gauge/histogram has `tenant` label |
+
+
+## 主な節
+
+### Request Flow
+
+**Request Flow** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Isolation Layers
+
+**Isolation Layers** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Providers
+
+**Providers** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Tenant Config
+
+**Tenant Config** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+## 例
+
+```
 Request → HttpServer
            │
            ├─ authenticate()           ← Bearer token → tenant mapping
@@ -13,15 +43,40 @@ Request → HttpServer
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
+                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
+                                        │
+                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
+                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
+                                        │
+                                        └─ Tenant-scoped instances:
+                                            ├─ SamplesStore(path/tenant_{id}/)
+                                            ├─ TraceStore(path/tenant_{id}/)
+                                            ├─ StateCheckpointer(path/tenant_{id}/)
+                                            ├─ ThreeLayerMemory(per-instance)
+                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
+```
+```typescript
+interface TenantConfig {
+  tenantId: string;
+  tokenBudget: number;
+  maxConcurrency: number;
+  maxRunsPerMinute: number;
+  enabled: boolean;
+  workspacePath?: string;
+}
 ```
 
-## 要点
+## 運用チェック
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [アーキテクチャ概要](/ja/architecture/overview)
+- [本番準備](/ja/architecture/production-readiness)
+- [セキュリティ](/ja/guide/security)
+- [クイックスタート](/ja/guide/getting-started)

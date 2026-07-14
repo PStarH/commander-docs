@@ -1,27 +1,69 @@
-# Agent Teams
+# エージェント・チーム
 
-**Agent Teams.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+Commander は、長期・協調ワークフロー向けに **永続インボックス・メッセージング** 付きのエージェント・チームをサポートします。
 
-本ページは Commander における **Agent Teams** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
+## 概要
 
-```bash
-import { AgentTeamManager } from '@commander/core';
+エージェント・チームは、複数エージェントが長時間にわたって複雑な作業を協力できるようにします。各エージェントは独自のインボックスを持ち、非同期でメッセージを送受信します。
 
-const team = new AgentTeamManager('team-1');
+## チーム作成
 
-// Register agents
+```typescript
+import { AgentTeamManager } from "@commander/core";
+
+const team = new AgentTeamManager("team-1");
+
 const leadId = team.registerAgent({
-  id: 'lead',
-  name: 'Lead Architect',
+  id: "lead",
+  name: "Lead Architect",
+  role: "architect",
+  capabilities: ["system-design", "code-review"],
+});
+
+const backendId = team.registerAgent({
+  id: "backend",
+  name: "Backend Specialist",
+  role: "engineer",
+  capabilities: ["api-design", "database"],
+});
+
+const frontendId = team.registerAgent({
+  id: "frontend",
+  name: "Frontend Specialist",
+  role: "engineer",
+  capabilities: ["ui", "react"],
+});
 ```
 
-## 要点
+> `@commander/core` は monorepo workspace から。npm 公開が主経路になるまでは clone + pnpm を使ってください。
 
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 実行例は [クイックスタート](/ja/guide/getting-started) の `cliEntry.ts` を使用  
+## 通信
+
+永続インボックス経由でメッセージを送ります。
+
+```typescript
+await team.sendMessage({
+  from: leadId,
+  to: backendId,
+  subject: "Design API endpoints",
+  body: "Need a REST API for the user module. Design the endpoints.",
+  priority: "high",
+});
+```
+
+エージェントはインボックスをポーリングするかイベントバスを購読して作業を続けます。ハンドオフと artifact 参照で情報損失を減らします。
+
+## いつ使うか
+
+| 状況             | 推奨                                        |
+| ---------------- | ------------------------------------------- |
+| 短い一回限り     | トポロジ自動選択（DISPATCH / ORCHESTRATOR） |
+| 数日にわたる協調 | Agent Teams + 永続インボックス              |
+| 高リスク検証     | REVIEW トポロジ + チーム・レビュー役割      |
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
-- [API](/ja/api/overview)  
+- [マルチエージェント](/ja/architecture/multi-agent)
+- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)
+- [Agent Runtime](/ja/architecture/agent-runtime)
+- [SDK](/ja/guide/sdk)

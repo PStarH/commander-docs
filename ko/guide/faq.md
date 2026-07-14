@@ -1,37 +1,70 @@
-# FAQ
+# Frequently Asked Questions
 
-## Commander란?
+**Frequently Asked Questions.** Commander monorepo 구성 요소에 대한 한국어 운영 문서입니다. 코드·식별자는 영어를 유지하며, CLI는 `npx tsx packages/core/src/cliEntry.ts` 를 우선합니다. 제품 지표: 25 프로바이더 · 5 토폴로지 · 18 tools · 6700+ 테스트.
 
-5개 정규 토폴로지로 여러 AI 에이전트를 조율하는 엔진입니다. 25 프로바이더, 18 내장 도구, 6700+ 테스트.
+## 참고 표
 
-## 일반 AI 코딩 도구와 차이는?
+| Topology | Use when |
+|----------|----------|
+| **SINGLE** | Simple, one-shot answers |
+| **CHAIN** | Sequential pipeline steps |
+| **DISPATCH** | Parallel specialists + synthesis |
+| **ORCHESTRATOR** | Lead agent delegates to workers |
+| **REVIEW** | Produce then critique / merge |
 
-단일 에이전트가 아니라 **자동 토폴로지·라이브 SSE·품질 게이트·프로덕션 인프라**를 제공합니다.
 
-## API 키가 여러 개 필요?
+## 주요 섹션
 
-아니요. **하나면 충분**합니다.
+### General
 
-## 오프라인?
+**General** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Setup
+
+**Setup** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Usage
+
+**Usage** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Performance
+
+**Performance** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Enterprise
+
+**Enterprise** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Data & Privacy
+
+**Data & Privacy** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+### Related
+
+**Related** 는 monorepo 구현과 품질 게이트·DLQ·서킷 브레이커와 함께 동작합니다. 전체 명세는 영문 소스와 코드(`packages/core`)를 참고하세요.
+
+## 예제
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 npx tsx packages/core/src/cliEntry.ts run "analyze this code"
 ```
-
-## 파일 수정?
-
-모드로 제어: `plan` / `read-only` / `suggest` / `auto-edit` / `full-auto`.
-
-## CI?
-
 ```bash
 export COMMANDER_MODE=full-auto
 npx tsx packages/core/src/cliEntry.ts run "fix all lint errors"
 ```
 
-## 5 토폴로지
+## 운영 체크
 
-SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW — [결정 트리](/ko/guide/usage/topology-decision-tree)
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
 
-[문제 해결](/ko/guide/troubleshooting) · [보안](/ko/guide/security)
+## 관련
+
+- [아키텍처 개요](/ko/architecture/overview)
+- [프로덕션 준비](/ko/architecture/production-readiness)
+- [보안](/ko/guide/security)
+- [빠른 시작](/ko/guide/getting-started)

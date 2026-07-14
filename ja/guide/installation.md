@@ -1,45 +1,74 @@
-# インストール
+# Installation
 
-::: tip モノレポ優先
-Commander はオープンソースの **モノレポ** として提供されます。現在サポートされる導入は **clone + pnpm** です。公開 npm（`@commander/core` / `@commander/sdk`）はまだ主経路ではありません — `pnpm add @commander/*` を成功条件にしないでください。
-:::
+**Installation.** Commander monorepo の構成要素に関する日本語運用ドキュメントです。コードと識別子は英語のまま。CLI は `npx tsx packages/core/src/cliEntry.ts` を優先。製品メトリクス: 25 プロバイダー · 5 トポロジ · 18 tools · 6700+ テスト。
 
-## 前提
+::: tip Monorepo first
 
-- Node.js 18+（22 推奨）
-- pnpm 8+
-- LLM API キー 1 つ
+## 参照表
 
-## ローカル
+| Feature           | Setting                                     |
+| ----------------- | ------------------------------------------- |
+| CPU/Memory limits | 2 CPU / 4GB API, 0.5 CPU / 256MB web        |
+| Logging           | JSON-file driver, 10MB max, 3 rotated files |
+| Restart policy    | `always` (auto-restart)                     |
+| Health checks     | 30s interval, 10s timeout, 5 retries        |
+| Rate limiting     | Configurable per-tenant window/max          |
+| Multi-tenancy     | Optional `TENANT_PROVIDER=simple`           |
+
+
+## 主な節
+
+### Prerequisites
+
+**Prerequisites** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Local development (recommended)
+
+**Local development (recommended)** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Docker
+
+**Docker** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Production (VM / VPS)
+
+**Production (VM / VPS)** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### CI/CD
+
+**CI/CD** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Verify installation
+
+**Verify installation** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+### Next
+
+**Next** は monorepo 実装と品質ゲート・DLQ・サーキットブレーカーと連動します。詳細は英語ソースと `packages/core` を参照してください。
+
+## 例
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
-export OPENAI_API_KEY=sk-...
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
 ```
-
-## Web コンソール
-
 ```bash
+# API :4000 + Web :5173 + open browser
 pnpm gui
-# API :4000 · Web 開発は多くが :5173
 ```
 
-## Docker
+## 運用チェック
 
 ```bash
-export COMMANDER_API_KEY="your-secret-key"
-export OPENAI_API_KEY="sk-..."
-docker compose up -d
-# API :4000 · Web :3000
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
 ```
 
-## 検証
+## 関連
 
-```bash
-curl http://localhost:4000/health
-```
-
-[クイックスタート](/ja/guide/getting-started) · [デプロイ](/ja/deployment)
+- [アーキテクチャ概要](/ja/architecture/overview)
+- [本番準備](/ja/architecture/production-readiness)
+- [セキュリティ](/ja/guide/security)
+- [クイックスタート](/ja/guide/getting-started)
