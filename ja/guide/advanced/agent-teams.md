@@ -1,6 +1,6 @@
 # Agent Teams
 
-Commander supports persistent agent teams with inbox messaging for long-running, collaborative workflows. Agent teams allow multiple agents to work together on complex tasks over extended periods. Each agent has its own inbox and can send/receive messages asynchronously.
+**Agent Teams.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Agent Teams** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

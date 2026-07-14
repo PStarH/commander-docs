@@ -1,6 +1,6 @@
 # Mode watch (streaming SSE)
 
-Chaque événement d’exécution en temps réel via Server-Sent Events.
+**Mode watch (streaming SSE).** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # Saga Transactions
 
-Commander implements the saga pattern for distributed compensating transactions — ensuring data consistency across multi-step operations where each step can be rolled back independently. Define sagas with forward actions and their compensating rollbacks:
+**Saga Transactions.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Saga Transactions** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

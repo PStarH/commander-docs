@@ -1,25 +1,45 @@
 # Pipeline de verificación
 
-Antes de devolver un resultado, Commander aplica **cinco puertas de calidad**.
+Toda salida de agente pasa por **5 puertas de calidad** antes de devolverse al caller. No es un check opcional: forma parte del bucle de reintento del runtime.
 
-| Puerta | Comprueba |
-|--------|-----------|
-| Hallucination | Hechos inventados (señales / LLM-as-judge) |
-| Consistency | Acuerdo entre agentes, sin contradicciones |
-| Completeness | Dimensiones requeridas cubiertas |
-| Accuracy | Alineación con material fuente |
-| Safety | Contenido, inyección, secretos |
+## Arquitectura
 
-Si una puerta falla: **reintento con contexto** o informe de fallo explícito — no un “éxito silencioso” incorrecto.
+```
+Agent output
+  │
+  ├─ Gate 1: Hallucination Detection
+  ├─ Gate 2: Consistency Check
+  ├─ Gate 3: Completeness Verification
+  ├─ Gate 4: Accuracy Validation
+  ├─ Gate 5: Safety Scanning
+  └─ → Pass / Fail → retry o informe con contexto
+```
 
-## Dónde se ve
+## UnifiedVerificationPipeline
 
-- Stream CLI / watch: líneas `[gate] …`  
-- Consola web: panel de ejecución  
-- Métricas / logs según config  
+```typescript
+const pipeline = new UnifiedVerificationPipeline();
+const result = await pipeline.verify(output, context, { tenantId });
+
+result.gates.forEach((gate) => {
+  if (!gate.passed) {
+    // reintento con gate.feedback
+  }
+});
+```
+
+## Puertas
+
+1. **Alucinación** — señales (no juez LLM circular): claims sin soporte de tools, números inconsistentes, contradicciones
+2. **Consistencia** — sin contradicciones lógicas; terminología estable
+3. **Completitud** — salidas pedidas presentes; sin placeholders TODO/FIXME
+4. **Exactitud** — frente a restricciones y resultados de tools
+5. **Seguridad** — inyección, fugas tipo secretos, comandos peligrosos
+
+Umbrales configurables por tenant. Tras fallos reiterados se reporta el modo de fallo al caller.
 
 ## Relacionado
 
-- [Runtime](/es/architecture/agent-runtime)  
-- [Seguridad](/es/guide/security)  
-- [Cookbook auditoría](/es/guide/cookbook/security-audit)
+- [Agent Runtime](/es/architecture/agent-runtime)
+- [Production readiness](/es/architecture/production-readiness)
+- [Seguridad](/es/guide/security)

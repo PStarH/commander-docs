@@ -1,6 +1,6 @@
 # Model Context Protocol (MCP)
 
-Commander supports the [Model Context Protocol](https://modelcontextprotocol.io) for connecting to external MCP servers and exposing Commander's capabilities as MCP services. Connect to any MCP-compatible server to extend Commander with external tools:
+**Model Context Protocol (MCP).** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Model Context Protocol (MCP)** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

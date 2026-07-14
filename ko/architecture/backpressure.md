@@ -1,6 +1,6 @@
 # Backpressure Controller
 
-The backpressure controller implements **unified admission control** for the Commander runtime, preventing overload when demand exceeds capacity. It uses a three-stage pipeline: Token Bucket → Ring Buffer → Circuit Breaker. 1. **Token Bucket** — Requests consume a token. When the bucket is empty, requests spill to the ring buffer.
+**Backpressure Controller.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
 
 이 문서는 Commander에서 **Backpressure Controller** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 

@@ -1,6 +1,6 @@
 # Self-Evolution
 
-Commander improves over time through a meta-learning system that tunes agent configurations based on execution outcomes. The system combines Thompson Sampling and Reflexion to optimize topology selection, provider choice, and parameter settings. Uses Thompson Sampling with Beta distributions to balance exploration and exploitation:
+**Self-Evolution.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Self-Evolution** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

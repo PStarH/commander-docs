@@ -1,6 +1,6 @@
 # Exécuter des tâches
 
-Commander propose plusieurs façons d’exécuter une tâche selon le besoin.
+**Exécuter des tâches.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 > **CLI monorepo :** `npx tsx packages/core/src/cliEntry.ts …`  
 > **Après build :** `commander …`  

@@ -1,6 +1,6 @@
 # Enterprise Security Gateway
 
-Commander's `EnterpriseSecurityGateway` provides a 7-layer defense-in-depth architecture that is invoked during all LLM calls and tool executions. It cannot be bypassed — cost checks execute both before and after LLM calls. - **Defense in depth** — Multiple independent layers, each with distinct responsibility
+**Enterprise Security Gateway.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Enterprise Security Gateway** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

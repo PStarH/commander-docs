@@ -1,6 +1,6 @@
 # 도구
 
-Commander ships with **18 built-in tools** (exposed to the LLM by default, out of 48 tool classes available in the codebase) across 8 categories, each designed for production use with caching, error handling, and rollback support. Every tool comes with:
+**도구.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
 
 이 문서는 Commander에서 **도구** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 

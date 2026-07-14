@@ -1,6 +1,6 @@
 # Communauté
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Communauté**.
+**Communauté.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Entrée rapide
 

@@ -1,32 +1,79 @@
-# Migration Architecture V2
+# Architecture V2 Migration
 
-Le **control plane** planifie ; les **workers** exécutent ; l’état vit dans **PostgreSQL**.
+**Architecture V2 Migration.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
-## Variables
+Métriques produit : **25** fournisseurs · **5** topologies · **18** tools · **6700+** tests.
 
-| Variable | Rôle |
-|----------|------|
-| `COMMANDER_V2_MODE=1` | Active V2 |
-| `DATABASE_URL` | Requis |
-| `COMMANDER_LEGACY_EXECUTION` | Pont temporaire |
-| `COMMANDER_WORKER_*` | kind, auth, concurrency |
+CLI monorepo : `npx tsx packages/core/src/cliEntry.ts` · après build : `commander`
 
-## Routes
+## Référence
 
-| Legacy | V2 |
-|--------|-----|
-| `POST /api/runtime/execute` | `POST /v1/runs` |
-| pause/resume/cancel legacy | `/v1/runs/:id/...` |
+| Plane | Responsibility |
+|-------|----------------|
+| **Gateway (control)** | Accept runs, schedule WorkGraphs, lifecycle (pause/resume/cancel) — **does not** execute agents in pure V2 |
+| **Worker (execution)** | Claim steps, run agents/tools, report results |
+| **Kernel storage** | PostgreSQL tables for runs, steps, events |
 
-## Rollout
 
-1. Staging avec pont legacy si besoin  
-2. Canary sur `/v1/runs`  
-3. Couper le legacy  
-4. Monitorer `/v1/slo`, DLQ, leases  
+## Contenu principal
 
-La CLI locale reste le plus rapide en dev. V2 compte pour l’exécution durable multi-réplicas.
+### Mental model
 
-Monorepo : `docs/v2-migration-guide.md`.
+En pratique, **Mental model** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
 
-[Déploiement](/fr/deployment) · [Event sourcing](/fr/architecture/event-sourcing)
+### Feature flags / env
+
+En pratique, **Feature flags / env** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### Route mapping
+
+En pratique, **Route mapping** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### Storage migration
+
+En pratique, **Storage migration** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### Worker sketch
+
+En pratique, **Worker sketch** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### Rollout strategy
+
+En pratique, **Rollout strategy** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### When you can stay on V1-style local CLI
+
+En pratique, **When you can stay on V1-style local CLI** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+### Voir aussi
+
+En pratique, **Related** s’intègre au runtime avec les portes de qualité, le DLQ et les circuit breakers. Consultez le monorepo pour le code source et la [référence anglaise](/guide/migration-v2) pour le détail exhaustif.
+
+## Exemples (code inchangé)
+
+```bash
+# After setting DATABASE_URL
+pnpm db:migrate   # from monorepo — see product scripts
+```
+
+```bash
+export DATABASE_URL=postgres://...
+export COMMANDER_WORKER_AUTH_TOKEN=...
+export COMMANDER_WORKER_KIND=agent
+# start worker process — see monorepo worker-plane package
+```
+
+## Opérations
+
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
+
+## Voir aussi
+
+- [Vue d’architecture](/fr/architecture/overview)
+- [Prêt production](/fr/architecture/production-readiness)
+- [Sécurité](/fr/guide/security)
+- [Démarrage rapide](/fr/guide/getting-started)

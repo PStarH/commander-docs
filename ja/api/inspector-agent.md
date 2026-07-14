@@ -1,6 +1,6 @@
 # Inspector Agent
 
-System health monitoring and issue detection across all Commander components.
+**Inspector Agent.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Inspector Agent** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

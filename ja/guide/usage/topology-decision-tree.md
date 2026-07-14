@@ -1,18 +1,47 @@
 # トポロジ決定木
 
-審議エンジンが **5 つの正規トポロジ** を選ぶ指針。[対話型エクスプローラー](/ja/guide/topology-explorer) も参照。
+どの編成トポロジを使うか迷ったら、この木に従ってください。
 
-1. 明確な一問一答 → **SINGLE**  
-2. 厳密なパイプライン A→B→C → **CHAIN**  
-3. 並列スペシャリスト + 統合 → **DISPATCH**  
-4. 委任・再計画が必要 → **ORCHESTRATOR**  
-5. 高リスク / 批評が必要 → **REVIEW**  
+## クイック参照
 
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "your real task"
-npx tsx packages/core/src/cliEntry.ts run "task" --topology review --stream
+```
+タスクは単純で明確か？
+├── YES → SINGLE
+└── NO  → サブタスクは独立か？
+    ├── YES → DISPATCH
+    └── NO  → 互いに依存するか？
+        ├── YES → CHAIN
+        └── NO  → 明確なリードがあるか？
+            ├── YES → ORCHESTRATOR
+            └── NO  → REVIEW
 ```
 
-名前: `single` · `chain` · `dispatch` · `orchestrator` · `review`。
+## 詳細
 
-[マルチエージェント](/ja/architecture/multi-agent)
+| トポロジ     | いつ                     | エージェント目安 |
+| ------------ | ------------------------ | ---------------- |
+| SINGLE       | 単純・範囲明確           | 1                |
+| CHAIN        | 前段依存の多段変換       | 2–3              |
+| DISPATCH     | 並列可能な独立サブタスク | 2–10             |
+| ORCHESTRATOR | 分解パスがある複雑タスク | 3–8              |
+| REVIEW       | 高リスク・交差検証       | 2–5              |
+
+## 複雑度スコア
+
+| スコア |   自動選択   |
+| :----: | :----------: |
+|  0–20  |    SINGLE    |
+| 20–40  |    CHAIN     |
+| 40–60  |   DISPATCH   |
+| 60–80  | ORCHESTRATOR |
+| 80–100 |    REVIEW    |
+
+```bash
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
+```
+
+## 関連
+
+- [マルチエージェント](/ja/architecture/multi-agent)
+- [トポロジ探索](/ja/guide/topology-explorer)
+- [タスク実行](/ja/guide/usage/running-tasks)

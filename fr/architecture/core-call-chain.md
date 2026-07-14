@@ -1,6 +1,6 @@
 # Chaîne d’appels core
 
-Chemin d’une requête de l’entrée jusqu’au résultat vérifié.
+**Chaîne d’appels core.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Entrées
 

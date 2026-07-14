@@ -1,6 +1,6 @@
 # レジリエンス
 
-Commander includes a multi-layer resilience infrastructure that ensures availability, data safety, and recoverability in production. Each LLM provider has its own circuit breaker with three states:
+**レジリエンス.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **レジリエンス** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

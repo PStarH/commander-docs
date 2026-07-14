@@ -1,6 +1,6 @@
 # 보안 샌드박스
 
-Commander's sandbox system provides secure execution isolation for all operations, with formal resource allocation via Petri net scheduling. Policies control what operations are permitted:
+**보안 샌드박스.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
 
 이 문서는 Commander에서 **보안 샌드박스** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 

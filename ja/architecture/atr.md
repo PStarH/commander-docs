@@ -1,6 +1,6 @@
 # Agent Transaction Runtime (ATR)
 
-ATR is the **settlement layer** that sits between the agent's decision loop and every external system call. It guarantees that agent actions are idempotent, recoverable, leased, and fenced. Without ATR, agent execution is fire-and-forget: if a tool call succeeds but the agent crashes before recording the result, the action is lost. If the agent retries, the action executes twice. ATR solves this w
+**Agent Transaction Runtime (ATR).** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Agent Transaction Runtime (ATR)** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

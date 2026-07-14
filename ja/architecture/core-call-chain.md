@@ -1,8 +1,42 @@
 # Core Call Chain
 
-Commander の **Core Call Chain** について、使い方と運用上の注意をまとめます。
+**Core Call Chain.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
-## クイック
+製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
+
+CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
+
+## 主な内容
+
+### 1. Deliberation
+
+運用では **1. Deliberation** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 2. Effort Scaling
+
+運用では **2. Effort Scaling** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 3. Topology Routing
+
+運用では **3. Topology Routing** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 4. Atomization
+
+運用では **4. Atomization** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 5. Execution
+
+運用では **5. Execution** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 6. Quality Gates
+
+運用では **6. Quality Gates** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+### 7. Completion
+
+運用では **7. Completion** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/core-call-chain)を参照してください。
+
+## 例（コードは英語のまま）
 
 ```bash
 CLI / HTTP / API
@@ -11,14 +45,25 @@ CLI / HTTP / API
   │   └─ TaskComplexityAnalyzer
 ```
 
+```bash
+  ├─ effortScaler.ts     ← "How many agents?"
+```
 
-## ポイント
+```bash
+  ├─ topologyRouter.ts   ← "Which topology fits?"
+```
 
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
+## 運用
+
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
+```
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+- [アーキテクチャ概要](/ja/architecture/overview)
+- [本番準備](/ja/architecture/production-readiness)
+- [セキュリティ](/ja/guide/security)
+- [クイックスタート](/ja/guide/getting-started)

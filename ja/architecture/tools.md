@@ -1,6 +1,6 @@
 # ツール
 
-Commander ships with **18 built-in tools** (exposed to the LLM by default, out of 48 tool classes available in the codebase) across 8 categories, each designed for production use with caching, error handling, and rollback support. Every tool comes with:
+**ツール.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **ツール** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

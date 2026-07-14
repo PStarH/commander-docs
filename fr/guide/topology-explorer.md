@@ -1,6 +1,6 @@
 # Explorateur interactif de topologie
 
-Choisissez la forme de la tâche. Le moteur de délibération de Commander mappe des signaux similaires sur l’une des **cinq topologies canoniques**. Aide à la décision — pas un substitut à `plan`.
+**Explorateur interactif de topologie.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Arbre de décision
 

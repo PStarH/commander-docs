@@ -1,6 +1,6 @@
 # Référence API
 
-Commander expose **deux couches** d’API. La plupart des apps n’ont besoin que de la couche 1.
+**Référence API.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Couche 1 — Intégration publique (commencez ici)
 

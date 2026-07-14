@@ -1,34 +1,47 @@
 # Orchestration multi-agents
 
-Commander coordonne plusieurs agents sur des **topologies canoniques** choisies par la délibération.
+**Orchestration multi-agents.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
-## Topologies
+## Topologies canoniques
 
-| Topologie | Motif | Cas typique |
-|-----------|-------|-------------|
-| **SINGLE** | Un agent | FAQ, one-shot |
-| **CHAIN** | Pipeline A→B→C | Migrer puis mettre à jour |
-| **DISPATCH** | Parallèle + synthèse | Audit, research multi-angle |
-| **ORCHESTRATOR** | Lead + workers | Gros chantier ambigu |
-| **REVIEW** | Producteur + critique | Code à haut risque |
+| Topologie        | Description                                           | Alias legacy                      |
+| ---------------- | ----------------------------------------------------- | --------------------------------- |
+| **SINGLE**       | Un agent gère toute la tâche                          | —                                 |
+| **CHAIN**        | Pipeline séquentiel                                   | SEQUENTIAL                        |
+| **DISPATCH**     | Sous-tâches indépendantes en parallèle, puis synthèse | PARALLEL                          |
+| **ORCHESTRATOR** | Lead décompose, délègue, synthétise                   | HIERARCHICAL / HYBRID             |
+| **REVIEW**       | Générer → critiquer → affiner                         | DEBATE / ENSEMBLE / EVALUATOR-OPT |
 
-## Coordination
+## Sélection
 
-- **Message bus** — événements inter-agents et système  
-- **Handoff** — transfert de contexte  
-- **Synthèse** — fusion des sorties  
-- **Budget tokens** — répartition par rôle  
+Le moteur de délibération (`deliberation.ts`) classifie chaque tâche :
 
-## Contrôle CLI
+| Complexité                       | Dépendances   | Topologie    |
+| -------------------------------- | ------------- | ------------ |
+| Trivial                          | Aucune        | SINGLE       |
+| Low                              | Séquentielles | CHAIN        |
+| Low                              | Indépendantes | DISPATCH     |
+| Medium / High                    | Mixtes        | ORCHESTRATOR |
+| High-risk / Critical / Iterative | Toute         | REVIEW       |
 
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "cross-repo security audit"
-npx tsx packages/core/src/cliEntry.ts run "audit" --topology dispatch --stream
-npx tsx packages/core/src/cliEntry.ts run "task" --agent-count 4
-```
+## Détails
 
-## Lié
+- **SINGLE** — demandes simples et bien bornées
+- **CHAIN** — transformations multi-étapes via artefacts
+- **DISPATCH** — travail parallélisable
+- **ORCHESTRATOR** — lead + spécialistes, reroutage adaptatif
+- **REVIEW** — solutions indépendantes, validation croisée, raffinement
 
-- [Explorateur de topologie](/fr/guide/topology-explorer)  
-- [Arbre de décision](/fr/guide/usage/topology-decision-tree)  
-- [Runtime](/fr/architecture/agent-runtime)
+## Scaling
+
+`effortScaler.ts` : simple 1 · modéré 2–5 · complexe 5–10 · research 10–20.
+
+## Communication
+
+Message bus · handoff d’agents (inbox persistante) · système d’artefacts · mémoire trois couches.
+
+## Voir aussi
+
+- [Arbre de décision topologique](/fr/guide/usage/topology-decision-tree)
+- [Agent Runtime](/fr/architecture/agent-runtime)
+- [Chaîne d’appels core](/fr/architecture/core-call-chain)

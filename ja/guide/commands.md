@@ -1,34 +1,44 @@
 # CLI コマンド
 
-ビルド後は `commander`。ソースからは:
+例はビルド後の `commander` バイナリ。ソースでは次に置き換え:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts
 ```
 
-## 実行
+## タスク実行
 
-| コマンド | 説明 |
-|----------|------|
-| `commander run <task>` | フル multi-agent 実行 |
-| `commander plan <task>` | 審議プラン表示 |
-| `commander run <task> --stream` | SSE ストリーム |
-| `commander run --file tasks.json` | バッチ |
-| `swarm` / `drive` / `goal` / `company` | 高度モード |
+| コマンド                                         | 説明                                     |
+| ------------------------------------------------ | ---------------------------------------- |
+| `commander <task>`                               | クイック分析                             |
+| `commander run <task>`                           | フル multi-agent パイプライン            |
+| `commander plan <task>`                          | 審議計画（トポロジ・エージェント・予算） |
+| `commander run <task> --stream`                  | リアルタイム SSE                         |
+| `commander run --file <tasks.json>`              | バッチ                                   |
+| `commander swarm` / `drive` / `goal` / `company` | 高度な実行モード                         |
 
-## UI
+## インターフェース
 
 `gui` · `tui` · `web`
 
-## 設定・診断
+## 分析・設定
 
-`mode` · `config` · `doctor` · `budget` · `status` · `cost` · `--debug`
+`review` · `workers` · `status` · `cost` · `mode` · `config` · `doctor` · `budget` · `--debug`
 
-## 承認モード
+## Skills / セッション / Saga
 
-`plan` · `read-only` · `suggest` · `auto-edit` · `full-auto`
+`skill *` · `history` · `share` · `saga` · `checkpoint` · `compensation` · `resume` · `undo`
+
+## 例
 
 ```bash
-export COMMANDER_MODE=plan
-commander mode plan
+npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
+npx tsx packages/core/src/cliEntry.ts doctor
 ```
+
+## 関連
+
+- [クイックスタート](/ja/guide/getting-started)
+- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)
+- [設定](/ja/guide/configuration)

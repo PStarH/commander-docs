@@ -1,21 +1,36 @@
 # Changelog
 
-Commander の **Changelog** について、使い方と運用上の注意をまとめます。
+Commander アーキテクチャの構成要素について日本語で説明します。monorepo 実装と整合しています。
 
-## クイック
+製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
+
+CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
+
+## 主な内容
+
+### v0.2.1-pre (Unreleased)
+
+運用では **v0.2.1-pre (Unreleased)** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/changelog)を参照してください。
+
+### v0.2.0 (2026-05-19)
+
+運用では **v0.2.0 (2026-05-19)** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/changelog)を参照してください。
+
+### v0.1.0 (2026-05-17)
+
+運用では **v0.1.0 (2026-05-17)** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/changelog)を参照してください。
+
+## 運用
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts plan "your task"
-npx tsx packages/core/src/cliEntry.ts run "your task" --stream
+npx tsx packages/core/src/cliEntry.ts doctor
+npx tsx packages/core/src/cliEntry.ts status
+curl -s http://localhost:4000/health/detailed || true
 ```
-
-## ポイント
-
-- CLI は monorepo の `cliEntry.ts`、ビルド後は `commander`  
-- 指標: 25 プロバイダー · 5 トポロジ · 18 ツール · 6700+ テスト  
-- 詳細な挙動は runtime / monorepo ソースを正とする  
 
 ## 関連
 
-- [アーキテクチャ](/ja/architecture/overview)  
-- [クイックスタート](/ja/guide/getting-started)  
+- [アーキテクチャ概要](/ja/architecture/overview)
+- [本番準備](/ja/architecture/production-readiness)
+- [セキュリティ](/ja/guide/security)
+- [クイックスタート](/ja/guide/getting-started)

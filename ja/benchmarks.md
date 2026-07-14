@@ -1,6 +1,6 @@
 # ベンチマーク
 
-Commander adds **+48.5 percentage points** over the bare MiMo base model on GAIA — demonstrating the power of multi-agent orchestration over single-agent baselines. - **Score**: 69.7% (115/165 correct)
+**ベンチマーク.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **ベンチマーク** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

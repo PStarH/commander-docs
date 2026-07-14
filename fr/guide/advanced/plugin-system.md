@@ -1,6 +1,6 @@
 # Système de plugins
 
-**19 points de hook** pour observer, modifier ou bloquer l’exécution.
+**Système de plugins.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Hooks principaux
 

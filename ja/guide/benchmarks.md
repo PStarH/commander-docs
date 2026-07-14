@@ -1,6 +1,6 @@
 # ベンチマーク
 
-Commander is benchmarked across **security, reliability, performance, chaos, and capability**. Numbers below are from the product README / monorepo scripts — re-run them yourself for current baselines. **Source of truth:** monorepo [`BENCHMARK.md`](https://github.com/PStarH/Commander/blob/master/BENCHMARK.md).
+**ベンチマーク.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **ベンチマーク** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

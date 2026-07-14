@@ -1,6 +1,6 @@
 # Vue d’ensemble de l’architecture
 
-Commander est un moteur d’orchestration multi-agents qui transforme une description de tâche en plan d’exécution structuré entre agents, tools et fournisseurs LLM.
+**Vue d’ensemble de l’architecture.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Lisez d’abord ces cinq pages
 

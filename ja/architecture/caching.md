@@ -1,6 +1,6 @@
 # Caching
 
-Commander implements a multi-level caching layer to reduce LLM calls, improve response times, and prevent redundant computation. Each cache is per-tenant isolated. An exact-match cache keyed by SHA-256 hash of `(tenantId + tool + args)`:
+**Caching.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Caching** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

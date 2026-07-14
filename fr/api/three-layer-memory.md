@@ -1,6 +1,6 @@
 # Mémoire à trois couches
 
-Working, episodic et long-term avec importance et tags.
+**Mémoire à trois couches.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 > **Couche 2** du runtime (`@commander/core`). Pour la plupart des applications, préférez [`CommanderClient`](/fr/guide/sdk) (couche 1).
 

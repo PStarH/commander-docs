@@ -1,6 +1,6 @@
 # Fournisseurs
 
-Commander prend en charge **25 fournisseurs LLM**. Une seule variable d’environnement suffit pour l’auto-détection.
+**Fournisseurs.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 | Variable | Fournisseur |
 |----------|-------------|

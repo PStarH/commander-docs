@@ -1,6 +1,6 @@
 # Channel Adapters
 
-Commander supports multiple communication channels through its adapter system, allowing agents to interact with users across different platforms. Channel adapters implement the `ChannelAdapter` interface:
+**Channel Adapters.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Channel Adapters** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

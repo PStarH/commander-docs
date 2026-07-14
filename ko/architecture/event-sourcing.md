@@ -1,6 +1,6 @@
 # 이벤트 소싱 및 복구
 
-Commander's event sourcing system provides crash-safe execution with tamper-proof audit trails, deterministic replay, and automatic zombie run recovery. The `EventSourcingEngine` implements the IEventSourcingEngine contract (Pillar I) with a Write-Ahead Log (WAL) and SHA-256 hash chain for tamper protection.
+**이벤트 소싱 및 복구.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
 
 이 문서는 Commander에서 **이벤트 소싱 및 복구** 의 역할과 사용 방법을 설명합니다. CLI/API는 monorepo와 맞춥니다.
 

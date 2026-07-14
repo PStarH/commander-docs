@@ -1,30 +1,50 @@
-# Listo para producción
+# Preparación para producción
 
-Primitivas de sistemas distribuidos aplicadas a workloads LLM.
+Commander se diseña para producción desde el día uno: observabilidad, seguridad y fiabilidad en cada componente.
 
-| Capacidad | Implementación |
-|-----------|----------------|
-| Circuit breakers | CLOSED / OPEN / HALF-OPEN por proveedor |
-| Dead letter queue | NDJSON append-only + replay |
-| Saga / compensación | Rollback de mutaciones |
-| Checkpoints | SQLite + WAL |
-| Caché semántica | SHA-256 + similitud |
-| Multi-tenant | Cuotas, storage, memoria |
-| Métricas | Prometheus `/metrics` |
+## Matriz
 
-## Health
+| Capacidad       | Estado                                          |
+| --------------- | ----------------------------------------------- |
+| Tipos           | TypeScript strict, cero `as any` / `@ts-ignore` |
+| Errores         | Cero catch vacíos en 100+ módulos               |
+| Métricas        | Prometheus/OpenMetrics + labels de tenant       |
+| Tracing         | Spans persistentes, OpenTelemetry               |
+| Crash safety    | Checkpoints SQLite WAL + hash chain             |
+| Circuit breaker | 5 fallos → 30s open → half-open                 |
+| DLQ             | 7 categorías, 15 modos, replay                  |
+| Multi-tenant    | Rate limits, cuotas, aislamiento storage/cache  |
+| Seguridad       | Gateway 7 capas, DLP, tokens, Bearer, CORS      |
+| Event sourcing  | WAL SHA-256, snapshots, replay determinista     |
+| Plugins         | Sandbox de carga; permisos ≤ sistema principal  |
 
-```bash
-curl http://localhost:4000/health
-curl http://localhost:4000/health/detailed
-curl http://localhost:4000/readyz
-curl http://localhost:4000/metrics
+## Mecanismos
+
+- **Circuit breaker** — registro por provider
+- **DLQ** — fallos no recuperables persistidos
+- **Compensation** — rollback de tools de mutación + Saga
+- **Checkpointer** — WAL atomic por paso
+- **Recovery bootstrapper** — reanuda o aborta runs zombi al arrancar
+
+## Observabilidad
+
+```typescript
+getMetricsCollector().exportOpenMetrics();
 ```
+
+Endpoints: `/health`, `/ready`, `/metrics`, `/health/detailed`. Dashboards Grafana (negocio + ops).
 
 ## Tests
 
-6700+ tests en CI (unit, integración, chaos, e2e según monorepo).
+6700+ unit/integration/chaos/e2e, aislamiento multi-tenant, permisos de plugins, stress.
+
+```
+npx tsx --test tests/*.test.ts
+npx tsc --noEmit
+```
 
 ## Relacionado
 
-- [Despliegue](/es/deployment) · [Resiliencia](/es/architecture/resilience) · [Benchmarks](/es/guide/benchmarks)
+- [Agent Runtime](/es/architecture/agent-runtime)
+- [Verificación](/es/architecture/verification)
+- [Despliegue](/es/deployment)

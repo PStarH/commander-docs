@@ -1,6 +1,6 @@
 # Smart Model Router
 
-The Smart Model Router provides **capability-based model selection** with user-configurable routing rules. It wraps the core `ModelRouter` with an extended API for defining model pools, routing rules, and budget constraints. Models are tagged with capability types for matching:
+**Smart Model Router.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Smart Model Router** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

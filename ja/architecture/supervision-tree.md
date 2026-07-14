@@ -1,6 +1,6 @@
 # Supervision Tree
 
-Commander implements an **Erlang/OTP-inspired supervision tree** for fault isolation. Instead of handling every possible error within an agent, agents crash and supervisors restart them automatically — the "Let It Crash" philosophy. Traditional error handling tries to catch and recover from every failure. This leads to complex, fragile code. Supervision trees flip the model: let agents crash, and 
+**Supervision Tree.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Supervision Tree** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

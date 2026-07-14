@@ -1,39 +1,72 @@
-# Runtime agents
+# Agent Runtime
 
-Le runtime exécute la boucle **LLM → tools → vérification → retry** pour chaque agent.
+**Agent Runtime.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
-## Boucle
+## Architecture
 
-1. Construire les messages (système + tâche + historique compacté)  
-2. Appeler le fournisseur LLM  
-3. Parser les tool calls  
-4. Exécuter les tools sous politique / sandbox  
-5. Attacher les résultats au contexte  
-6. Passer les **portes de qualité**  
-7. Terminer ou réessayer avec contexte  
-
-## Streaming SSE
-
-```bash
-npx tsx packages/core/src/cliEntry.ts run "task" --stream
-# ou
-npx tsx packages/core/src/cliEntry.ts watch "task"
+```
+AgentRuntime.execute(ctx)
+  │
+  ├─ acquireSlot()        ← sémaphore de concurrence
+  ├─ [Tenant check]       ← rate limit + quota de concurrence
+  ├─ resolve storage      ← mémoire + cache scopés tenant
+  │
+  ├─ [Retry loop: 0..maxRetries]
+  │   ├─ callWithTimeout()       ← provider LLM
+  │   ├─ [Tool execution loop]
+  │   │   ├─ planner.plan()      ← plan dépendances
+  │   │   ├─ executeTool()       ← StepErrorBoundary → tool.execute()
+  │   │   └─ cache.set()
+  │   ├─ verification.check()    ← 5 portes qualité
+  │   └─ checkpoint()            ← save atomique
+  │
+  ├─ releaseSlot()
+  └─ flush traces + samples
 ```
 
-Chaque pensée, tool call et décision de gate peut être émise vers le terminal ou la console web.
+## Boucle principale
 
-## Fiabilité intégrée
+1. **Acquisition de slot** — ne pas dépasser les runs concurrents
+2. **Validation tenant** — rate limits et quotas
+3. **Appel LLM** — timeout configurable
+4. **Exécution tools** — `ToolPlanner` parallélise les tools indépendants
+5. **Vérification** — 5 portes ; échec → retry
+6. **Checkpoint** — persistance atomique à chaque étape
+7. **Tracing** — flush des traces et échantillons LLM
 
-| Mécanisme | Rôle |
-|-----------|------|
-| Timeouts par tool | Évite les runs bloqués |
-| Cache de résultats | Moins de travail redondant |
-| Circuit breakers | Isole un fournisseur en panne |
-| Checkpoints | Reprise après crash |
+## Composants clés
 
-## Lié
+| Composant            | Fichier                         | Rôle                           |
+| -------------------- | ------------------------------- | ------------------------------ |
+| `AgentRuntime`       | `runtime/agentRuntime.ts`       | Boucle principale              |
+| `ToolPlanner`        | `runtime/toolPlanner.ts`        | Plan d’exécution tools         |
+| `ToolOrchestrator`   | `runtime/toolOrchestrator.ts`   | Exécute le plan                |
+| `StepErrorBoundary`  | `runtime/stepErrorBoundary.ts`  | skip / retry / abort par étape |
+| `StepTimeoutManager` | `runtime/stepTimeoutManager.ts` | Timeouts d’étape               |
+| `ContextCompactor`   | `runtime/contextCompactor.ts`   | Compactage messages            |
+| `ContextWindow`      | `runtime/contextWindow.ts`      | Fenêtre glissante              |
+| `TokenGovernor`      | `runtime/tokenGovernor.ts`      | Budget tokens                  |
+| `CycleDetector`      | `runtime/cycleDetector.ts`      | Boucles infinies               |
+| `ToolOutputManager`  | `runtime/toolOutputManager.ts`  | Budget sorties tools           |
 
-- [Fournisseurs](/fr/guide/providers)  
-- [Tools](/fr/architecture/tools)  
-- [Vérification](/fr/architecture/verification)  
-- [Multi-agents](/fr/architecture/multi-agent)
+## Configuration
+
+```typescript
+interface AgentRuntimeConfig {
+  maxStepsPerRun: number;
+  maxRetries: number;
+  timeoutMs: number;
+  maxConcurrency: number;
+  budgetHardCapTokens: number;
+}
+```
+
+## Plan d’exécution
+
+Les tools ne suivent pas l’ordre brut de la réponse LLM. Indépendants → parallèle ; dépendants → séquentiel après prérequis ; cycles détectés avant exécution.
+
+## Voir aussi
+
+- [Vérification](/fr/architecture/verification)
+- [Multi-agent](/fr/architecture/multi-agent)
+- [Chaîne d’appels core](/fr/architecture/core-call-chain)

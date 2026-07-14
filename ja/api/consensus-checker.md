@@ -1,6 +1,6 @@
 # Consensus Checker
 
-Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
+**Consensus Checker.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Consensus Checker** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

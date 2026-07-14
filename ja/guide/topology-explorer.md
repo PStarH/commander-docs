@@ -1,6 +1,6 @@
 # 対話型トポロジエクスプローラー
 
-Pick a task shape. Commander’s deliberation engine maps similar signals onto one of **five canonical topologies**. This page is a decision aid — not a substitute for `plan`. Answer mentally, then confirm with `plan`:
+**対話型トポロジエクスプローラー.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **対話型トポロジエクスプローラー** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

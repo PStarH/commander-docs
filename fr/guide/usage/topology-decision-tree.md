@@ -1,35 +1,47 @@
-# Arbre de décision des topologies
+# Arbre de décision topologique
 
-Page localisée (fr) — contenu aligné sur la documentation anglaise / espagnole pour **Arbre de décision des topologies**.
+**Arbre de décision topologique.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
-## Entrée rapide
+## Référence rapide
 
-```bash
-npx tsx packages/core/src/cliEntry.ts run "task" --topology dispatch --stream
-npx tsx packages/core/src/cliEntry.ts plan "task" --topology review
+```
+Tâche simple et bien définie ?
+├── OUI → SINGLE
+└── NON → Sous-tâches indépendantes ?
+    ├── OUI → DISPATCH
+    └── NON → Dépendent-elles les unes des autres ?
+        ├── OUI → CHAIN
+        └── NON → Lead agent clair ?
+            ├── OUI → ORCHESTRATOR
+            └── NON → REVIEW
 ```
 
+## Détails
+
+| Topologie    | Quand                                    | Agents |
+| ------------ | ---------------------------------------- | ------ |
+| SINGLE       | Simple, bien bornée                      | 1      |
+| CHAIN        | Transformations multi-étapes dépendantes | 2–3    |
+| DISPATCH     | Sous-tâches parallélisables              | 2–10   |
+| ORCHESTRATOR | Décomposition claire                     | 3–8    |
+| REVIEW       | Haut risque, validation croisée          | 2–5    |
+
+## Score de complexité
+
+| Score  |     Auto     |
+| :----: | :----------: |
+|  0–20  |    SINGLE    |
+| 20–40  |    CHAIN     |
+| 40–60  |   DISPATCH   |
+| 60–80  | ORCHESTRATOR |
+| 80–100 |    REVIEW    |
+
 ```bash
-npx tsx packages/core/src/cliEntry.ts plan "your real task here"
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
 ```
 
-| Señal en la tarea | Topología probable |
-|-------------------|--------------------|
-| “explica”, “qué es”, one-shot | SINGLE |
-| “migra y luego actualiza callers” | CHAIN |
-| “audita”, “investiga desde varios ángulos” | DISPATCH |
-| “rediseña el sistema de billing end-to-end” | ORCHESTRATOR |
-| “código de alto riesgo”, seguridad | REVIEW |
+## Voir aussi
 
-
-## Notes
-
-- CLI monorepo : `packages/core/src/cliEntry.ts` · après build : `commander`  
-- Métriques produit : 25 fournisseurs · 5 topologies · 18 tools · 6700+ tests  
-- Pour le détail exhaustif, le monorepo et la version anglaise restent la source de vérité des signatures API  
-
-## Lié
-
-- [Vue d’architecture](/fr/architecture/overview)  
-- [Démarrage rapide](/fr/guide/getting-started)  
-- [Commandes](/fr/guide/commands)  
+- [Multi-agent](/fr/architecture/multi-agent)
+- [Explorateur de topologie](/fr/guide/topology-explorer)
+- [Exécuter des tâches](/fr/guide/usage/running-tasks)

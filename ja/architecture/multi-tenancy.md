@@ -1,6 +1,6 @@
 # Multi-Tenant Architecture
 
-Commander supports multi-tenant isolation at every layer.
+**Multi-Tenant Architecture.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Multi-Tenant Architecture** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

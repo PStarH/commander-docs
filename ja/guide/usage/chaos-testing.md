@@ -1,6 +1,6 @@
 # Chaos Testing
 
-Commander includes a built-in chaos engineering framework that injects faults across 4 layers and verifies recovery. Use it to validate that your agent deployment can survive real-world failures. Every chaos run calls `RecoveryBootstrapper.bootstrap()` after fault injection. If recovery fails, the run is marked failed in the report.
+**Chaos Testing.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Chaos Testing** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

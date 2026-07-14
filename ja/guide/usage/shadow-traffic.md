@@ -1,6 +1,6 @@
 # Shadow Traffic
 
-Shadow traffic lets you compare two versions of Commander side-by-side without affecting production. A shadow proxy mirrors production requests to a shadow endpoint and reports drift in status, latency, and cost. - **Pre-deploy validation** — Compare current vs candidate version before rollout
+**Shadow Traffic.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Shadow Traffic** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

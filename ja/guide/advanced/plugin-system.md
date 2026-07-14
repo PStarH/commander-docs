@@ -1,6 +1,6 @@
 # Plugin System
 
-Commander's plugin system provides **19 hook points** to observe, modify, or block execution at any stage. Third-party plugins receive a **sandboxed load context** that strictly limits their permissions. Plugin permissions must never exceed main system permissions.
+**Plugin System.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Plugin System** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

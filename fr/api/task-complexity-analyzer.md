@@ -1,6 +1,6 @@
 # Analyseur de complexité des tâches
 
-Évalue la complexité d’une tâche et recommande une topologie (SINGLE…REVIEW).
+**Analyseur de complexité des tâches.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 > **Couche 2** du runtime (`@commander/core`). Pour la plupart des applications, préférez [`CommanderClient`](/fr/guide/sdk) (couche 1).
 

@@ -1,6 +1,6 @@
 # タスク複雑度アナライザー
 
-Analyzes task complexity and selects the optimal orchestration topology.
+**タスク複雑度アナライザー.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **タスク複雑度アナライザー** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

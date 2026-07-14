@@ -1,6 +1,6 @@
 # Mode plan
 
-Voir **ce que Commander va faire avant de le faire**. Stratégie, agents, tools — zéro risque de mutation.
+**Mode plan.** Cette page décrit un composant d’architecture Commander. Le texte ci-dessous reprend la structure du monorepo en français opérationnel ; les blocs de code restent en anglais.
 
 ## Pourquoi
 

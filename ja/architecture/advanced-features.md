@@ -1,6 +1,6 @@
 # Advanced Engine Features
 
-Commander includes several advanced engine components for sophisticated execution control. The speculative executor runs multiple execution paths in parallel and selects the best result:
+**Advanced Engine Features.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Advanced Engine Features** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

@@ -1,6 +1,6 @@
 # Skills System
 
-Commander's skills system provides domain-specific expertise that agents can load on demand. A skill is a packaged set of instructions, examples, and constraints that teaches an agent how to perform a specific type of task. Skills can be:
+**Skills System.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Skills System** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 

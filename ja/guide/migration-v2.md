@@ -1,6 +1,6 @@
 # Architecture V2 Migration
 
-Migrate from legacy V1 execution paths to the **Architecture V2** durable kernel: control plane schedules work; workers execute steps; state lives in PostgreSQL. - `POST /v1/runs` · `GET /v1/runs/:id` · `GET /v1/runs/:id/steps` · `GET /v1/runs/:id/events`
+**Architecture V2 Migration.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
 
 本ページは Commander における **Architecture V2 Migration** の役割と使い方を説明します。CLI / API は monorepo と一致させています。
 
