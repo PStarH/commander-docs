@@ -42,16 +42,12 @@
 - /deployment.html
 - /community.html
 
-## Chinese routes (zh-CN)
-- /zh/ — home (localized Home component)
-- /zh/guide/getting-started.html
-- /zh/guide/why-commander.html
-- /zh/guide/installation.html
-- /zh/guide/web-console.html
-- /zh/guide/faq.html
-- /zh/guide/cookbook/
-- /zh/guide/cookbook/security-audit.html
-- /zh/community.html
+## Locales (full tree mirrors English)
+- /zh/ — 简体中文 (full guide + architecture + api)
+- /ja/ — 日本語 (full guide + architecture + api)
+- /ko/ — 한국어 (full guide + architecture + api)
+- Entry pages hand-written; remaining pages localized headings + EN body with banner
+- Topology explorer: /guide/topology-explorer.html (+ /zh|ja|ko/...)
 
 ## Machine files
 - /llms.txt

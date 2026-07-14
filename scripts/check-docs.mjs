@@ -67,27 +67,53 @@ if (!home.includes('prefersReducedMotion') && !home.includes('prefers-reduced-mo
   warnings.push('Home.vue should respect prefers-reduced-motion')
 }
 
-// --- Config must declare locales.zh ---
+// --- Config must declare multi-locale ---
 const cfg = readFileSync(join(root, '.vitepress/config.mts'), 'utf8')
-if (!cfg.includes("zh:") && !cfg.includes('zh: {')) {
-  errors.push('config.mts should define zh locale')
+for (const loc of ['zh', 'ja', 'ko']) {
+  if (!cfg.includes(`${loc}:`) && !cfg.includes(`${loc}: {`)) {
+    errors.push(`config.mts should define ${loc} locale`)
+  }
 }
 if (!cfg.includes('25 providers')) {
   errors.push('config description should mention 25 providers')
 }
 
-// --- zh locale pages exist ---
-const zhRequired = [
+// --- locale entry pages exist ---
+const localeRequired = [
   'zh/index.md',
   'zh/guide/getting-started.md',
   'zh/guide/why-commander.md',
   'zh/guide/faq.md',
+  'ja/index.md',
+  'ja/guide/getting-started.md',
+  'ja/guide/why-commander.md',
+  'ko/index.md',
+  'ko/guide/getting-started.md',
+  'ko/guide/why-commander.md',
+  'guide/topology-explorer.md',
 ]
-for (const p of zhRequired) {
+for (const p of localeRequired) {
   try {
     statSync(join(root, p))
   } catch {
-    errors.push(`missing zh page: ${p}`)
+    errors.push(`missing page: ${p}`)
+  }
+}
+
+// --- full coverage: each locale should mirror key EN trees ---
+for (const loc of ['zh', 'ja', 'ko']) {
+  for (const tree of ['guide', 'architecture', 'api']) {
+    const dir = join(root, loc, tree)
+    try {
+      const count = readdirSync(dir, { recursive: true }).filter((f) =>
+        String(f).endsWith('.md'),
+      ).length
+      if (count < 5) {
+        errors.push(`${loc}/${tree} coverage too thin (${count} md files)`)
+      }
+    } catch {
+      errors.push(`missing locale tree: ${loc}/${tree}`)
+    }
   }
 }
 

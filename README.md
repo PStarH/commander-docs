@@ -27,10 +27,18 @@ npm run preview
 
 ## Locales
 
-| Path | Language |
-|------|----------|
-| `/` | English (full) |
-| `/zh/` | 简体中文 (entry: quick start, why, FAQ, cookbook sample) |
+| Path | Language | Coverage |
+|------|----------|----------|
+| `/` | English | Full (source of truth) |
+| `/zh/` | 简体中文 | Full tree (hand entry + generated mirrors) |
+| `/ja/` | 日本語 | Full tree |
+| `/ko/` | 한국어 | Full tree |
+
+Regenerate mirrors after EN content changes:
+
+```bash
+npm run locales:gen
+```
 
 Language switcher is in the VitePress nav.
 

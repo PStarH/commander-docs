@@ -5,119 +5,95 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const { lang } = useData()
-const isZh = computed(() => (lang.value || '').startsWith('zh'))
+const locale = computed<'en' | 'zh' | 'ja' | 'ko'>(() => {
+  const l = lang.value || 'en'
+  if (l.startsWith('zh')) return 'zh'
+  if (l.startsWith('ja')) return 'ja'
+  if (l.startsWith('ko')) return 'ko'
+  return 'en'
+})
+const isZh = computed(() => locale.value === 'zh')
+const locPrefix = computed(() => (locale.value === 'en' ? '' : `/${locale.value}`))
+
+const featureIcons = {
+  wide1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
+  tall1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
+  short1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
+  short2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
+  tall2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
+  wide2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
+}
 
 // Keep stats aligned with packages/core (25 providers, 18 tools) and product README.
-const features = computed(() =>
-  isZh.value
-    ? [
-        {
-          title: '实时 SSE 流式输出',
-          desc: '每个代理的思考、工具调用与决策经 Server-Sent Events 实时进入终端。不是轮询，不是事后日志。',
-          link: '/architecture/agent-runtime',
-          span: 'wide',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
-        },
-        {
-          title: '自动拓扑选择',
-          desc: '审议引擎分类任务（CODING / RESEARCH / ANALYSIS / FACTUAL），从 5 种规范拓扑中选择：SINGLE、CHAIN、DISPATCH、ORCHESTRATOR、REVIEW。',
-          link: '/guide/usage/topology-decision-tree',
-          span: 'tall',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
-        },
-        {
-          title: '25 家提供商自动故障转移',
-          desc: '任意一把 API Key。自动识别提供商，失败时按可配置链路切换 — OpenAI → Anthropic → DeepSeek → Groq → Ollama。',
-          link: '/guide/providers',
-          span: 'short',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
-        },
-        {
-          title: '每次输出都有质量门',
-          desc: '五层校验：幻觉、一致性、完整性、准确性、安全。失败则带上下文重试 — 不静默给错答案。',
-          link: '/architecture/verification',
-          span: 'short',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
-        },
-        {
-          title: '自优化运行时',
-          desc: '基于 Thompson Sampling 与 Reflexion 的元学习，跨运行调参。积累 5+ 经验后生效。',
-          link: '/architecture/intelligence',
-          span: 'tall',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
-        },
-        {
-          title: '生产级基础设施',
-          desc: '熔断、死信队列、SQLite WAL 检查点、语义缓存、Saga 事务、监督树 — 与分布式系统同纪律。',
-          link: '/architecture/production-readiness',
-          span: 'wide',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
-        },
-      ]
-    : [
-        {
-          title: 'Live SSE streaming',
-          desc: 'Every agent thought, tool call, and decision streams to your terminal in real time via Server-Sent Events. Not polling. Not logs after the fact — you watch your agents reason, step by step.',
-          link: '/architecture/agent-runtime',
-          span: 'wide',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>`,
-        },
-        {
-          title: 'Automatic topology selection',
-          desc: 'The deliberation engine classifies each task (CODING / RESEARCH / ANALYSIS / FACTUAL) and picks from 5 canonical topologies — SINGLE, CHAIN, DISPATCH, ORCHESTRATOR, REVIEW.',
-          link: '/guide/usage/topology-decision-tree',
-          span: 'tall',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`,
-        },
-        {
-          title: '25 providers with auto-failover',
-          desc: 'Set any one API key. Commander detects your provider, and if it fails, falls through a configurable chain — OpenAI → Anthropic → DeepSeek → Groq → Ollama.',
-          link: '/guide/providers',
-          span: 'short',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M18 4v4h-4M6 20v-4h4"/></svg>`,
-        },
-        {
-          title: 'Quality gates on every output',
-          desc: 'Five-layer verification: hallucination, consistency, completeness, accuracy, and safety. Failed gates trigger retry with full context — no silent wrong answers.',
-          link: '/architecture/verification',
-          span: 'short',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>`,
-        },
-        {
-          title: 'Self-optimizing runtime',
-          desc: 'A meta-learner using Thompson Sampling and Reflexion tunes agent configurations across runs. Activates after 5+ recorded experiences.',
-          link: '/architecture/intelligence',
-          span: 'tall',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13-6"/><path d="M20 12a8 8 0 0 1-13 6"/><path d="M3 6h4v4M21 18h-4v-4"/></svg>`,
-        },
-        {
-          title: 'Production infrastructure',
-          desc: 'Circuit breakers, dead letter queue, SQLite WAL checkpoints, semantic caching, saga transactions, and a supervision tree. Built with the same discipline as any production distributed system.',
-          link: '/architecture/production-readiness',
-          span: 'wide',
-          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-4 8-8 9-4-1-8-4-8-9V7z"/></svg>`,
-        },
-      ],
-)
+const features = computed(() => {
+  const pre = locPrefix.value
+  const base = [
+    { span: 'wide', icon: featureIcons.wide1, link: `${pre}/architecture/agent-runtime` },
+    { span: 'tall', icon: featureIcons.tall1, link: `${pre}/guide/usage/topology-decision-tree` },
+    { span: 'short', icon: featureIcons.short1, link: `${pre}/guide/providers` },
+    { span: 'short', icon: featureIcons.short2, link: `${pre}/architecture/verification` },
+    { span: 'tall', icon: featureIcons.tall2, link: `${pre}/architecture/intelligence` },
+    { span: 'wide', icon: featureIcons.wide2, link: `${pre}/architecture/production-readiness` },
+  ]
+  const copy = {
+    en: [
+      ['Live SSE streaming', 'Every agent thought, tool call, and decision streams in real time via SSE.'],
+      ['Automatic topology selection', 'Classifies CODING / RESEARCH / ANALYSIS / FACTUAL and picks SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW.'],
+      ['25 providers with auto-failover', 'One API key. Auto-detect + failover across cloud and local models.'],
+      ['Quality gates on every output', 'Five-layer verification: hallucination, consistency, completeness, accuracy, safety.'],
+      ['Self-optimizing runtime', 'Thompson Sampling + Reflexion meta-learner. Activates after 5+ experiences.'],
+      ['Production infrastructure', 'Circuit breakers, DLQ, WAL checkpoints, semantic cache, saga, supervision tree.'],
+    ],
+    zh: [
+      ['实时 SSE 流式输出', '每个代理的思考、工具调用与决策经 SSE 实时进入终端。'],
+      ['自动拓扑选择', '分类 CODING / RESEARCH / ANALYSIS / FACTUAL，选择 5 种规范拓扑。'],
+      ['25 家提供商自动故障转移', '任意一把 Key。自动识别与故障转移。'],
+      ['每次输出都有质量门', '五层校验：幻觉、一致性、完整性、准确性、安全。'],
+      ['自优化运行时', 'Thompson Sampling + Reflexion。5+ 经验后生效。'],
+      ['生产级基础设施', '熔断、DLQ、WAL、语义缓存、Saga、监督树。'],
+    ],
+    ja: [
+      ['ライブ SSE ストリーム', '思考・ツール・決定を SSE でリアルタイム表示。'],
+      ['自動トポロジ選択', 'CODING / RESEARCH / ANALYSIS / FACTUAL を分類し 5 トポロジから選択。'],
+      ['25 プロバイダー + フェイルオーバー', 'キー 1 つ。自動検出とフェイルオーバー。'],
+      ['出力ごとの品質ゲート', '幻覚・一貫性・完全性・正確性・安全の 5 層。'],
+      ['自己最適化ランタイム', 'Thompson Sampling + Reflexion。5+ 経験後に有効。'],
+      ['本番インフラ', 'ブレーカー、DLQ、WAL、セマンティックキャッシュ、Saga。'],
+    ],
+    ko: [
+      ['라이브 SSE 스트림', '사고·도구·결정을 SSE로 실시간 표시.'],
+      ['자동 토폴로지 선택', 'CODING / RESEARCH / ANALYSIS / FACTUAL 분류 후 5종 선택.'],
+      ['25 프로바이더 + 페일오버', '키 하나. 자동 감지와 페일오버.'],
+      ['출력마다 품질 게이트', '환각·일관성·완전성·정확성·안전 5계층.'],
+      ['자가 최적화 런타임', 'Thompson Sampling + Reflexion. 5+ 경험 후 활성.'],
+      ['프로덕션 인프라', '서킷 브레이커, DLQ, WAL, 시맨틱 캐시, Saga.'],
+    ],
+  }[locale.value]
 
-const stats = computed(() =>
-  isZh.value
-    ? [
-        { value: '25', label: 'LLM 提供商' },
-        { value: '5', label: '规范拓扑' },
-        { value: '18', label: '内置工具' },
-        { value: '6700+', label: '测试' },
-      ]
-    : [
-        { value: '25', label: 'LLM providers' },
-        { value: '5', label: 'Canonical topologies' },
-        { value: '18', label: 'Built-in tools' },
-        { value: '6700+', label: 'Tests' },
-      ],
-)
+  return base.map((b, i) => ({
+    ...b,
+    title: copy[i][0],
+    desc: copy[i][1],
+  }))
+})
+
+const stats = computed(() => {
+  const labels = {
+    en: ['LLM providers', 'Canonical topologies', 'Built-in tools', 'Tests'],
+    zh: ['LLM 提供商', '规范拓扑', '内置工具', '测试'],
+    ja: ['LLM プロバイダー', '正規トポロジ', '組み込みツール', 'テスト'],
+    ko: ['LLM 프로바이더', '정규 토폴로지', '내장 도구', '테스트'],
+  }[locale.value]
+  return [
+    { value: '25', label: labels[0] },
+    { value: '5', label: labels[1] },
+    { value: '18', label: labels[2] },
+    { value: '6700+', label: labels[3] },
+  ]
+})
 
 const whyCards = computed(() =>
-  isZh.value
+  locale.value === 'zh'
     ? [
         {
           title: '你是工程师，不是乘客',
@@ -136,41 +112,79 @@ const whyCards = computed(() =>
           desc: '任意 Key 即可。云端与本地（Ollama、vLLM）自动发现与故障转移，换提供商不必重写流程。',
         },
       ]
-    : [
-        {
-          title: 'You are the engineer, not a passenger',
-          desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
-        },
-        {
-          title: 'No graph builders. No YAML.',
-          desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
-        },
-        {
-          title: 'Production primitives, not demos',
-          desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
-        },
-        {
-          title: 'One key, twenty-five providers',
-          desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
-        },
-      ],
+    : locale.value === 'ja'
+      ? [
+          {
+            title: 'あなたは乗客ではなくエンジニア',
+            desc: '他フレームワークは YAML の裏にグラフを隠します。Commander は思考・ツール・品質ゲートをストリームし、信頼できる実行を可能にします。',
+          },
+          {
+            title: 'グラフビルダーなし。YAML なし。',
+            desc: '自然言語でタスクを記述。審議が分類しトポロジを選び、エージェント 1–20 をスケール。',
+          },
+          {
+            title: '本番プリミティブ',
+            desc: 'サーキットブレーカー、DLQ、Saga、WAL、セマンティックキャッシュ、マルチテナント。',
+          },
+          {
+            title: 'キー 1 つ、25 プロバイダー',
+            desc: '任意の API キー。クラウドとローカル (Ollama / vLLM) の自動検出とフェイルオーバー。',
+          },
+        ]
+      : locale.value === 'ko'
+        ? [
+            {
+              title: '승객이 아니라 엔지니어',
+              desc: '다른 프레임워크는 YAML 뒤에 그래프를 숨깁니다. Commander는 사고·도구·품질 게이트를 스트림합니다.',
+            },
+            {
+              title: '그래프 빌더 없음. YAML 없음.',
+              desc: '자연어로 작업 설명. 심의가 분류하고 토폴로지를 고르며 에이전트 1–20을 확장합니다.',
+            },
+            {
+              title: '프로덕션 프리미티브',
+              desc: '서킷 브레이커, DLQ, Saga, WAL, 시맨틱 캐시, 멀티 테넌시.',
+            },
+            {
+              title: '키 하나, 25 프로바이더',
+              desc: '아무 API 키나. 클라우드와 로컬(Ollama/vLLM) 자동 감지와 페일오버.',
+            },
+          ]
+        : [
+            {
+              title: 'You are the engineer, not a passenger',
+              desc: 'Other frameworks hide agent graphs behind YAML and hope. Commander streams every thought, tool call, and quality gate so you can debug and trust the run.',
+            },
+            {
+              title: 'No graph builders. No YAML.',
+              desc: 'Describe the task in plain language. Deliberation classifies it, picks a topology, and scales agents 1–20. Simple tasks stay simple.',
+            },
+            {
+              title: 'Production primitives, not demos',
+              desc: 'Circuit breakers, DLQ, saga compensation, SQLite WAL checkpoints, semantic cache, multi-tenancy — the same discipline as a distributed system.',
+            },
+            {
+              title: 'One key, twenty-five providers',
+              desc: 'Set any API key. Auto-detect + failover across cloud and local models (Ollama, vLLM). Swap providers without rewriting your workflow.',
+            },
+          ],
 )
 
-const quickLinks = computed(() =>
-  isZh.value
-    ? [
-        { text: '快速开始', to: '/zh/guide/getting-started', theme: 'brand' },
-        { text: '为什么选它', to: '/zh/guide/why-commander', theme: 'alt' },
-        { text: '实战手册', to: '/zh/guide/cookbook/', theme: 'alt' },
-        { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
-      ]
-    : [
-        { text: 'Get started', to: '/guide/getting-started', theme: 'brand' },
-        { text: 'Why Commander', to: '/guide/why-commander', theme: 'alt' },
-        { text: 'Cookbook', to: '/guide/cookbook/', theme: 'alt' },
-        { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
-      ],
-)
+const quickLinks = computed(() => {
+  const pre = locPrefix.value
+  const labels = {
+    en: ['Get started', 'Why Commander', 'Cookbook'],
+    zh: ['快速开始', '为什么选它', '实战手册'],
+    ja: ['クイックスタート', 'なぜ Commander', 'クックブック'],
+    ko: ['빠른 시작', '왜 Commander', '쿡북'],
+  }[locale.value]
+  return [
+    { text: labels[0], to: `${pre}/guide/getting-started`, theme: 'brand' },
+    { text: labels[1], to: `${pre}/guide/why-commander`, theme: 'alt' },
+    { text: labels[2], to: `${pre}/guide/cookbook/`, theme: 'alt' },
+    { text: 'GitHub', to: 'https://github.com/PStarH/Commander', theme: 'ghost', external: true },
+  ]
+})
 
 const demoLines = [
   { cls: 'cmd-demo-muted', text: '$ commander run "audit this repo" --stream' },
@@ -185,90 +199,158 @@ const demoLines = [
   { cls: 'cmd-demo-dim', text: '└────────────────────────────────────────────' },
 ]
 
-const t = computed(() =>
-  isZh.value
-    ? {
-        badge: 'v0.2 · 预生产',
-        h1a: '多代理编排，',
-        h1b: '为生产而生。',
-        sub: '一把 API Key。Commander 分类任务、选择拓扑，并把每个代理决策流式打到终端。无黑盒。6700+ 测试，不画图，不写 YAML。',
-        demoTitle: '看清每一步决策',
-        demoDesc: '审议、拓扑、工具与质量门实时流出 — 不是事后日志。复制命令、设置 Key，看着代理工作。',
-        checklist: '五分钟清单',
-        cookbook: '实战配方',
-        featuresTitle: 'Commander 能做什么',
-        featuresSub: '六大核心能力，均有生产级基础设施与 CI 审计支撑。',
-        whyTitle: '为什么选 Commander',
-        whySub: '为想看清 AI 在做什么的工程师而建。',
-        pathsTitle: '从这里开始',
-        pathsSub: '同一引擎的三条入口。',
-        path1k: '01 · CLI',
-        path1t: '终端直接跑',
-        path1d: '克隆、设 Key，两分钟内流式多代理运行。',
-        path1a: '快速开始 →',
-        path2k: '02 · 控制台',
-        path2t: '打开 Web 控制台',
-        path2d: '对话、拓扑、DLQ、治理。',
-        path2a: 'Web 控制台 →',
-        path2to: '/zh/guide/web-console',
-        path3k: '03 · SDK',
-        path3t: '嵌入 TypeScript',
-        path3d: '事件、记忆与 plan 模式。',
-        path3a: 'Agent SDK →',
-        path1to: '/zh/guide/getting-started',
-        path3to: '/guide/sdk',
-        ctaTitle: '准备好编排了吗？',
-        ctaSub: '一条命令，25 家提供商，决策全程可见。设好 Key 开干。',
-        ctaStart: '快速开始',
-        ctaInstall: '安装',
-        ctaStar: '在 GitHub 上 Star',
-        more: '了解更多 →',
-        startTo: '/zh/guide/getting-started',
-        installTo: '/zh/guide/installation',
-        cookbookTo: '/zh/guide/cookbook/',
-      }
-    : {
-        badge: 'v0.2 · Pre-production',
-        h1a: 'Multi-agent orchestration,',
-        h1b: 'built for production.',
-        sub: 'Set one API key. Commander classifies the task, picks the right topology, and streams every agent decision to your terminal. No black boxes. 6700+ tests, no graph builders, no YAML.',
-        demoTitle: 'See every decision',
-        demoDesc:
-          'Deliberation, topology, tools, and quality gates stream live — not after the fact. Copy, set a key, and watch agents work.',
-        checklist: '5-minute checklist',
-        cookbook: 'Cookbook recipes',
-        featuresTitle: 'What Commander does',
-        featuresSub: 'Six core capabilities, each backed by production-grade infrastructure and audited in CI.',
-        whyTitle: 'Why Commander',
-        whySub: 'Built for engineers who want to see what their AI is actually doing.',
-        pathsTitle: 'Start where you are',
-        pathsSub: 'Three paths into the same engine.',
-        path1k: '01 · CLI',
-        path1t: 'Run from the terminal',
-        path1d: 'Clone, set one key, stream a multi-agent run in under two minutes.',
-        path1a: 'Quick start →',
-        path2k: '02 · Console',
-        path2t: 'Open the Web Console',
-        path2d: 'chat, topology, DLQ, governance.',
-        path2a: 'Web Console →',
-        path2to: '/guide/web-console',
-        path3k: '03 · SDK',
-        path3t: 'Embed in TypeScript',
-        path3d: 'events, memory, and plan mode.',
-        path3a: 'Agent SDK →',
-        path1to: '/guide/getting-started',
-        path3to: '/guide/sdk',
-        ctaTitle: 'Ready to orchestrate?',
-        ctaSub: 'One command, 25 providers, every decision visible. Set an API key and go.',
-        ctaStart: 'Get started',
-        ctaInstall: 'Install',
-        ctaStar: 'Star on GitHub',
-        more: 'Read more →',
-        startTo: '/guide/getting-started',
-        installTo: '/guide/installation',
-        cookbookTo: '/guide/cookbook/',
-      },
-)
+const t = computed(() => {
+  const pre = locPrefix.value
+  const pack = {
+    en: {
+      badge: 'v0.2 · Pre-production',
+      h1a: 'Multi-agent orchestration,',
+      h1b: 'built for production.',
+      sub: 'Set one API key. Commander classifies the task, picks the right topology, and streams every agent decision to your terminal. No black boxes. 6700+ tests, no graph builders, no YAML.',
+      demoTitle: 'See every decision',
+      demoDesc:
+        'Deliberation, topology, tools, and quality gates stream live — not after the fact. Copy, set a key, and watch agents work.',
+      checklist: '5-minute checklist',
+      cookbook: 'Cookbook recipes',
+      featuresTitle: 'What Commander does',
+      featuresSub: 'Six core capabilities, each backed by production-grade infrastructure and audited in CI.',
+      whyTitle: 'Why Commander',
+      whySub: 'Built for engineers who want to see what their AI is actually doing.',
+      pathsTitle: 'Start where you are',
+      pathsSub: 'Three paths into the same engine.',
+      path1k: '01 · CLI',
+      path1t: 'Run from the terminal',
+      path1d: 'Clone, set one key, stream a multi-agent run in under two minutes.',
+      path1a: 'Quick start →',
+      path2k: '02 · Console',
+      path2t: 'Open the Web Console',
+      path2d: 'chat, topology, DLQ, governance.',
+      path2a: 'Web Console →',
+      path3k: '03 · SDK',
+      path3t: 'Embed in TypeScript',
+      path3d: 'events, memory, and plan mode.',
+      path3a: 'Agent SDK →',
+      ctaTitle: 'Ready to orchestrate?',
+      ctaSub: 'One command, 25 providers, every decision visible. Set an API key and go.',
+      ctaStart: 'Get started',
+      ctaInstall: 'Install',
+      ctaStar: 'Star on GitHub',
+      more: 'Read more →',
+    },
+    zh: {
+      badge: 'v0.2 · 预生产',
+      h1a: '多代理编排，',
+      h1b: '为生产而生。',
+      sub: '一把 API Key。Commander 分类任务、选择拓扑，并把每个代理决策流式打到终端。无黑盒。6700+ 测试，不画图，不写 YAML。',
+      demoTitle: '看清每一步决策',
+      demoDesc: '审议、拓扑、工具与质量门实时流出 — 不是事后日志。复制命令、设置 Key，看着代理工作。',
+      checklist: '五分钟清单',
+      cookbook: '实战配方',
+      featuresTitle: 'Commander 能做什么',
+      featuresSub: '六大核心能力，均有生产级基础设施与 CI 审计支撑。',
+      whyTitle: '为什么选 Commander',
+      whySub: '为想看清 AI 在做什么的工程师而建。',
+      pathsTitle: '从这里开始',
+      pathsSub: '同一引擎的三条入口。',
+      path1k: '01 · CLI',
+      path1t: '终端直接跑',
+      path1d: '克隆、设 Key，两分钟内流式多代理运行。',
+      path1a: '快速开始 →',
+      path2k: '02 · 控制台',
+      path2t: '打开 Web 控制台',
+      path2d: '对话、拓扑、DLQ、治理。',
+      path2a: 'Web 控制台 →',
+      path3k: '03 · SDK',
+      path3t: '嵌入 TypeScript',
+      path3d: '事件、记忆与 plan 模式。',
+      path3a: 'Agent SDK →',
+      ctaTitle: '准备好编排了吗？',
+      ctaSub: '一条命令，25 家提供商，决策全程可见。设好 Key 开干。',
+      ctaStart: '快速开始',
+      ctaInstall: '安装',
+      ctaStar: '在 GitHub 上 Star',
+      more: '了解更多 →',
+    },
+    ja: {
+      badge: 'v0.2 · プレ本番',
+      h1a: 'マルチエージェント編成、',
+      h1b: '本番のために。',
+      sub: 'API キーは 1 つ。Commander がタスクを分類しトポロジを選び、すべての決定をターミナルにストリーム。ブラックボックスなし。6700+ テスト。',
+      demoTitle: 'すべての決定を見る',
+      demoDesc: '審議・トポロジ・ツール・品質ゲートがライブで流れます。キーを設定してエージェントを観察。',
+      checklist: '5 分チェックリスト',
+      cookbook: 'クックブック',
+      featuresTitle: 'Commander ができること',
+      featuresSub: '6 つのコア能力。本番インフラと CI で監査。',
+      whyTitle: 'なぜ Commander か',
+      whySub: 'AI の挙動を見たいエンジニアのために。',
+      pathsTitle: 'ここから始める',
+      pathsSub: '同じエンジンへの 3 つの入口。',
+      path1k: '01 · CLI',
+      path1t: 'ターミナルから実行',
+      path1d: 'クローン、キー設定、2 分以内にストリーム。',
+      path1a: 'クイックスタート →',
+      path2k: '02 · コンソール',
+      path2t: 'Web コンソールを開く',
+      path2d: 'チャット、トポロジ、DLQ、ガバナンス。',
+      path2a: 'Web コンソール →',
+      path3k: '03 · SDK',
+      path3t: 'TypeScript に埋め込む',
+      path3d: 'イベント、メモリ、plan モード。',
+      path3a: 'Agent SDK →',
+      ctaTitle: '編成の準備はできた？',
+      ctaSub: '1 コマンド、25 プロバイダー、すべて可視化。',
+      ctaStart: 'はじめる',
+      ctaInstall: 'インストール',
+      ctaStar: 'GitHub で Star',
+      more: '続きを読む →',
+    },
+    ko: {
+      badge: 'v0.2 · 프리프로덕션',
+      h1a: '멀티 에이전트 오케스트레이션,',
+      h1b: '프로덕션을 위해.',
+      sub: 'API 키 하나. Commander가 작업을 분류하고 토폴로지를 고르며 모든 결정을 터미널로 스트림. 블랙박스 없음. 6700+ 테스트.',
+      demoTitle: '모든 결정을 보세요',
+      demoDesc: '심의·토폴로지·도구·품질 게이트가 실시간으로 흐릅니다. 키를 설정하고 에이전트를 관찰하세요.',
+      checklist: '5분 체크리스트',
+      cookbook: '쿡북 레시피',
+      featuresTitle: 'Commander가 하는 일',
+      featuresSub: '6가지 핵심 역량. 프로덕션 인프라와 CI 감사.',
+      whyTitle: '왜 Commander인가',
+      whySub: 'AI가 무엇을 하는지 보고 싶은 엔지니어를 위해.',
+      pathsTitle: '여기서 시작',
+      pathsSub: '같은 엔진으로 가는 세 갈래.',
+      path1k: '01 · CLI',
+      path1t: '터미널에서 실행',
+      path1d: '클론, 키 설정, 2분 내 스트림.',
+      path1a: '빠른 시작 →',
+      path2k: '02 · 콘솔',
+      path2t: '웹 콘솔 열기',
+      path2d: '채팅, 토폴로지, DLQ, 거버넌스.',
+      path2a: '웹 콘솔 →',
+      path3k: '03 · SDK',
+      path3t: 'TypeScript에 임베드',
+      path3d: '이벤트, 메모리, plan 모드.',
+      path3a: 'Agent SDK →',
+      ctaTitle: '오케스트레이션 준비됐나요?',
+      ctaSub: '명령 하나, 25 프로바이더, 모든 결정이 보입니다.',
+      ctaStart: '시작하기',
+      ctaInstall: '설치',
+      ctaStar: 'GitHub에서 Star',
+      more: '더 보기 →',
+    },
+  }[locale.value]
+
+  return {
+    ...pack,
+    path1to: `${pre}/guide/getting-started`,
+    path2to: `${pre}/guide/web-console`,
+    path3to: `${pre}/guide/sdk`,
+    startTo: `${pre}/guide/getting-started`,
+    installTo: `${pre}/guide/installation`,
+    cookbookTo: `${pre}/guide/cookbook/`,
+  }
+})
 
 /** Prefix site base for internal paths (required on GitHub Pages /commander-docs/). */
 function hrefFor(to: string, external?: boolean) {
