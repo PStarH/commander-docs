@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" fill="none" role="img" aria-label="Commander Web Console mockup">
+  <defs>
+    <style>
+      .t { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; }
+      .m { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    </style>
+  </defs>
+  <!-- Outer -->
+  <rect width="960" height="560" rx="14" fill="#09090b" stroke="#27272a"/>
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="200" height="560" rx="14" fill="#111113"/>
+  <rect x="200" y="0" width="1" height="560" fill="#27272a"/>
+  <text x="24" y="36" class="t" fill="#fafafa" font-size="15" font-weight="600">Commander</text>
+  <text x="24" y="54" class="t" fill="#52525b" font-size="11">Web Console</text>
+
+  <!-- Nav items -->
+  <rect x="12" y="80" width="176" height="32" rx="8" fill="#18181b" stroke="#3f3f46"/>
+  <text x="28" y="100" class="t" fill="#fafafa" font-size="12">Dashboard</text>
+  <text x="28" y="136" class="t" fill="#a1a1aa" font-size="12">Chat</text>
+  <text x="28" y="168" class="t" fill="#a1a1aa" font-size="12">Execution</text>
+  <text x="28" y="200" class="t" fill="#a1a1aa" font-size="12">Agents</text>
+  <text x="28" y="232" class="t" fill="#a1a1aa" font-size="12">Governance</text>
+  <text x="28" y="264" class="t" fill="#a1a1aa" font-size="12">DLQ</text>
+  <text x="28" y="296" class="t" fill="#a1a1aa" font-size="12">Security</text>
+
+  <!-- Top bar -->
+  <text x="224" y="34" class="t" fill="#fafafa" font-size="16" font-weight="600">Mission board</text>
+  <text x="224" y="52" class="t" fill="#71717a" font-size="12">Live topology · token trends · agent roster</text>
+  <rect x="780" y="18" width="156" height="28" rx="6" fill="#fafafa"/>
+  <text x="858" y="36" text-anchor="middle" class="t" fill="#09090b" font-size="12" font-weight="600">New run</text>
+
+  <!-- KPI cards -->
+  <rect x="220" y="72" width="170" height="78" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="236" y="96" class="t" fill="#71717a" font-size="11">Active agents</text>
+  <text x="236" y="124" class="t" fill="#fafafa" font-size="28" font-weight="700">3</text>
+  <text x="270" y="124" class="t" fill="#52525b" font-size="12">DISPATCH</text>
+
+  <rect x="402" y="72" width="170" height="78" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="418" y="96" class="t" fill="#71717a" font-size="11">Tokens (run)</text>
+  <text x="418" y="124" class="t" fill="#fafafa" font-size="28" font-weight="700">8.4k</text>
+
+  <rect x="584" y="72" width="170" height="78" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="600" y="96" class="t" fill="#71717a" font-size="11">Gates</text>
+  <text x="600" y="124" class="t" fill="#4ade80" font-size="28" font-weight="700">5/5</text>
+
+  <rect x="766" y="72" width="170" height="78" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="782" y="96" class="t" fill="#71717a" font-size="11">Hallucination risk</text>
+  <text x="782" y="124" class="t" fill="#fbbf24" font-size="28" font-weight="700">low</text>
+
+  <!-- Topology panel -->
+  <rect x="220" y="166" width="430" height="220" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="236" y="192" class="t" fill="#fafafa" font-size="13" font-weight="600">Live topology</text>
+  <text x="236" y="210" class="m" fill="#52525b" font-size="11">task · audit this repo</text>
+  <!-- nodes -->
+  <rect x="280" y="240" width="100" height="36" rx="8" fill="#18181b" stroke="#3f3f46"/>
+  <text x="330" y="262" text-anchor="middle" class="t" fill="#e4e4e7" font-size="11">Lead</text>
+  <line x1="330" y1="276" x2="300" y2="320" stroke="#3f3f46"/>
+  <line x1="330" y1="276" x2="380" y2="320" stroke="#3f3f46"/>
+  <line x1="330" y1="276" x2="460" y2="320" stroke="#3f3f46"/>
+  <rect x="250" y="320" width="100" height="36" rx="8" fill="#18181b" stroke="#22c55e"/>
+  <text x="300" y="342" text-anchor="middle" class="t" fill="#e4e4e7" font-size="11">α security</text>
+  <rect x="360" y="320" width="100" height="36" rx="8" fill="#18181b" stroke="#eab308"/>
+  <text x="410" y="342" text-anchor="middle" class="t" fill="#e4e4e7" font-size="11">β review</text>
+  <rect x="470" y="320" width="100" height="36" rx="8" fill="#18181b" stroke="#3f3f46"/>
+  <text x="520" y="342" text-anchor="middle" class="t" fill="#e4e4e7" font-size="11">γ deps</text>
+
+  <!-- Feed -->
+  <rect x="666" y="166" width="270" height="220" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="682" y="192" class="t" fill="#fafafa" font-size="13" font-weight="600">Execution feed</text>
+  <text x="682" y="220" class="m" fill="#4ade80" font-size="11">✓ deliberation · DISPATCH</text>
+  <text x="682" y="244" class="m" fill="#a1a1aa" font-size="11">· tool npm audit</text>
+  <text x="682" y="268" class="m" fill="#4ade80" font-size="11">✓ gate ACCURACY</text>
+  <text x="682" y="292" class="m" fill="#fbbf24" font-size="11">⚠ gate SAFETY</text>
+  <text x="682" y="316" class="m" fill="#a1a1aa" font-size="11">· synthesizer merge…</text>
+  <text x="682" y="348" class="m" fill="#e4e4e7" font-size="11">4 findings · 2 critical</text>
+
+  <!-- Bottom chat strip -->
+  <rect x="220" y="404" width="716" height="132" rx="10" fill="#111113" stroke="#27272a"/>
+  <text x="236" y="430" class="t" fill="#fafafa" font-size="13" font-weight="600">Chat</text>
+  <text x="236" y="456" class="t" fill="#71717a" font-size="12">You: audit this repo for security vulnerabilities</text>
+  <text x="236" y="480" class="t" fill="#a1a1aa" font-size="12">Commander: Running DISPATCH with 3 agents. Streaming gates…</text>
+  <rect x="236" y="498" width="560" height="24" rx="6" fill="#09090b" stroke="#27272a"/>
+  <text x="248" y="514" class="t" fill="#52525b" font-size="11">Message the agents…</text>
+  <rect x="808" y="498" width="108" height="24" rx="6" fill="#fafafa"/>
+  <text x="862" y="514" text-anchor="middle" class="t" fill="#09090b" font-size="11" font-weight="600">Send</text>
+</svg>

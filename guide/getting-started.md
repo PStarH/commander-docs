@@ -6,14 +6,14 @@ Get Commander running in about five minutes. One API key. No graph builders. No 
 
 You are done when **all three** are true:
 
-1. `pnpm install` finished without errors  
-2. You ran a task and saw **deliberation + topology** (plan or stream)  
+1. `pnpm install` finished without errors
+2. You ran a task and saw **deliberation + topology** (plan or stream)
 3. The process exited with a result (or a clear error from `doctor`, not a silent hang)
 
 ## Prerequisites
 
-- **Node.js** 18+ (22 recommended)  
-- **pnpm** 8+ (9+ preferred — monorepo workspaces)  
+- **Node.js** 18+ (22 recommended)
+- **pnpm** 8+ (9+ preferred — monorepo workspaces)
 - Any one LLM API key (OpenAI, Anthropic, DeepSeek, Groq, …)
 
 > Use **pnpm**, not npm alone — this is a multi-package monorepo.
@@ -65,7 +65,7 @@ You should see live agent thoughts, tool calls, and quality gates.
 pnpm gui
 ```
 
-- API: `http://localhost:4000`  
+- API: `http://localhost:4000`
 - Web: typically `http://localhost:5173` (dev) or `http://localhost:3000` (Docker)
 
 See [Web Console](/guide/web-console).
@@ -79,41 +79,50 @@ docker compose up -d
 # API :4000 · Web :3000
 ```
 
-## After build: `commander` binary
+## After build: `commander` binary (optional)
+
+Until packages are published to npm, prefer the monorepo entry:
+
+```bash
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
+```
+
+After a local core build, a `commander` bin may be available from the workspace:
 
 ```bash
 pnpm --filter @commander/core build
+# then, from the monorepo (pnpm bin / package bin path):
 commander run "audit this repo" --stream
 ```
 
 ## If something fails
 
-| Symptom | Fix |
-|---------|-----|
-| `Provider not available` | `echo $OPENAI_API_KEY` — key must be exported in **this** shell. Then `npx tsx packages/core/src/cliEntry.ts doctor` |
-| `Cannot find module` / workspace errors | Run from repo root with **pnpm**, then `pnpm install` and `pnpm -r build` |
-| Hang / no output | Try `plan` first; set `COMMANDER_DEBUG=true`; check network / provider status |
-| Rate limited | Wait, lower concurrency (`COMMANDER_MAX_CONCURRENCY=1`), or add a second provider key |
-| Circuit breaker open | Wait ~30s or `npx tsx packages/core/src/cliEntry.ts doctor --reset` |
-| Offline only | Use Ollama: `export OLLAMA_BASE_URL=http://localhost:11434` |
+| Symptom                                 | Fix                                                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Provider not available`                | `echo $OPENAI_API_KEY` — key must be exported in **this** shell. Then `npx tsx packages/core/src/cliEntry.ts doctor` |
+| `Cannot find module` / workspace errors | Run from repo root with **pnpm**, then `pnpm install` and `pnpm -r build`                                            |
+| Hang / no output                        | Try `plan` first; set `COMMANDER_DEBUG=true`; check network / provider status                                        |
+| Rate limited                            | Wait, lower concurrency (`COMMANDER_MAX_CONCURRENCY=1`), or add a second provider key                                |
+| Circuit breaker open                    | Wait ~30s or `npx tsx packages/core/src/cliEntry.ts doctor --reset`                                                  |
+| Offline only                            | Use Ollama: `export OLLAMA_BASE_URL=http://localhost:11434`                                                          |
 
 Full guide: [Troubleshooting](/guide/troubleshooting).
 
 ## What just happened?
 
-1. **Classified** the task (CODING / RESEARCH / ANALYSIS / FACTUAL)  
-2. **Picked** a topology (SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW)  
-3. **Ran** one or more agents with tools  
-4. **Verified** output through five quality gates  
+1. **Classified** the task (CODING / RESEARCH / ANALYSIS / FACTUAL)
+2. **Picked** a topology (SINGLE · CHAIN · DISPATCH · ORCHESTRATOR · REVIEW)
+3. **Ran** one or more agents with tools
+4. **Verified** output through five quality gates
 
 Details: [Topology Decision Tree](/guide/usage/topology-decision-tree) · [Architecture](/architecture/overview).
 
 ## Next paths
 
-| Goal | Go to |
-|------|--------|
-| Real recipes | [Cookbook](/guide/cookbook/) |
-| Why not framework X? | [Why Commander](/guide/why-commander) |
-| Embed in TypeScript | [Agent SDK](/guide/sdk) |
-| Ship to a VM | [Deployment](/deployment) · [Installation](/guide/installation) |
-| CLI reference | [Commands](/guide/commands) |
+| Goal                 | Go to                                                           |
+| -------------------- | --------------------------------------------------------------- |
+| Real recipes         | [Cookbook](/guide/cookbook/)                                    |
+| Why not framework X? | [Why Commander](/guide/why-commander)                           |
+| Embed in TypeScript  | [Agent SDK](/guide/sdk)                                         |
+| Ship to a VM         | [Deployment](/deployment) · [Installation](/guide/installation) |
+| CLI reference        | [Commands](/guide/commands)                                     |

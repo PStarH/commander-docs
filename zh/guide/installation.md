@@ -1,9 +1,13 @@
 # 安装
 
+::: tip 优先 monorepo
+Commander 以开源 **monorepo** 交付。当前支持的安装路径是 **clone + pnpm**。公开 npm 包（`@commander/core`、`@commander/sdk`）**尚不是**主路径 — 不要把 `pnpm add @commander/*` 当成快速成功标准。
+:::
+
 ## 前置
 
-- **Node.js** 18+（推荐 LTS）  
-- **pnpm** 8+（`npm install -g pnpm`）  
+- **Node.js** 18+（推荐 LTS）
+- **pnpm** 8+（`npm install -g pnpm`）
 - 一把 LLM API Key（见 [Providers](/guide/providers)）
 
 ## 本地开发
@@ -57,5 +61,5 @@ cd packages/core && npx tsx --test tests/*.test.ts
 
 ## 更多
 
-- [快速开始](/zh/guide/getting-started)  
-- [英文 Deployment](/deployment)  
+- [快速开始](/zh/guide/getting-started)
+- [英文 Deployment](/deployment)

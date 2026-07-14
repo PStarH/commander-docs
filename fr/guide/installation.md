@@ -1,5 +1,9 @@
 # Installation
 
+::: tip Monorepo d’abord
+Commander est livré en **monorepo** open source. Le chemin supporté aujourd’hui est **clone + pnpm**. Les paquets npm publics (`@commander/core`, `@commander/sdk`) ne sont **pas** encore le chemin principal — n’utilisez pas `pnpm add @commander/*` comme checklist de succès.
+:::
+
 ## Prérequis
 
 - **Node.js** 18+ (LTS recommandé)
@@ -51,14 +55,14 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ### Overlay production
 
-| Fonction | Réglage |
-|----------|---------|
+| Fonction        | Réglage                              |
+| --------------- | ------------------------------------ |
 | Limites CPU/RAM | 2 CPU / 4GB API, 0.5 CPU / 256MB web |
-| Logs | json-file, 10MB max, 3 rotations |
-| Restart | `always` |
-| Health checks | 30s / 10s / 5 retries |
-| Rate limiting | configurable par tenant |
-| Multi-tenant | optionnel `TENANT_PROVIDER=simple` |
+| Logs            | json-file, 10MB max, 3 rotations     |
+| Restart         | `always`                             |
+| Health checks   | 30s / 10s / 5 retries                |
+| Rate limiting   | configurable par tenant              |
+| Multi-tenant    | optionnel `TENANT_PROVIDER=simple`   |
 
 ## Vérifier
 

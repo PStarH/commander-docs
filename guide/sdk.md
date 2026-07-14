@@ -2,7 +2,7 @@
 
 Embed Commander in your own applications with `@commander/sdk`.
 
-> **Status:** Packages ship from the monorepo (`packages/sdk`). npm publication is in progress — install from the workspace until the public package is live.
+> **Status:** Packages live under `packages/sdk` in the monorepo. **npm publication is not the primary install path yet** — clone the monorepo and build the workspace package.
 
 ## Installation
 
@@ -14,24 +14,25 @@ cd Commander && pnpm install
 pnpm --filter @commander/sdk build
 ```
 
-Then depend on the workspace package from your app, or import from `packages/sdk` during development.
+Then depend on the workspace package from your app (`"@commander/sdk": "workspace:*"`), or import from `packages/sdk` during development.
 
-### When published to npm
+### When published to npm (upcoming)
 
 ```bash
+# Not the quick-start path yet — only after public publish:
 pnpm add @commander/sdk
-# peer: @commander/core (workspace / published)
+# peer: @commander/core
 ```
 
 ## Quick Start
 
 ```typescript
-import { CommanderClient } from '@commander/sdk';
+import { CommanderClient } from "@commander/sdk";
 
-const client = new CommanderClient({ provider: 'openai' });
+const client = new CommanderClient({ provider: "openai" });
 await client.connect();
 
-const result = await client.run('analyze this repository structure');
+const result = await client.run("analyze this repository structure");
 console.log(result.status, result.summary);
 
 await client.disconnect();
@@ -40,17 +41,17 @@ await client.disconnect();
 Zero-config (auto-detect provider from environment):
 
 ```typescript
-import { createClient } from '@commander/sdk';
+import { createClient } from "@commander/sdk";
 
 const client = await createClient(); // connects for you
-const result = await client.run('audit this repo for security vulnerabilities');
+const result = await client.run("audit this repo for security vulnerabilities");
 await client.disconnect();
 ```
 
 ## Plan without executing
 
 ```typescript
-const plan = await client.plan('refactor the auth module');
+const plan = await client.plan("refactor the auth module");
 // Deliberation only — topology, agents, budget (no full execution)
 console.log(plan);
 ```
@@ -62,7 +63,7 @@ const unsub = client.onEvent((event) => {
   console.log(`[${event.type}]`, event.data);
 });
 
-await client.run('debug the failing test');
+await client.run("debug the failing test");
 unsub();
 ```
 
@@ -70,35 +71,35 @@ unsub();
 
 ```typescript
 const client = new CommanderClient({
-  provider: 'anthropic',   // optional — auto-detect from env if omitted
+  provider: "anthropic", // optional — auto-detect from env if omitted
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-4-20250514',
+  model: "claude-sonnet-4-20250514",
   tokenBudget: 64_000,
-  defaultTopology: 'SINGLE',
+  defaultTopology: "SINGLE",
   persistSessions: true,
 });
 ```
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `provider` | auto | Provider id (`openai`, `anthropic`, `ollama`, …) |
-| `apiKey` | env | Explicit API key |
-| `model` | provider default | Model override |
-| `baseUrl` | provider default | Custom OpenAI-compatible base URL |
-| `tokenBudget` | `64000` | Soft token budget |
-| `defaultTopology` | `SINGLE` | Fallback topology |
-| `persistSessions` | `true` | Keep recent session summaries in memory |
+| Option            | Default          | Description                                      |
+| ----------------- | ---------------- | ------------------------------------------------ |
+| `provider`        | auto             | Provider id (`openai`, `anthropic`, `ollama`, …) |
+| `apiKey`          | env              | Explicit API key                                 |
+| `model`           | provider default | Model override                                   |
+| `baseUrl`         | provider default | Custom OpenAI-compatible base URL                |
+| `tokenBudget`     | `64000`          | Soft token budget                                |
+| `defaultTopology` | `SINGLE`         | Fallback topology                                |
+| `persistSessions` | `true`           | Keep recent session summaries in memory          |
 
 ## Core methods
 
-| Method | Description |
-|--------|-------------|
-| `connect()` / `disconnect()` | Lifecycle — wires core runtime + event bus |
-| `run(task)` | Full multi-agent execution → `ExecutionResult` |
-| `plan(task)` | Deliberation only |
-| `onEvent(handler)` | Subscribe to agent/tool lifecycle events |
-| `createAgent(config)` | Register a named agent profile |
-| `writeMemory` / `queryMemory` | Three-layer memory helpers |
+| Method                        | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `connect()` / `disconnect()`  | Lifecycle — wires core runtime + event bus     |
+| `run(task)`                   | Full multi-agent execution → `ExecutionResult` |
+| `plan(task)`                  | Deliberation only                              |
+| `onEvent(handler)`            | Subscribe to agent/tool lifecycle events       |
+| `createAgent(config)`         | Register a named agent profile                 |
+| `writeMemory` / `queryMemory` | Three-layer memory helpers                     |
 
 ## HTTP API (server mode)
 

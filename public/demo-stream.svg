@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" role="img" aria-label="Animated Commander stream demo">
+  <defs>
+    <clipPath id="clip">
+      <rect x="1" y="37" width="638" height="362" rx="0"/>
+    </clipPath>
+    <style>
+      .line { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+      .dim { fill: #52525b; }
+      .muted { fill: #a1a1aa; }
+      .fg { fill: #e4e4e7; }
+      .ok { fill: #4ade80; }
+      .accent { fill: #fafafa; }
+      .warn { fill: #fbbf24; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .row { opacity: 0; animation: fadeUp 0.45s ease forwards; }
+      .r1 { animation-delay: 0.15s; }
+      .r2 { animation-delay: 0.45s; }
+      .r3 { animation-delay: 0.75s; }
+      .r4 { animation-delay: 1.05s; }
+      .r5 { animation-delay: 1.35s; }
+      .r6 { animation-delay: 1.65s; }
+      .r7 { animation-delay: 1.95s; }
+      .r8 { animation-delay: 2.25s; }
+      .r9 { animation-delay: 2.55s; }
+      .r10 { animation-delay: 2.85s; }
+      .r11 { animation-delay: 3.15s; }
+      .r12 { animation-delay: 3.45s; }
+      .cursor {
+        fill: #fafafa;
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink { 50% { opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        .row { opacity: 1; animation: none; }
+        .cursor { animation: none; }
+      }
+    </style>
+  </defs>
+
+  <!-- Frame -->
+  <rect x="0.5" y="0.5" width="639" height="399" rx="12" fill="#09090b" stroke="#27272a"/>
+  <path d="M0.5 12a12 12 0 0112-12h615a12 12 0 0112 12v24H0.5z" fill="#111113"/>
+  <line x1="0.5" y1="36" x2="639.5" y2="36" stroke="#27272a"/>
+  <circle cx="22" cy="18" r="5" fill="#ef4444"/>
+  <circle cx="42" cy="18" r="5" fill="#eab308"/>
+  <circle cx="62" cy="18" r="5" fill="#22c55e"/>
+  <text x="320" y="22" text-anchor="middle" class="line dim" font-size="11">commander · stream</text>
+
+  <g clip-path="url(#clip)">
+    <text class="line row r1" x="20" y="60">
+      <tspan class="muted">$</tspan>
+      <tspan class="fg" dx="8">npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</tspan>
+    </text>
+
+    <text class="line row r2 dim" x="20" y="88">┌─ Deliberation ─────────────────────────────────────</text>
+    <text class="line row r3" x="20" y="110">
+      <tspan class="muted">│ Classification:</tspan>
+      <tspan class="accent" dx="6">ANALYSIS</tspan>
+      <tspan class="dim" dx="10">· Complexity: 7/10</tspan>
+    </text>
+    <text class="line row r4" x="20" y="132">
+      <tspan class="muted">│ Topology:</tspan>
+      <tspan class="accent" dx="6">DISPATCH</tspan>
+      <tspan class="dim" dx="10">(3 agents)</tspan>
+    </text>
+
+    <text class="line row r5 dim" x="20" y="160">├─ Agent α (security-scanner) ───────────────────────</text>
+    <text class="line row r6" x="20" y="182">
+      <tspan class="muted">│ [think]</tspan>
+      <tspan class="fg" dx="6">Scanning package.json for known CVEs…</tspan>
+    </text>
+    <text class="line row r7" x="20" y="204">
+      <tspan class="ok">│ [tool]</tspan>
+      <tspan class="fg" dx="6">npm audit · 2 critical, 5 moderate</tspan>
+    </text>
+    <text class="line row r8" x="20" y="226">
+      <tspan class="ok">│ [gate]</tspan>
+      <tspan class="ok" dx="6">ACCURACY ✓</tspan>
+      <tspan class="ok" dx="8">COMPLETENESS ✓</tspan>
+    </text>
+
+    <text class="line row r9 dim" x="20" y="254">├─ Agent β (code-reviewer) ──────────────────────────</text>
+    <text class="line row r10" x="20" y="276">
+      <tspan class="warn">│ [gate]</tspan>
+      <tspan class="warn" dx="6">SAFETY ⚠</tspan>
+      <tspan class="dim" dx="8">potential secret pattern in config.ts</tspan>
+    </text>
+
+    <text class="line row r11 dim" x="20" y="304">├─ Synthesizer ──────────────────────────────────────</text>
+    <text class="line row r12" x="20" y="326">
+      <tspan class="accent">│ Leader synthesis · 4 findings, 2 critical</tspan>
+    </text>
+    <text class="line row r12 dim" x="20" y="348">└────────────────────────────────────────────────────</text>
+
+    <text class="line row r12" x="20" y="376">
+      <tspan class="dim">elapsed 12.4s · tokens 8,412 · gates 5/5</tspan>
+      <tspan class="cursor" dx="10">█</tspan>
+    </text>
+  </g>
+</svg>

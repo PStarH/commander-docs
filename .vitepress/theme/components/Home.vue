@@ -243,8 +243,9 @@ const quickLinks = computed(() => {
   ]
 })
 
+// Fallback / a11y text when SVG animation is unavailable
 const demoLines = [
-  { cls: 'cmd-demo-muted', text: '$ commander run "audit this repo" --stream' },
+  { cls: 'cmd-demo-muted', text: '$ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream' },
   { cls: 'cmd-demo-dim', text: '┌─ Deliberation ─────────────────────────────' },
   { cls: '', text: '│ Classification: ANALYSIS · Complexity: 7/10' },
   { cls: '', text: '│ Topology: DISPATCH (3 agents)' },
@@ -625,13 +626,15 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
           </div>
         </div>
         <div class="cmd-demo-terminal" role="img" aria-label="Example Commander stream output">
-          <div class="cmd-demo-chrome">
-            <span class="cmd-demo-dot cmd-demo-dot--r" />
-            <span class="cmd-demo-dot cmd-demo-dot--y" />
-            <span class="cmd-demo-dot cmd-demo-dot--g" />
-            <span class="cmd-demo-chrome-title">commander · stream</span>
-          </div>
-          <div class="cmd-demo-body">
+          <img
+            class="cmd-demo-svg"
+            :src="withBase('/demo-stream.svg')"
+            alt="Commander stream: deliberation, DISPATCH topology, tools, and quality gates"
+            width="640"
+            height="400"
+          />
+          <!-- Fallback text for crawlers / no-img; visually hidden when SVG loads -->
+          <div class="cmd-demo-fallback" aria-hidden="true">
             <div
               v-for="(line, i) in demoLines"
               :key="i"
@@ -1058,47 +1061,33 @@ npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream</code></pre
 }
 
 .cmd-demo-terminal {
+  position: relative;
   border-radius: 12px;
   border: 1px solid var(--vp-c-border);
   background: #09090b;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 280px;
+  min-height: 0;
 }
 
-.cmd-demo-chrome {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid #27272a;
-  background: #111113;
+.cmd-demo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.cmd-demo-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.cmd-demo-dot--r { background: #ef4444; }
-.cmd-demo-dot--y { background: #eab308; }
-.cmd-demo-dot--g { background: #22c55e; }
-
-.cmd-demo-chrome-title {
-  margin-left: 8px;
-  font-size: 0.7rem;
-  color: #71717a;
-  font-family: var(--vp-font-family-mono);
-}
-
-.cmd-demo-body {
-  padding: 14px 16px 18px;
-  font-family: var(--vp-font-family-mono);
-  font-size: 0.72rem;
-  line-height: 1.65;
-  color: #d4d4d8;
-  flex: 1;
+/* Visually hidden fallback for screen readers / no-CSS; SVG is primary */
+.cmd-demo-fallback {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .cmd-demo-line { white-space: pre-wrap; word-break: break-word; }

@@ -1,5 +1,9 @@
 # Instalación
 
+::: tip Monorepo primero
+Commander se entrega como **monorepo** open source. Hoy el camino soportado es **clonar + pnpm**. Los paquetes npm públicos (`@commander/core`, `@commander/sdk`) **aún no** son la vía principal — no uses `pnpm add @commander/*` como checklist de éxito.
+:::
+
 ## Requisitos previos
 
 - **Node.js** 18+ (LTS recomendado)
@@ -55,24 +59,24 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ### Overlay de producción
 
-| Función | Ajuste |
-|---------|--------|
-| Límites CPU/RAM | 2 CPU / 4GB API, 0.5 CPU / 256MB web |
-| Logs | driver json-file, 10MB máx, 3 rotaciones |
-| Restart | `always` |
-| Health checks | intervalo 30s, timeout 10s, 5 reintentos |
-| Rate limiting | configurable por tenant |
-| Multi-tenant | opcional `TENANT_PROVIDER=simple` |
+| Función         | Ajuste                                   |
+| --------------- | ---------------------------------------- |
+| Límites CPU/RAM | 2 CPU / 4GB API, 0.5 CPU / 256MB web     |
+| Logs            | driver json-file, 10MB máx, 3 rotaciones |
+| Restart         | `always`                                 |
+| Health checks   | intervalo 30s, timeout 10s, 5 reintentos |
+| Rate limiting   | configurable por tenant                  |
+| Multi-tenant    | opcional `TENANT_PROVIDER=simple`        |
 
 ## CI/CD
 
 El pipeline (`.github/workflows/ci.yml`) corre en cada push/PR:
 
-| Job | Comprueba |
-|-----|-----------|
+| Job         | Comprueba                                |
+| ----------- | ---------------------------------------- |
 | **quality** | TypeScript, 6700+ tests, CLI, build core |
-| **docker** | `docker compose build` |
-| **web-gui** | build Vite de producción |
+| **docker**  | `docker compose build`                   |
+| **web-gui** | build Vite de producción                 |
 
 ## Verificar instalación
 

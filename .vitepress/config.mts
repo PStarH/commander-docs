@@ -884,6 +884,64 @@ function themeFor(locale: L): DefaultTheme.Config {
   }
 }
 
+/** Absolute page URL for OG / hreflang (base includes trailing slash). */
+function absUrl(pagePath: string): string {
+  const base = 'https://pstarh.github.io/commander-docs/'
+  const p = pagePath.replace(/^\//, '').replace(/\/index\.html?$/, '/').replace(/\.html$/, '')
+  if (!p || p === 'index') return base
+  return `${base}${p.endsWith('/') ? p : `${p}.html`}`
+}
+
+/**
+ * Inject hreflang alternates for multi-locale SEO.
+ * Maps EN root ↔ /zh|ja|ko|es|fr/ paths for the same relative page.
+ */
+function hreflangLinks(relativePath: string): HeadConfig[] {
+  // relativePath e.g. "guide/getting-started.md", "zh/guide/getting-started.md", "index.md"
+  const file = relativePath.replace(/\\/g, '/')
+  const localeRoots = ['zh', 'ja', 'ko', 'es', 'fr'] as const
+  let bare = file.replace(/\.md$/, '')
+  let current: 'en' | (typeof localeRoots)[number] = 'en'
+  for (const loc of localeRoots) {
+    if (bare === loc || bare.startsWith(`${loc}/`)) {
+      current = loc
+      bare = bare === loc || bare === `${loc}/index` ? 'index' : bare.slice(loc.length + 1)
+      break
+    }
+  }
+  if (bare === 'index' || bare === '') bare = ''
+
+  const pathFor = (loc: 'en' | (typeof localeRoots)[number]) => {
+    if (!bare) return loc === 'en' ? '' : `${loc}/`
+    return loc === 'en' ? bare : `${loc}/${bare}`
+  }
+
+  const hreflangMap: Record<string, string> = {
+    en: 'en',
+    zh: 'zh-CN',
+    ja: 'ja',
+    ko: 'ko',
+    es: 'es',
+    fr: 'fr',
+  }
+
+  const links: HeadConfig[] = []
+  for (const loc of ['en', ...localeRoots] as const) {
+    links.push([
+      'link',
+      {
+        rel: 'alternate',
+        hreflang: hreflangMap[loc],
+        href: absUrl(pathFor(loc)),
+      },
+    ])
+  }
+  links.push(['link', { rel: 'alternate', hreflang: 'x-default', href: absUrl(pathFor('en')) }])
+  // Prefer self-canonical for the current locale page
+  links.push(['link', { rel: 'canonical', href: absUrl(pathFor(current)) }])
+  return links
+}
+
 export default defineConfig({
   title: 'Commander',
   description,
@@ -896,6 +954,11 @@ export default defineConfig({
     ssr: { noExternal: ['gsap', 'gsap/ScrollTrigger'] },
   },
   head,
+  transformHead({ pageData }) {
+    const rel = pageData.relativePath || ''
+    if (!rel.endsWith('.md')) return []
+    return hreflangLinks(rel)
+  },
   locales: {
     root: {
       label: 'English',

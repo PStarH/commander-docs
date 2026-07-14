@@ -1,10 +1,14 @@
 # インストール
 
+::: tip モノレポ優先
+Commander はオープンソースの **モノレポ** として提供されます。現在サポートされる導入は **clone + pnpm** です。公開 npm（`@commander/core` / `@commander/sdk`）はまだ主経路ではありません — `pnpm add @commander/*` を成功条件にしないでください。
+:::
+
 ## 前提
 
-- Node.js 18+（22 推奨）  
-- pnpm 8+  
-- LLM API キー 1 つ  
+- Node.js 18+（22 推奨）
+- pnpm 8+
+- LLM API キー 1 つ
 
 ## ローカル
 
