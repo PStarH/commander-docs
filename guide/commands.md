@@ -1,5 +1,12 @@
 # CLI Commands
 
+Examples use the `commander` binary (available after building `@commander/core`).  
+From a source checkout without a build, replace `commander` with:
+
+```bash
+npx tsx packages/core/src/cliEntry.ts
+```
+
 ## Task Execution
 
 | Command | Description |
@@ -7,8 +14,12 @@
 | `commander <task>` | Quick task analysis |
 | `commander run <task>` | Full multi-agent execution pipeline |
 | `commander plan <task>` | Show deliberation plan (topology, agents, budget) |
-| `commander watch <task>` | Execute with real-time SSE event stream |
+| `commander run <task> --stream` | Execute with real-time SSE event stream |
 | `commander run --file <tasks.json>` | Batch process multiple tasks |
+| `commander swarm <task>` | Recursive decomposition with parallel execution |
+| `commander drive <task>` | Autonomous step-by-step execution |
+| `commander goal <task>` | Multi-round convergence loop |
+| `commander company <task>` | Enterprise pipeline with quality gates and memory |
 
 ## Interface
 
@@ -22,11 +33,10 @@
 
 | Command | Description |
 |---------|-------------|
-| `commander company <task>` | Company mode — multi-agent with review |
-| `commander review [--commit\|--base\|--json]` | Code review with guidelines |
+| `commander review [--commit\|--base\|--json]` | Code review with guidelines (P0-P3 findings) |
 | `commander workers [topics]` | Parallel research workers |
-| `commander benchmark <config> [options]` | Run benchmarks |
 | `commander status` | System status, provider, MetaLearner stats |
+| `commander cost` | Cost analysis and breakdown |
 
 ## Configuration
 
@@ -35,6 +45,7 @@
 | `commander mode [mode]` | Set approval mode (plan/read-only/auto-edit/full-auto/suggest) |
 | `commander config` | View or change settings |
 | `commander doctor` | Run diagnostics |
+| `commander budget` | Token budget management |
 | `commander --debug` | Enable verbose logging across all 74+ modules |
 
 ## Skills
@@ -56,6 +67,16 @@
 | `commander history delete <id>` | Delete a session |
 | `commander share` | Share a session link |
 
+## Saga & Recovery
+
+| Command | Description |
+|---------|-------------|
+| `commander saga` | Saga transaction operations |
+| `commander checkpoint` | Checkpoint operations |
+| `commander compensation` | Compensation registry operations |
+| `commander resume` | Resume a paused or interrupted run |
+| `commander undo` | Undo last operation via compensation |
+
 ## Advanced
 
 | Command | Description |
@@ -63,15 +84,9 @@
 | `commander connect` | Connect to providers |
 | `commander plan --topology <name>` | Force specific topology |
 | `commander run --agent-count <n>` | Override agent count |
-
-## Benchmark Runner
-
-```bash
-commander benchmark gaia.yaml                       # Run GAIA benchmark
-commander benchmark config.yaml --parallel 5         # 5 concurrent requests
-commander benchmark config.yaml --output ./results   # Custom output dir
-commander benchmark --list                           # List available configs
-```
+| `commander plugin enable <name>` | Enable a plugin (e.g., `rag`) |
+| `commander plugin disable <name>` | Disable a plugin |
+| `commander intelligence` | View intelligence metrics and patterns |
 
 ## Approval Modes
 
@@ -87,6 +102,9 @@ commander benchmark --list                           # List available configs
 # Set mode globally
 export COMMANDER_MODE=auto-edit
 
-# Or at runtime
-npx tsx cli.ts mode plan
+# Or at runtime (from monorepo source)
+npx tsx packages/core/src/cliEntry.ts mode plan
+
+# After building @commander/core
+commander mode plan
 ```

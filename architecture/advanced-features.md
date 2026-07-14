@@ -172,6 +172,6 @@ Export traces to OpenTelemetry-compatible backends:
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
 export OTEL_SERVICE_NAME=commander
 
-npx tsx cli.ts run "task"
+npx tsx packages/core/src/cliEntry.ts run "task"
 # Traces exported to your OTLP endpoint
 ```

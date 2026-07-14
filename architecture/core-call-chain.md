@@ -27,16 +27,13 @@ Based on complexity, Commander scales across 1–20 agents. Simple tasks get a s
   ├─ topologyRouter.ts   ← "Which topology fits?"
 ```
 
-Selects the optimal execution topology from 8 options:
+Selects the optimal execution topology from 5 canonical options:
 
 - **SINGLE** — Simple tasks, one agent
-- **SEQUENTIAL** — Dependent steps, chain-of-thought
-- **PARALLEL** — Independent subtasks, max throughput
-- **HIERARCHICAL** — Lead agent delegates to specialists
-- **HYBRID** — Mixed topology for complex workflows
-- **DEBATE** — Multiple agents cross-validate answers
-- **ENSEMBLE** — Vote-based consensus from diverse models
-- **EVALUATOR-OPT** — Generate → critique → refine loop
+- **CHAIN** — Dependent steps, chain-of-thought (legacy: SEQUENTIAL)
+- **DISPATCH** — Independent subtasks, max throughput (legacy: PARALLEL)
+- **ORCHESTRATOR** — Lead agent delegates to specialists (legacy: HIERARCHICAL / HYBRID)
+- **REVIEW** — Generate → critique → refine loop (legacy: DEBATE / ENSEMBLE / EVALUATOR-OPT)
 
 ## 4. Atomization
 

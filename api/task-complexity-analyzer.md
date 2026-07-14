@@ -1,18 +1,18 @@
 # Task Complexity Analyzer
 
-Analyzes task complexity and selects the optimal orchestration mode.
+Analyzes task complexity and selects the optimal orchestration topology.
 
 ## Types
 
 ```typescript
 type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'extreme';
-type OrchestrationMode = 'SEQUENTIAL' | 'PARALLEL' | 'HANDOFF' | 'MAGENTIC' | 'CONSENSUS';
+type Topology = 'SINGLE' | 'CHAIN' | 'DISPATCH' | 'ORCHESTRATOR' | 'REVIEW';
 
 interface ComplexityScore {
   level: ComplexityLevel;
   score: number;           // 0-100
   factors: ComplexityFactors;
-  recommendedMode: OrchestrationMode;
+  recommendedTopology: Topology;
   tokenBudget: TokenBudget;
   confidence: number;      // 0-1
 }
@@ -42,19 +42,19 @@ const scores = batchAnalyzer.analyzeBatch(tasks: Task[]): ComplexityScore[];
 
 // Get orchestration recommendation
 const orch = batchAnalyzer.getBatchOrchestration(scores): {
-  mode: OrchestrationMode;
+  topology: Topology;
   totalBudget: number;
   parallelGroups: number;
 };
 ```
 
-## Mode Selection Rules
+## Topology Selection Rules
 
-| Condition | Mode |
-|-----------|------|
-| Complexity > 80 | CONSENSUS |
-| Complexity > 60 + no dependencies | MAGENTIC |
-| Complexity > 50 | HANDOFF |
-| Has dependencies + complexity > 30 | HANDOFF |
-| No dependencies + complexity < 30 | PARALLEL |
-| Default | SEQUENTIAL |
+| Condition | Topology |
+|-----------|----------|
+| Complexity > 80 | REVIEW |
+| Complexity > 60 + no dependencies | DISPATCH |
+| Complexity > 50 | ORCHESTRATOR |
+| Has dependencies + complexity > 30 | CHAIN |
+| No dependencies + complexity < 30 | DISPATCH |
+| Default | CHAIN |

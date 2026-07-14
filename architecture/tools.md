@@ -1,6 +1,6 @@
 # Tools
 
-Commander ships with **28 built-in tools** across 8 categories, each designed for production use with caching, error handling, and rollback support.
+Commander ships with **18 built-in tools** (exposed to the LLM by default, out of 48 tool classes available in the codebase) across 8 categories, each designed for production use with caching, error handling, and rollback support.
 
 ## Filesystem Operations
 
@@ -51,6 +51,7 @@ Commander ships with **28 built-in tools** across 8 categories, each designed fo
 | `memory_store` | `memory_store` | Store data in persistent memory |
 | `memory_recall` | `memory_recall` | Recall stored memories by query |
 | `memory_list` | `memory_list` | List all stored memories |
+| `knowledge_search` | `knowledge_search` | RAG knowledge base search (builtin-rag plugin) |
 
 ## Version Control
 
@@ -79,6 +80,8 @@ Commander ships with **28 built-in tools** across 8 categories, each designed fo
 | `todowrite` | — | Multi-step task tracking |
 | `question` | — | User clarification |
 | `mcp` | `mcp_tool_adapter` | MCP server tool integration |
+| `saga` | `saga_tool` | Saga transaction operations |
+| `checkpoint` | `checkpoint_tool` | Checkpoint management |
 
 ## Production Features
 
@@ -90,6 +93,7 @@ Every tool comes with:
 - **Step error boundary** — skip/retry/abort per tool
 - **Tool call repair** — automatically fix malformed tool calls
 - **Tool output management** — structured output parsing and validation
+- **DLP scanning** — tool inputs scanned for 6 sensitive data patterns (API Key, private key, AWS Key, GitHub Token, JWT, password)
 
 ## Custom Tools
 

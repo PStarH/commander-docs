@@ -1,69 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 380" fill="none">
-  <!-- Terminal window frame -->
-  <rect x="0" y="0" width="560" height="380" rx="8" fill="#0a0a12" stroke="#27272a" stroke-width="1"/>
-  
+  <!-- Terminal window frame — clean zinc, no glow -->
+  <rect x="0.5" y="0.5" width="559" height="379" rx="10" fill="#09090b" stroke="#27272a" stroke-width="1"/>
+
   <!-- Title bar -->
-  <rect x="0" y="0" width="560" height="36" rx="8" fill="#1a1928"/>
-  <rect x="0" y="28" width="560" height="8" fill="#1a1928"/>
-  
-  <!-- Traffic lights -->
-  <circle cx="20" cy="18" r="5" fill="#ef4444"/>
-  <circle cx="38" cy="18" r="5" fill="#eab308"/>
-  <circle cx="56" cy="18" r="5" fill="#22c55e"/>
-  
+  <path d="M0.5 10a10 10 0 0110-10h539a10 10 0 0110 10v26H0.5z" fill="#131316"/>
+  <line x1="0.5" y1="36" x2="559.5" y2="36" stroke="#27272a" stroke-width="1"/>
+
+  <!-- Traffic lights — single-tone zinc dots (restrained) -->
+  <circle cx="20" cy="18" r="5" fill="#3f3f46"/>
+  <circle cx="38" cy="18" r="5" fill="#3f3f46"/>
+  <circle cx="56" cy="18" r="5" fill="#3f3f46"/>
+
   <!-- Title -->
-  <text x="280" y="24" text-anchor="middle" fill="#71717a" font-family="'JetBrains Mono', monospace" font-size="11">commander — Multi-Agent Orchestration Engine</text>
-  
-  <!-- Terminal content -->
-  <text font-family="'JetBrains Mono', monospace" font-size="12">
-    <tspan x="20" y="62" fill="#52525b"># ─────────────────────────────────────────────</tspan>
-    <tspan x="20" y="82" fill="#52525b"># Commander v0.1 — Agent Runtime Initialized</tspan>
-    <tspan x="20" y="102" fill="#52525b"># ─────────────────────────────────────────────</tspan>
-    
-    <tspan x="20" y="132" fill="#818cf8">commander@run</tspan>
-    <tspan x="168" y="132" fill="#e4e4e7">$</tspan>
+  <text x="280" y="24" text-anchor="middle" fill="#52525b" font-family="'JetBrains Mono', ui-monospace, monospace" font-size="11" letter-spacing="0.04em">commander — terminal</text>
+
+  <!-- Terminal content — pure zinc ramp -->
+  <text font-family="'JetBrains Mono', ui-monospace, monospace" font-size="12">
+    <tspan x="20" y="62" fill="#3f3f46"># ─────────────────────────────────────────────</tspan>
+    <tspan x="20" y="82" fill="#3f3f46"># Commander v0.2 — Agent Runtime Initialized</tspan>
+    <tspan x="20" y="102" fill="#3f3f46"># ─────────────────────────────────────────────</tspan>
+
+    <tspan x="20" y="132" fill="#a1a1aa">commander@run</tspan>
+    <tspan x="168" y="132" fill="#fafafa">$</tspan>
     <tspan x="182" y="132" fill="#e4e4e7">plan "refactor this module"</tspan>
-    
-    <tspan x="20" y="158" fill="#818cf8">┃</tspan>
-    <tspan x="32" y="158" fill="#f472b6">→</tspan>
-    <tspan x="48" y="158" fill="#c4b5fd">Deliberating task...</tspan>
-    <tspan x="20" y="178" fill="#818cf8">┃</tspan>
-    <tspan x="32" y="178" fill="#f472b6">→</tspan>
-    <tspan x="48" y="178" fill="#c4b5fd">Complexity:</tspan>
-    <tspan x="148" y="178" fill="#fbbf24">HIGH</tspan>
-    <tspan x="190" y="178" fill="#71717a">(score: 72/100)</tspan>
-    <tspan x="20" y="198" fill="#818cf8">┃</tspan>
-    <tspan x="32" y="198" fill="#f472b6">→</tspan>
-    <tspan x="48" y="198" fill="#c4b5fd">Topology:</tspan>
-    <tspan x="148" y="198" fill="#2dd4bf">HIERARCHICAL</tspan>
-    <tspan x="20" y="218" fill="#818cf8">┃</tspan>
-    <tspan x="32" y="218" fill="#f472b6">→</tspan>
-    <tspan x="48" y="218" fill="#c4b5fd">Agents:</tspan>
-    <tspan x="148" y="218" fill="#2dd4bf">4</tspan>
+
+    <tspan x="20" y="158" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="158" fill="#71717a">→</tspan>
+    <tspan x="48" y="158" fill="#a1a1aa">Deliberating task...</tspan>
+    <tspan x="20" y="178" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="178" fill="#71717a">→</tspan>
+    <tspan x="48" y="178" fill="#a1a1aa">Complexity:</tspan>
+    <tspan x="148" y="178" fill="#fafafa">HIGH</tspan>
+    <tspan x="190" y="178" fill="#52525b">(score: 72/100)</tspan>
+    <tspan x="20" y="198" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="198" fill="#71717a">→</tspan>
+    <tspan x="48" y="198" fill="#a1a1aa">Topology:</tspan>
+    <tspan x="148" y="198" fill="#fafafa">HIERARCHICAL</tspan>
+    <tspan x="20" y="218" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="218" fill="#71717a">→</tspan>
+    <tspan x="48" y="218" fill="#a1a1aa">Agents:</tspan>
+    <tspan x="148" y="218" fill="#fafafa">4</tspan>
     <tspan x="166" y="218" fill="#71717a">(1 lead + 3 specialists)</tspan>
-    <tspan x="20" y="238" fill="#818cf8">┃</tspan>
-    <tspan x="32" y="238" fill="#f472b6">→</tspan>
-    <tspan x="48" y="238" fill="#c4b5fd">Provider:</tspan>
-    <tspan x="148" y="238" fill="#2dd4bf">deepseek</tspan>
-    <tspan x="228" y="238" fill="#71717a">(fallback: openai → anthropic)</tspan>
-    
-    <tspan x="20" y="268" fill="#818cf8">commander@run</tspan>
-    <tspan x="168" y="268" fill="#e4e4e7">$</tspan>
+    <tspan x="20" y="238" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="238" fill="#71717a">→</tspan>
+    <tspan x="48" y="238" fill="#a1a1aa">Provider:</tspan>
+    <tspan x="148" y="238" fill="#fafafa">deepseek</tspan>
+    <tspan x="228" y="238" fill="#52525b">(fallback: openai → anthropic)</tspan>
+
+    <tspan x="20" y="268" fill="#a1a1aa">commander@run</tspan>
+    <tspan x="168" y="268" fill="#fafafa">$</tspan>
     <tspan x="182" y="268" fill="#e4e4e7">execute</tspan>
-    
-    <tspan x="20" y="294" fill="#4ade80">┃</tspan>
-    <tspan x="32" y="294" fill="#4ade80">✓</tspan>
+
+    <tspan x="20" y="294" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="294" fill="#a1a1aa">✓</tspan>
     <tspan x="48" y="294" fill="#e4e4e7">Lead agent:</tspan>
     <tspan x="146" y="294" fill="#71717a">architect — analyzing dependencies</tspan>
-    <tspan x="20" y="314" fill="#4ade80">┃</tspan>
-    <tspan x="32" y="314" fill="#4ade80">✓</tspan>
+    <tspan x="20" y="314" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="314" fill="#a1a1aa">✓</tspan>
     <tspan x="48" y="314" fill="#e4e4e7">Sub-agent 1:</tspan>
     <tspan x="148" y="314" fill="#71717a">scaffolding project structure</tspan>
-    <tspan x="20" y="334" fill="#4ade80">┃</tspan>
-    <tspan x="32" y="334" fill="#4ade80">✓</tspan>
+    <tspan x="20" y="334" fill="#3f3f46">┃</tspan>
+    <tspan x="32" y="334" fill="#a1a1aa">✓</tspan>
     <tspan x="48" y="334" fill="#e4e4e7">Sub-agent 2:</tspan>
     <tspan x="148" y="334" fill="#71717a">migrating module A → B</tspan>
-    
-    <tspan x="20" y="362" fill="#71717a">⏳ Elapsed: 2.4s · Tokens: 3,241 · Cache hits: 7</tspan>
+
+    <tspan x="20" y="362" fill="#52525b">⏳ Elapsed: 2.4s · Tokens: 3,241 · Cache hits: 7</tspan>
   </text>
 </svg>

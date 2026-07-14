@@ -1,14 +1,20 @@
 {
   "name": "commander-docs",
   "version": "0.1.0",
-  "description": "Commander — Multi-agent orchestration engine documentation",
+  "description": "Commander docs — 25 providers · 5 topologies · 18 tools · multi-agent orchestration",
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "vitepress": "^1.6.3"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0"
   }
 }

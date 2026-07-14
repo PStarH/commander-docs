@@ -5,9 +5,12 @@ Commander supports multiple deployment options for different environments.
 ## Local (Docker Compose)
 
 ```bash
+export COMMANDER_API_KEY="your-secret-key"
+export OPENAI_API_KEY="sk-..."
 docker compose up -d
-# API: http://localhost:4000
-# Web GUI: http://localhost:3000
+# API:     http://localhost:4000
+# Web GUI: http://localhost:3000   (Docker / Nginx)
+# Dev GUI: http://localhost:5173   (pnpm gui, no Docker)
 ```
 
 The Docker setup features:
@@ -78,6 +81,51 @@ jobs:
 ```
 
 Requires GitHub Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`.
+
+## Observability Stack
+
+Commander includes a pre-configured observability stack for production monitoring:
+
+```bash
+# Start the full observability stack
+docker compose -f deploy/observability/docker-compose.yml up -d
+```
+
+### Components
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| Prometheus | v2.51.0 | Metrics scraping (10s interval, 30-day retention) |
+| Grafana | 10.4.0 | Dashboards (admin/admin, auto-provisioned) |
+| Jaeger | 1.55 | Distributed tracing (optional, `--profile tracing`) |
+
+### Grafana Dashboards
+
+Two pre-configured dashboards are auto-provisioned:
+
+**Developer View** (default home):
+- Run success rate (threshold: 0.8 warn / 0.95 green)
+- P95 latency (5s warn / 10s red)
+- Token cost USD/hour ($1 warn / $10 red)
+- Active run count
+- Token usage trends, tool call success rate, cost by component
+
+**Mechanistic View** (Ops perspective):
+- EventSourcing WAL write latency p95 (50ms warn / 200ms red)
+- WAL file size MB (100MB warn / 500MB red)
+- DLQ backlog (10 warn / 50 red)
+- Circuit breaker open state
+- Event backlog ratio trends (1000 warn / 10000 red)
+- SQLite busy lock contention error rate
+- Compensation execution rate (success/failure)
+- Audit event rate
+- Checkpoint success rate
+
+### Prometheus Configuration
+
+Prometheus scrapes two jobs:
+- `commander` — `host.docker.internal:3000/metrics` (application metrics)
+- `commander-process` — `host.docker.internal:9091` (process metrics)
 
 ## Configuration Reference
 

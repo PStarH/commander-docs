@@ -70,6 +70,51 @@ const hookManager = getHookManager();
 hookManager.register(new LoggingPlugin());
 ```
 
+## Plugin Security
+
+Third-party plugins receive a **sandboxed load context** that strictly limits their permissions. Plugin permissions must never exceed main system permissions.
+
+### Sandboxed Load Context
+
+The `buildSandboxedLoadContext()` method constructs a restricted context for third-party plugins:
+
+```typescript
+// Third-party plugins only receive:
+const sandboxContext = {
+  registerHook: enforcer.wrapRegisterHook(...),
+  readFile: enforcer.wrapReadFile(...),
+  writeFile: enforcer.wrapWriteFile(...),  // files written with mode 0o600
+  fetch: enforcer.wrapFetch(...),          // domain + port checked
+  getEnvVar: enforcer.wrapGetEnvVar(...),
+  getConfig: enforcer.wrapGetConfig(...),
+  log: enforcer.wrapLog(...),
+};
+// The raw HookManager is NOT included — prevents privilege escalation
+```
+
+Built-in plugins (without an enforcer) still receive the full `HookManager`.
+
+### Permission Enforcement
+
+| Mechanism | Behavior |
+|-----------|----------|
+| `register()` | Third-party plugins get sandboxed context, not raw HookManager |
+| `updateConfig()` | Routes through same sandboxed context as `register()` |
+| `withTimeout()` | Uses `Math.min(plugin.maxExecutionTimeMs, globalTimeoutMs)` — stricter value wins |
+| Network requests | URL-parsed, hostname/port checked via `enforcer.checkNetwork()` |
+| File writes | Enforced to mode `0o600` |
+| Failures | Reported via `reportSilentFailure` (never throws to plugin) |
+
+### Security Hardening (v0.2.1)
+
+Three privilege escalation vulnerabilities were identified and fixed:
+
+1. **GAP-1**: `register()` leaked raw `HookManager` → sandbox bypass → Fixed with `buildSandboxedLoadContext()`
+2. **GAP-2**: `updateConfig()` bypassed sandbox entirely → Fixed by reusing sandboxed context
+3. **GAP-3**: `withTimeout()` ignored plugin's `maxExecutionTimeMs` → DoS risk → Fixed with `Math.min()` enforcement
+
+47 test scenarios in `tests/pluginPermissions.test.ts` verify the sandbox is enforced.
+
 ## Use Cases
 
 - **Audit logging** — Record every LLM call and tool execution
@@ -78,3 +123,4 @@ hookManager.register(new LoggingPlugin());
 - **Custom metrics** — Send metrics to Datadog, Grafana, etc.
 - **Security scanning** — Scan tool inputs/outputs for sensitive data
 - **Approval workflows** — Block certain tools or actions pending human approval
+- **RAG integration** — Built-in `builtin-rag` plugin provides knowledge base search

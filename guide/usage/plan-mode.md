@@ -11,15 +11,17 @@ Plan mode lets you see what Commander will do **before** it does it. Switch to p
 
 ## Usage
 
+> From monorepo source; after build use `commander` instead of `npx tsx packages/core/src/cliEntry.ts`.
+
 ```bash
 # Set plan mode
-npx tsx cli.ts mode plan
+npx tsx packages/core/src/cliEntry.ts mode plan
 
 # Then run any task
-npx tsx cli.ts run "refactor the database layer"
+npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 
 # Or use the --plan flag for one-off plan mode
-npx tsx cli.ts plan "implement search feature"
+npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
 
 ## Plan Output
@@ -29,7 +31,7 @@ When you run a task in plan mode, Commander shows:
 ```
 ┃ → Deliberating task...
 ┃ → Complexity: HIGH (score: 72/100)
-┃ → Topology: HIERARCHICAL
+┃ → Topology: ORCHESTRATOR
 ┃ → Agents: 4 (1 lead + 3 specialists)
 ┃ → Provider: deepseek (fallback: openai → anthropic)
 ┃ → Token budget: 100,000

@@ -1,66 +1,50 @@
 # Token Budget Allocator
 
-Allocates and tracks token budgets across agents and execution phases.
+Allocates token budgets across agents based on topology and task complexity.
 
 ## Types
 
 ```typescript
 interface TokenBudget {
-  total: number;
-  leadAgent: number;
-  specialistAgents: number;
-  evaluation: number;
-  overhead: number;
-  reserved: number;
+  totalBudget: number;
+  perAgentBudget: number;
+  reservedForTools: number;
+  reservedForVerification: number;
 }
 
-interface BudgetConfig {
-  baseBudget: number;
-  maxBudget: number;
-  efficiencyTarget: number;
-  reserveRatio: number;
-  warnThreshold: number;   // Default: 0.8
-  cutoffThreshold: number; // Default: 0.95
+interface AllocationResult {
+  lead: number;
+  specialists: number;
+  evaluation: number;
+  overhead: number;
 }
 ```
 
 ## API
 
 ```typescript
-const allocator = new TokenBudgetAllocator(config?: Partial<BudgetConfig>);
+const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
 
-// Initialize budget
-allocator.initialize(totalBudget: number): void;
-
-// Allocate budget based on mode and complexity
+// Allocate based on topology
 const budget = allocator.allocate(
-  mode: OrchestrationMode,
+  topology: Topology,
   complexity: number,
   agentCount: number
 ): TokenBudget;
 
-// Record usage
-allocator.recordUsage(agentId: string, tokens: number, phase?: string): void;
-
-// Check thresholds
-allocator.isWarningThreshold(): boolean;  // ≥80%
-allocator.isCutoffThreshold(): boolean;    // ≥95%
-
-// Get efficiency analysis
-allocator.getEfficiencyAnalysis(): {
-  overall: number;
-  byPhase: Record<string, number>;
-  trend: 'improving' | 'declining' | 'stable';
-  recommendations: string[];
-};
+// Get allocation breakdown
+const allocation = allocator.getAllocation(
+  topology: OrchestrationTopology,
+  totalBudget: number
+): AllocationResult;
 ```
 
-## Allocation by Mode
+## Allocation by Topology
 
-| Mode | Lead | Specialists | Evaluation | Overhead |
-|------|------|-------------|------------|----------|
-| SEQUENTIAL | 70% | 10% | 15% | 5% |
-| PARALLEL | 25% | 55% | 15% | 5% |
-| HANDOFF | 35% | 45% | 15% | 5% |
-| MAGENTIC | 30% | 40% | 15% | 15% |
-| CONSENSUS | 25% | 30% | 40% | 5% |
+| Topology | Lead | Specialists | Evaluation | Overhead |
+|----------|------|-------------|------------|----------|
+| SINGLE | 95% | 0% | 5% | 0% |
+| CHAIN | 30% | 50% | 15% | 5% |
+| DISPATCH | 15% | 65% | 15% | 5% |
+| ORCHESTRATOR | 35% | 45% | 15% | 5% |
+| REVIEW | 25% | 30% | 40% | 5% |

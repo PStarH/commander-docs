@@ -5,7 +5,8 @@ Watch mode provides real-time streaming of every execution event via Server-Sent
 ## Usage
 
 ```bash
-npx tsx cli.ts watch "investigate this production bug"
+# From monorepo source (or: commander watch "...")
+npx tsx packages/core/src/cliEntry.ts watch "investigate this production bug"
 ```
 
 ## Streamed Events
@@ -44,7 +45,7 @@ Every event in the execution pipeline is streamed:
 
 ### CLI
 ```bash
-npx tsx cli.ts watch "debug" | jq '.type'
+npx tsx packages/core/src/cliEntry.ts watch "debug" | jq '.type'
 ```
 
 ### JavaScript/TypeScript

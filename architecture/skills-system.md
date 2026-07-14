@@ -31,16 +31,16 @@ A skill is a packaged set of instructions, examples, and constraints that teache
 
 ```bash
 # List available skills
-npx tsx cli.ts skill list
+npx tsx packages/core/src/cliEntry.ts skill list
 
 # View a skill's content
-npx tsx cli.ts skill view <skill-name>
+npx tsx packages/core/src/cliEntry.ts skill view <skill-name>
 
 # Create a new skill
-npx tsx cli.ts skill create <skill-name>
+npx tsx packages/core/src/cliEntry.ts skill create <skill-name>
 
 # Pin a skill (always loaded)
-npx tsx cli.ts skill pin <skill-name>
+npx tsx packages/core/src/cliEntry.ts skill pin <skill-name>
 ```
 
 ## Skill Quality

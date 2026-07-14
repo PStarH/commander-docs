@@ -1,80 +1,104 @@
 # API Reference
 
-Commander exposes 7 core components for multi-agent orchestration.
+Commander exposes three integration surfaces. Pick the one that matches how you embed it.
 
-## Components
+## Surfaces
 
-| Component | Size | Purpose |
-|-----------|------|---------|
-| [Task Complexity Analyzer](/api/task-complexity-analyzer) | 14.1KB | Analyzes task complexity and selects orchestration mode |
-| [Adaptive Orchestrator](/api/adaptive-orchestrator) | 16.2KB | Manages agent coordination and task execution |
-| [Token Budget Allocator](/api/token-budget-allocator) | 9.9KB | Allocates and tracks token budgets |
-| [Three-Layer Memory](/api/three-layer-memory) | 9.6KB | Manages working, episodic, and long-term memory |
-| [Reflection Engine](/api/reflection-engine) | 13.2KB | Self-reflection and pattern detection |
-| [Consensus Checker](/api/consensus-checker) | 11.3KB | Multi-model consensus for high-risk decisions |
-| [Inspector Agent](/api/inspector-agent) | 13.6KB | System health monitoring and issue detection |
+| Surface | Package / path | When to use |
+|---------|----------------|-------------|
+| **CLI** | `commander` / `packages/core/src/cliEntry.ts` | Terminal workflows, CI scripts |
+| **TypeScript SDK** | `@commander/sdk` → `CommanderClient` | Embed runtime in a Node app |
+| **HTTP API** | API server `:4000` | Language-agnostic clients, Web Console, Python SDK |
 
-## Complete Workflow Example
+Deep architectural modules (resilience, security, event sourcing) live under [Architecture](/architecture/overview). This section documents the **orchestration building blocks** you will see in SDK traces and advanced customizations.
+
+## TypeScript SDK (primary)
+
+```typescript
+import { CommanderClient, createClient } from '@commander/sdk';
+
+// Explicit
+const client = new CommanderClient({ provider: 'openai' });
+await client.connect();
+const result = await client.run('audit this repo');
+await client.disconnect();
+
+// Or zero-config
+const c = await createClient();
+await c.run('explain the architecture');
+await c.disconnect();
+```
+
+Full guide: [Agent SDK](/guide/sdk).
+
+## HTTP API (server)
+
+```bash
+# Liveness
+curl http://localhost:4000/health
+curl http://localhost:4000/health/detailed
+curl http://localhost:4000/readyz
+curl http://localhost:4000/metrics
+```
+
+Start the stack with Docker (`API :4000`, Web `:3000`) or `pnpm gui` (API `:4000`, Web `:5173`). See [Deployment](/deployment).
+
+## Orchestration components
+
+These modules power deliberation, budgeting, memory, and verification. They are available from `@commander/core` for advanced integrations; most apps only need `CommanderClient.run()`.
+
+| Component | Purpose |
+|-----------|---------|
+| [Task Complexity Analyzer](/api/task-complexity-analyzer) | Scores task complexity and recommends topology |
+| [Adaptive Orchestrator](/api/adaptive-orchestrator) | Coordinates multi-agent plans and execution |
+| [Token Budget Allocator](/api/token-budget-allocator) | Allocates and tracks token budgets |
+| [Three-Layer Memory](/api/three-layer-memory) | Working · episodic · long-term memory |
+| [Reflection Engine](/api/reflection-engine) | Post-run self-evaluation and patterns |
+| [Consensus Checker](/api/consensus-checker) | Multi-model consensus for high-risk decisions |
+| [Inspector Agent](/api/inspector-agent) | Health monitoring and issue detection |
+
+## Minimal advanced workflow
 
 ```typescript
 import {
   TaskComplexityAnalyzer,
   AdaptiveOrchestrator,
   TokenBudgetAllocator,
-  ThreeLayerMemory,
-  ReflectionEngine,
-  ConsensusChecker,
-  InspectorAgent
 } from '@commander/core';
 
-// 1. Analyze task
 const analyzer = new TaskComplexityAnalyzer();
 const complexity = analyzer.analyze({
   id: 'task-1',
   description: 'Build distributed logging system',
-  riskLevel: 'high'
+  riskLevel: 'high',
 });
 
-// 2. Allocate budget
-const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
-const budget = allocator.allocate(complexity.recommendedMode, complexity.score, 3);
-
-// 3. Create plan
-const orchestrator = new AdaptiveOrchestrator();
-orchestrator.registerAgent({
-  id: 'lead', name: 'Lead', role: 'architect', capabilities: []
-});
-const plan = orchestrator.createPlan(
-  [{ id: 'task-1', description: '...', complexity: complexity.score }],
-  complexity.recommendedMode
+const allocator = new TokenBudgetAllocator({ baseBudget: 100_000 });
+const budget = allocator.allocate(
+  complexity.recommendedTopology,
+  complexity.score,
+  3,
 );
 
-// 4. Store in memory
-const memory = new ThreeLayerMemory();
-memory.add('Starting task', 'working', 'task-1', 0.9);
+const orchestrator = new AdaptiveOrchestrator();
+orchestrator.registerAgent({
+  id: 'lead',
+  name: 'Lead',
+  role: 'architect',
+  capabilities: [],
+});
 
-// 5. Consensus for high-risk decisions
-const checker = new ConsensusChecker();
-const checkId = checker.createCheck('Best technology stack?');
-checker.addVote(checkId, 'm1', 'Model A', 'Kafka + ES', 0.9, 'Industry standard');
-checker.addVote(checkId, 'm2', 'Model B', 'Kafka + ES', 0.85, 'Scalable');
-const result = checker.getResult(checkId);
+const plan = orchestrator.createPlan(
+  [{ id: 'task-1', description: '...', complexity: complexity.score }],
+  complexity.recommendedTopology,
+);
 
-// 6. Reflect
-const engine = new ReflectionEngine();
-const sessionId = engine.startSession('task-1');
-engine.addReflection(sessionId, 'post_execution', 'Result?', 'Succeeded');
-engine.completeSession(sessionId, 'success');
-
-// 7. Inspect
-const inspector = new InspectorAgent();
-inspector.updateComponent('orchestrator', 'healthy', 0.9);
-const report = inspector.inspect();
+console.log(complexity.recommendedTopology, budget, plan);
 ```
 
-## Global Accessors
+## Global accessors
 
-Each component has a global singleton accessor:
+Several components expose process-wide singletons (used by the runtime and SDK helpers):
 
 - `getGlobalTaskComplexityAnalyzer()`
 - `getGlobalAdaptiveOrchestrator()`
@@ -83,3 +107,12 @@ Each component has a global singleton accessor:
 - `getGlobalReflectionEngine()`
 - `getGlobalConsensusChecker()`
 - `getGlobalInspectorAgent()`
+
+Prefer `CommanderClient` unless you are extending the runtime itself.
+
+## Related
+
+- [CLI commands](/guide/commands)
+- [Python SDK](/guide/sdk-python)
+- [Providers](/guide/providers)
+- [Production readiness](/architecture/production-readiness)

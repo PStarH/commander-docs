@@ -1,10 +1,11 @@
 # Providers
 
-Commander supports **18 LLM providers**. Set any single environment variable—Commander auto-detects the provider.
+Commander supports **25 LLM providers**. Set any single environment variable—Commander auto-detects the provider.
 
 | Variable | Provider |
 |----------|----------|
 | `OPENAI_API_KEY` | OpenAI / DeepSeek / GLM / MiMo (fallback chain) |
+| `AZURE_OPENAI_API_KEY` | Azure OpenAI |
 | `ANTHROPIC_API_KEY` | Anthropic Claude |
 | `GOOGLE_API_KEY` | Google Gemini |
 | `DEEPSEEK_API_KEY` | DeepSeek (dedicated) |
@@ -19,12 +20,15 @@ Commander supports **18 LLM providers**. Set any single environment variable—C
 | `MISTRAL_API_KEY` | Mistral AI |
 | `CO_API_KEY` | Cohere |
 | `OPENROUTER_API_KEY` | OpenRouter (200+ models) |
-| `OLLAMA_HOST` | Ollama (local) |
-| `VLLM_BASE_URL` | vLLM (local) |
+| `OLLAMA_BASE_URL` / `OLLAMA_API_KEY` | Ollama (local) |
+| `VLLM_BASE_URL` / `VLLM_API_KEY` | vLLM (local) |
 | `AWS_ACCESS_KEY_ID` | AWS Bedrock |
 | `XAI_API_KEY` | xAI (Grok) |
 | `ANYSCALE_API_KEY` | Anyscale |
 | `DEEPINFRA_API_KEY` | DeepInfra |
+| `AGNES_API_KEY` | Agnes |
+| `STEPFUN_API_KEY` | StepFun |
+| `MINIMAX_API_KEY` | MiniMax |
 
 ## Provider Selection
 

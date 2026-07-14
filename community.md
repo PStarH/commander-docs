@@ -1,95 +1,64 @@
-# Community & Roadmap
+# Community
 
-> Target: 2000万 valuation · Timeline: 6 months
+Commander is open source (MIT) and built in public. Here is how to get involved today.
 
-## Phase 1: Launch (Weeks 1–4)
+## Get involved
 
-### GitHub Presence
-- ✅ Benchmark comparison tables with real numbers
-- 🔲 CONTRIBUTING.md with commit conventions, PR template, dev setup
-- 🔲 Issue templates (bug report, feature request, question)
-- 🔲 GitHub stars badge + CI status badge
-- 🔲 Publish to Hacker News with technical blog post
+| Channel | Status | Link |
+|---------|--------|------|
+| **GitHub** | Live | [github.com/PStarH/Commander](https://github.com/PStarH/Commander) — issues, PRs, stars |
+| **Discussions** | Use GitHub Issues | Feature ideas and Q&A via [Issues](https://github.com/PStarH/Commander/issues) |
+| **Docs** | Live | This site + PRs on [commander-docs](https://github.com/PStarH/commander-docs) |
+| **Discord / Twitter** | Planned | Not live yet — follow the repo for announcements |
 
-### Technical Content (1 post / week)
-1. "Building a Multi-Agent Orchestrator: 8 Topologies for AI Workflows"
-2. "How we got 97.7% on PinchBench: Multi-Agent Tool Calling Deep Dive"
-3. "18 LLM Providers, One Interface: Commander's Provider Architecture"
-4. "Production-Ready AI: Circuit Breakers, Dead Letter Queues, and Compensation Registry"
+## Contributing
 
-### Community Hub
-- 🔲 Create Discord server (#general, #help, #showcase, #development, #benchmarks)
-- 🔲 Welcome channel with quick start guide and FAQ
-- 🔲 Discord link in README badge
+We welcome contributions of all sizes — bug fixes, docs, providers, tools, and topologies.
 
-## Phase 2: Growth (Weeks 5–12)
+### Quick start for contributors
 
-### Open Source Growth
-- 🎯 Target: 500 GitHub stars
-- Respond to all issues within 24h
-- Ship 3 community-contributed PRs
-- Good-first-issue labels with detailed reproduction steps
-- "How to Add a Custom Tool to Commander" tutorial
+```bash
+git clone https://github.com/PStarH/Commander.git
+cd Commander
+pnpm install
+# Prefer project scripts when available:
+pnpm test:all   # or: cd packages/core && npx tsx --test tests/*.test.ts
+```
 
-### Performance Marketing
-- Benchmark comparison blog: Commander vs Claude Code vs Codex CLI vs OpenCode
-- Publish on dev.to, Medium, HackerNoon
-- Submit to r/MachineLearning, r/programming, r/typescript
-- 2-minute demo GIF for README
+### Areas that help most
 
-## Phase 3: Commercialization (Weeks 8–24)
+- **New tools** — filesystem, web, code analysis, integrations
+- **LLM providers** — via the provider registration interface
+- **Topologies** — new orchestration patterns with tests
+- **Documentation** — guides, API accuracy, examples
+- **Bug fixes** — issues tagged `good-first-issue`
 
-### Tiers
+### Guidelines
 
-| Tier | Price | Features |
-|------|-------|----------|
-| **Open Source** | Free | Self-hosted, all features |
-| **Cloud Starter** | $49/mo | Managed API, 10K requests/mo, 1 tenant |
-| **Cloud Pro** | $199/mo | 100K requests/mo, 5 tenants, SSO, priority support |
-| **Enterprise** | Custom | Unlimited, dedicated infra, SLA, on-prem option |
+- All tests must pass (`# fail 0`)
+- TypeScript strict mode — no `as any` or `@ts-ignore` in production code
+- Follow existing patterns; add tests for new behavior
+- Keep commits atomic and well-described
+- Docs live in [commander-docs](https://github.com/PStarH/commander-docs) — open PRs against `master`
 
-### Cloud Features
-- Usage dashboard (requests, tokens, cost breakdown per tenant)
-- API key management UI
-- Per-tenant analytics (success rate, latency, tool usage)
-- Audit log (all requests, tool calls, errors)
-- Teams (invite members, role-based access)
+## Roadmap
 
-### Enterprise Features
-- SAML/SSO (Okta, Azure AD, Google Workspace)
-- VPC deployment / air-gapped
-- Custom LLM provider (internal models)
-- SOC 2 compliance documentation
-- Dedicated Slack channel support
+| Area | Status | Details |
+|------|--------|---------|
+| **Event Sourcing** | Shipped (0.2.x) | WAL + hash chain, deterministic replay, snapshot recovery |
+| **Enterprise Security** | Shipped (0.2.x) | 7-layer gateway, DLP, capability tokens, plugin sandboxing |
+| **RAG Knowledge Base** | Shipped (0.2.x) | Optional plugin, HNSW vector search |
+| **Unified Audit Log** | Shipped (0.2.x) | Cross-source aggregation, query/export API |
+| **Petri Net Scheduler** | Shipped (0.2.x) | Formal resource allocation, deadlock detection |
+| **Recovery Bootstrapper** | Shipped (0.2.x) | Zombie run detection, automatic recovery on startup |
+| **npm publish** | In progress | `@commander/core`, `@commander/sdk` public packages |
+| **Cloud Platform** | Planned | Managed API, usage dashboard, API key management |
+| **Enterprise SSO** | Planned | SSO/SAML, VPC deployment, SLA support |
+| **Community spaces** | Planned | Discord, showcase gallery |
+| **Ecosystem** | Planned | More providers, tools, template projects |
 
-## Phase 4: Scale (Months 4–6)
+## Stay updated
 
-### Revenue Targets
-- Month 1: $0 (pre-launch)
-- Month 2: $150 (3 paid users)
-- Month 3: $1,000 (10 paid users)
-- Month 4: $3,500 (25 paid users)
-- Month 5: $8,000 (50 paid users)
-- Month 6: $18,000 (100 paid users)
-
-### Investor Signals
-- 500+ GitHub stars
-- 100+ Discord members
-- $18K MRR with 10% MoM growth
-- 3 enterprise LOIs
-- Published BFCL leaderboard score
-
-### Risk Mitigation
-
-| Risk | Mitigation |
-|------|-----------|
-| Open source cannibalizes paid tiers | Cloud tier offers managed infra + enterprise features OSS can't provide |
-| LLM provider cost unpredictable | Pass-through pricing + caching layer |
-| Competitors catch up | Multi-tenant + enterprise features (moat) |
-| Low community adoption | Heavy investment in documentation + quickstart experience |
-
-## Get Involved
-
-- **GitHub**: [github.com/sampan/Commander](https://github.com/sampan/Commander)
-- **Discord**: Coming soon
-- **Twitter**: Coming soon
+- Star [Commander](https://github.com/PStarH/Commander)
+- Watch [changelog](/guide/changelog) for release notes
+- Open an issue when something in the docs is wrong — we treat that as a first-class bug

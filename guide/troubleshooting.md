@@ -2,109 +2,130 @@
 
 Common issues and their solutions.
 
-## Installation Issues
+> **CLI note:** From a monorepo checkout use  
+> `npx tsx packages/core/src/cliEntry.ts <command>`  
+> After building `@commander/core`, use `commander <command>` instead.
+
+## Installation issues
 
 ### `pnpm install` fails
+
 ```
 Error: Cannot find module '@commander/core'
 ```
-**Solution**: Ensure you're in the project root and have all dependencies:
+
+**Solution:** Run from the monorepo root and install all workspaces:
+
 ```bash
 pnpm install
 pnpm build
 ```
 
 ### TypeScript errors after install
+
 ```
 error TS2307: Cannot find module 'xyz'
 ```
-**Solution**:
+
+**Solution:**
+
 ```bash
 pnpm build
 # or
 npx tsc --noEmit
 ```
 
-## Provider Issues
+## Provider issues
 
 ### "Provider not available"
+
 Commander can't find a valid API key. Check:
+
 ```bash
 # Verify the key is set
 echo $OPENAI_API_KEY
 
 # Run diagnostics
-npx tsx cli.ts doctor
+npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
 ### "Rate limited" errors
+
 You're hitting provider rate limits. Solutions:
+
 - Wait and retry (Commander auto-retries with backoff)
-- Use multiple providers with fallback chain
+- Use multiple providers with a fallback chain
 - Reduce concurrency: `export COMMANDER_MAX_CONCURRENCY=1`
 
 ### "Timeout" errors
+
 The LLM provider took too long to respond.
+
 - Check your network connection
 - Try a faster provider (Groq, Together)
 - Increase timeout: `export COMMANDER_TIMEOUT_MS=120000`
 
-## Execution Issues
+## Execution issues
 
 ### Task hangs or never completes
-```bash
-# Check system status
-npx tsx cli.ts status
 
-# Check for provider issues
-npx tsx cli.ts doctor
+```bash
+npx tsx packages/core/src/cliEntry.ts status
+npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
 ### "Circuit breaker open"
-The circuit breaker has tripped due to repeated failures. Wait 30 seconds for automatic recovery, or:
+
+The circuit breaker tripped due to repeated failures. Wait ~30s for automatic recovery, or:
+
 ```bash
-# Reset circuit breakers
-npx tsx cli.ts doctor --reset
+npx tsx packages/core/src/cliEntry.ts doctor --reset
 ```
 
 ### Agent produces wrong results
-Try a different topology:
+
+Force a stricter topology:
+
 ```bash
-npx tsx cli.ts run "task" --topology debate
-npx tsx cli.ts run "task" --topology ensemble
+# Canonical topologies: single | chain | dispatch | orchestrator | review
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
+npx tsx packages/core/src/cliEntry.ts plan "task"
 ```
 
-## Build Issues
+## Build issues
 
 ### Docker build fails
-```bash
-# Ensure Docker is running
-docker info
 
-# Try building with no cache
+```bash
+docker info
 docker compose build --no-cache
 ```
 
 ### Test failures
-```bash
-# Run a specific test file
-npx tsx --test tests/integration.test.ts
 
-# Check for pre-existing failures
-npx tsx --test tests/*.test.ts --grep "my test"
+```bash
+cd packages/core
+npx tsx --test tests/integration.test.ts
+npx tsx --test tests/*.test.ts
 ```
 
-## Debug Mode
+## Debug mode
 
-Enable verbose logging for detailed diagnostics:
 ```bash
 export COMMANDER_DEBUG=true
-npx tsx cli.ts run "task"
+npx tsx packages/core/src/cliEntry.ts run "task"
 ```
 
-This enables debug output across all 74+ modules, including:
+This enables verbose output across modules, including:
+
 - LLM provider selection and calls
 - Tool execution with full arguments
 - Agent deliberation steps
 - Cache hits and misses
 - Circuit breaker state changes
+
+## Still stuck?
+
+- [FAQ](/guide/faq)
+- [GitHub Issues](https://github.com/PStarH/Commander/issues)
+- [Architecture overview](/architecture/overview)

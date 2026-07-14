@@ -1,6 +1,16 @@
 # Multi-Agent Orchestration
 
-Commander's core differentiator is its ability to orchestrate multiple agents across **8 distinct topologies**.
+Commander's core differentiator is its ability to orchestrate multiple agents across **5 canonical topologies**, aligned with Anthropic's "Building effective agents" ontology. Nine legacy topology names remain as aliases for backward compatibility during a 2-version migration window.
+
+## Canonical Topologies
+
+| Topology | Description | Legacy Alias |
+|----------|-------------|--------------|
+| **SINGLE** | One agent handles the entire task | — |
+| **CHAIN** | Sequential pipeline, each agent builds on previous output | SEQUENTIAL |
+| **DISPATCH** | Independent subtasks run concurrently, results synthesized | PARALLEL |
+| **ORCHESTRATOR** | Lead agent decomposes and delegates to specialists | HIERARCHICAL / HYBRID |
+| **REVIEW** | Generate → critique → refine loop | DEBATE / ENSEMBLE / EVALUATOR-OPT |
 
 ## Topology Selection
 
@@ -9,39 +19,30 @@ The deliberation engine (`deliberation.ts`) classifies every task and selects th
 | Complexity | Dependencies | Selected Topology |
 |------------|-------------|-------------------|
 | Trivial | None | SINGLE |
-| Low | Sequential | SEQUENTIAL |
-| Low | Independent | PARALLEL |
-| Medium | Mixed | HIERARCHICAL |
-| High | Mixed | HYBRID |
-| High-risk | Any | DEBATE |
-| Critical | Any | ENSEMBLE |
-| Iterative | Any | EVALUATOR-OPT |
+| Low | Sequential | CHAIN |
+| Low | Independent | DISPATCH |
+| Medium | Mixed | ORCHESTRATOR |
+| High | Mixed | ORCHESTRATOR |
+| High-risk | Any | REVIEW |
+| Critical | Any | REVIEW |
+| Iterative | Any | REVIEW |
 
 ## Topology Details
 
 ### SINGLE
 One agent handles the entire task. Best for simple, well-scoped requests.
 
-### SEQUENTIAL
-Agents execute in order, each building on the previous output. Best for multi-step transformations.
+### CHAIN
+Agents execute in order, each building on the previous output via artifact references. Best for multi-step transformations.
 
-### PARALLEL
-Independent subtasks run concurrently via sub-agents. Results are synthesized at the end.
+### DISPATCH
+Independent subtasks run concurrently via sub-agents. Results are synthesized at the end. Best for parallelizable work.
 
-### HIERARCHICAL
-A lead agent decomposes the task and delegates subtasks to specialist agents, then synthesizes results.
+### ORCHESTRATOR
+A lead agent decomposes the task and delegates subtasks to specialist agents, then synthesizes results. Adaptive rerouting allows mixed parallel/sequential execution.
 
-### HYBRID
-Mixed topology: some steps run in parallel, others sequentially, with adaptive rerouting.
-
-### DEBATE
-Multiple agents independently solve the same problem, then cross-validate each other's answers.
-
-### ENSEMBLE
-Multiple models vote on the answer, weighted by their confidence and historical accuracy.
-
-### EVALUATOR-OPTIMIZER
-Generate → critique → refine loop. One agent produces output, another critiques, the first refines.
+### REVIEW
+Multiple agents independently produce solutions, then cross-validate and refine. Includes debate (cross-validation), ensemble (weighted voting), and evaluator-optimizer (generate-critique-refine) patterns.
 
 ## Agent Scaling
 
@@ -58,4 +59,5 @@ Agents communicate through:
 
 - **Message bus** (`messageBus.ts`): Pub/sub for inter-agent and system events
 - **Agent handoff** (`agentHandoff.ts`): Direct agent-to-agent handoff with persistent inbox
+- **Artifact system** (`artifactSystem.ts`): Reference-based communication to prevent information loss
 - **Three-layer memory**: Shared working/episodic/long-term memory for context across agents

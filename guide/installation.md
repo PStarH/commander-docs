@@ -6,25 +6,41 @@
 - **pnpm** 8+ (`npm install -g pnpm`)
 - One LLM provider API key (see [Providers](/guide/providers))
 
-## Local Development
+## Local development
 
 ```bash
-git clone https://github.com/sampan/Commander.git
+git clone https://github.com/PStarH/Commander.git
 cd Commander
 pnpm install
 ```
 
-## Docker
-
-Commander includes a 6-stage multi-architecture Docker build:
+### Web Console (dev)
 
 ```bash
-docker compose up -d
-# API: http://localhost:4000
-# Web GUI: http://localhost:3000
+# API :4000 + Web :5173 + open browser
+pnpm gui
 ```
 
-The Docker setup includes Nginx reverse proxy, health checks, persistent volumes, and tini init.
+### CLI from source
+
+```bash
+export OPENAI_API_KEY=sk-...
+npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
+```
+
+After building core (`pnpm --filter @commander/core build`), the `commander` binary is available from the package.
+
+## Docker
+
+```bash
+export COMMANDER_API_KEY="your-secret-key"
+export OPENAI_API_KEY="sk-..."
+docker compose up -d
+# API:      http://localhost:4000
+# Web GUI:  http://localhost:3000
+```
+
+The Docker setup includes multi-stage multi-architecture build, Nginx reverse proxy, health checks, persistent volumes, and tini init.
 
 ## Production (VM / VPS)
 
@@ -40,7 +56,7 @@ cp .env.example .env.production
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
-### Production Overlay
+### Production overlay
 
 The production overlay (`docker-compose.prod.yml`) adds:
 
@@ -59,19 +75,28 @@ Commander's CI pipeline (`.github/workflows/ci.yml`) runs on every push/PR:
 
 | Job | Checks |
 |-----|--------|
-| **quality** | TypeScript compilation, 330+ tests, benchmarks, CLI check, core build |
+| **quality** | TypeScript compilation, 6700+ tests, CLI check, core build |
 | **docker** | `docker compose build` |
 | **web-gui** | Vite production build |
 
-CD auto-deploys to production on main branch. Requires GitHub Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`.
+CD deploys on the main product branch. Requires GitHub Secrets: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_KEY`.
 
-## Verify Installation
+## Verify installation
 
 ```bash
-# Run the test suite (233+ tests, must be all green)
+# Health (when API is running)
+curl http://localhost:4000/health
+
+# Test suite from monorepo root (or packages/core)
 cd packages/core
 npx tsx --test tests/*.test.ts
 
-# Verify zero type errors
+# Typecheck
 npx tsc --noEmit
 ```
+
+## Next
+
+- [Quick Start](/guide/getting-started)
+- [Commands](/guide/commands)
+- [Deployment](/deployment)

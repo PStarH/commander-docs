@@ -2,12 +2,16 @@
 
 Commander offers multiple ways to execute tasks depending on your needs.
 
+> **CLI from source** (monorepo): `npx tsx packages/core/src/cliEntry.ts …`  
+> **After build**: `commander …`  
+> All examples below use the monorepo form.
+
 ## Quick Task
 
 For simple requests where you want an immediate answer:
 
 ```bash
-npx tsx cli.ts "what does this function do?"
+npx tsx packages/core/src/cliEntry.ts "what does this function do?"
 ```
 
 Commander analyzes the task, selects the optimal topology, executes, and returns the result — all in one step.
@@ -17,7 +21,7 @@ Commander analyzes the task, selects the optimal topology, executes, and returns
 For complex multi-step tasks:
 
 ```bash
-npx tsx cli.ts run "implement user authentication with JWT"
+npx tsx packages/core/src/cliEntry.ts run "implement user authentication with JWT"
 ```
 
 The `run` command activates the full pipeline:
@@ -33,7 +37,7 @@ The `run` command activates the full pipeline:
 Preview the execution plan before any changes are made:
 
 ```bash
-npx tsx cli.ts plan "refactor the authentication module"
+npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module"
 ```
 
 Plan mode shows:
@@ -48,7 +52,7 @@ Plan mode shows:
 Execute with real-time streaming events:
 
 ```bash
-npx tsx cli.ts watch "debug the failing test"
+npx tsx packages/core/src/cliEntry.ts watch "debug the failing test"
 ```
 
 Watch mode streams every event via SSE:
@@ -61,7 +65,7 @@ Watch mode streams every event via SSE:
 
 ```bash
 # Process multiple tasks from a file
-npx tsx cli.ts run --file tasks.json
+npx tsx packages/core/src/cliEntry.ts run --file tasks.json
 
 # Format:
 # [{"task": "analyze module A"}, {"task": "test module B"}]
@@ -81,5 +85,5 @@ Set the mode via:
 ```bash
 export COMMANDER_MODE=auto-edit
 # Or at runtime:
-npx tsx cli.ts mode auto-edit
+npx tsx packages/core/src/cliEntry.ts mode auto-edit
 ```
