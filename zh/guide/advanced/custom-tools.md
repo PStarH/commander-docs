@@ -1,10 +1,15 @@
-# Custom Tools
+# 自定义工具
 
-本页说明 Commander 中 **Custom Tools** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/advanced/custom-tools)
 
-## 快速入口
 
-```bash
+
+Extend Commander with your own tools by implementing the `Tool` interface.
+
+## Tool Interface
+
+
+```typescript
 interface Tool {
   name: string;
   description: string;
@@ -14,32 +19,78 @@ interface Tool {
 }
 ```
 
-
-## 说明
-
-### Tool Interface
-
-（对应英文文档章节 **Tool Interface** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Example: Webhook Tool
-
-（对应英文文档章节 **Example: Webhook Tool** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Registering a Tool
-
-（对应英文文档章节 **Registering a Tool** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Tool Features
-
-（对应英文文档章节 **Tool Features** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+## Example: Webhook Tool
 
 
-## 指标口径
+```typescript
+import { Tool, ToolContext } from '@commander/core';
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+interface WebhookArgs {
+  url: string;
+  payload: Record<string, any>;
+}
 
-## 相关
+class WebhookTool implements Tool {
+  name = 'webhook';
+  description = 'Send data to a webhook URL';
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+  parameters = {
+    url: { type: 'string', required: true, description: 'Webhook URL' },
+    payload: { type: 'object', required: true, description: 'JSON payload' },
+  };
+
+  async execute(context: ToolContext, args: WebhookArgs): Promise<ToolResult> {
+    try {
+      const response = await fetch(args.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args.payload),
+      });
+
+      return {
+        success: response.ok,
+        data: await response.text(),
+        error: response.ok ? undefined : `HTTP ${response.status}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+}
+```
+
+## Registering a Tool
+
+
+```typescript
+import { CommanderRuntime } from '@commander/core';
+
+const runtime = new CommanderRuntime();
+runtime.registerTool('webhook', new WebhookTool());
+```
+
+## Tool Features
+
+
+Every registered tool automatically gets:
+
+- **SHA-256 caching** — Results are cached per-tenant, per-argument hash
+- **Compensation registry** — Register a rollback action for mutations
+- **Circuit breaker** — Protects downstream services from overload
+- **Step error boundary** — Isolated failure handling (skip/retry/abort)
+
+## Loading Tools from Files
+
+
+```json
+// .commander.json
+{
+  "customTools": [
+    "./tools/webhook-tool.ts",
+    "./tools/database-tool.ts"
+  ]
+}
+```

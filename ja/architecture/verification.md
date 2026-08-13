@@ -1,34 +1,40 @@
 # 検証パイプライン
 
-すべてのエージェント出力は呼び出し元に返る前に **5 つの品質ゲート** を通ります。「あると良い」チェックではなく、ランタイム再試行ループの一部です。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/verification)
 
-## 構造
+
+
+Every agent output passes through a 5-gate quality verification pipeline before it is returned to the caller. This is not a "nice-to-have" check — it is an integral part of the runtime retry loop.
+
+## Architecture
+
 
 ```
 Agent output
   │
   ├─ Gate 1: Hallucination Detection
-  │   └─ 設定可能な閾値のシグナルベース検出
+  │   └─ Signal-based detector with configurable thresholds
   │
   ├─ Gate 2: Consistency Check
-  │   └─ 内部一貫性・矛盾検出
+  │   └─ Internal consistency and contradiction detection
   │
   ├─ Gate 3: Completeness Verification
-  │   └─ 必須フィールドと手順の存在
+  │   └─ All required fields and steps present
   │
   ├─ Gate 4: Accuracy Validation
-  │   └─ 既知制約に対する事実精度
+  │   └─ Factual accuracy against known constraints
   │
   ├─ Gate 5: Safety Scanning
-  │   └─ インジェクション検出、機微データ漏洩
+  │   └─ Injection detection, sensitive data leakage
   │
-  └─ → Pass: 結果を返す
-     → Fail: 全文脈付きで再試行または報告
+  └─ → Pass: return result
+     → Fail: retry or report with full context
 ```
 
 ## UnifiedVerificationPipeline
 
-`UnifiedVerificationPipeline` が 5 ゲートを調整します。
+
+The `UnifiedVerificationPipeline` orchestrates all 5 gates:
 
 ```typescript
 interface UVPTaskContext {
@@ -41,52 +47,75 @@ interface UVPTaskContext {
 const pipeline = new UnifiedVerificationPipeline();
 const result = await pipeline.verify(output, context, { tenantId });
 
-result.gates.forEach((gate) => {
+result.gates.forEach(gate => {
   if (!gate.passed) {
-    // 失敗時は gate.feedback を文脈に再試行
+    // Gate failure triggers retry with gate.feedback as context
   }
 });
 ```
 
-## ゲート詳細
+## Gate Details
 
-### 1. 幻覚検出
 
-LLM が LLM を裁く循環を避け、**シグナルベース**検出を使います。
+### 1. Hallucination Detection
 
-- ツール出力で裏付けられない主張
-- 数値の不整合
-- 同一応答内の矛盾
-- 証拠と合わない確信度
 
-閾値はテナント単位で調整し、感度と誤検知のバランスを取ります。
+Uses signal-based detection rather than LLM-judging (which is circular). Checks for:
 
-### 2. 一貫性
+- Claims unsupported by tool outputs
+- Numerical inconsistencies
+- Contradictory statements within the same response
+- Confidence estimates that don't match evidence
 
-- セクション間の論理矛盾なし
-- 用語・参照の一貫
-- 実行項目が前提と一致
+Thresholds are configurable per tenant to balance sensitivity vs false positives.
 
-### 3. 完全性
+### 2. Consistency Check
 
-- 要求された出力がすべてある
-- 必須フィールドが埋まっている
-- 「TODO」「FIXME」などのプレースホルダなし
 
-### 4. 正確性
+Verifies that the output is internally consistent:
 
-既知制約・ツール結果・タスク目標に対する事実チェック。
+- No logical contradictions between sections
+- Consistent terminology and references
+- Actionable items match their preconditions
 
-### 5. 安全
+### 3. Completeness Verification
 
-インジェクション、シークレット類似漏洩、危険なコマンド提案などを走査。
 
-## 失敗時
+Ensures the output satisfies the original task requirements:
 
-ゲート失敗は多くの場合 **再試行** に繋がり、フィードバックが次の LLM 呼び出し文脈に入ります。上限超過時は失敗モード付きで呼び出し元に報告します。
+- All requested outputs are present
+- Required fields are populated
+- No placeholder content ("TODO", "FIXME")
 
-## 関連
+### 4. Accuracy Validation
 
-- [エージェントランタイム](/ja/architecture/agent-runtime)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
+
+Checks factual claims against available context:
+
+- Tool outputs support the assertions made
+- No fabricated citations or references
+- Claims match known constraints from the task context
+
+### 5. Safety Scanning
+
+
+The final gate prevents unsafe outputs:
+
+- Prompt injection detection
+- Sensitive data leakage (API keys, credentials)
+- Policy violations
+- Content policy compliance
+
+## Integration with Retry Loop
+
+
+When a gate fails, the runtime retries with the gate's feedback injected into the LLM context:
+
+```
+Gate failure → feedback → retry LLM → re-verify
+              (maxRetries attempts)
+                ↓
+All retries exhausted → Dead Letter Queue + error report
+```
+
+The `llmRetry.ts` module classifies verification failures as retryable, and the `StepErrorBoundary` handles per-step recovery policies.

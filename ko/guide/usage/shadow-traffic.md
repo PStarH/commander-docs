@@ -1,17 +1,24 @@
 # 섀도 트래픽
 
-섀도 트래픽은 프로덕션에 영향을 주지 않고 Commander 두 버전을 **나란히 비교**합니다. 섀도 프록시가 프로덕션 요청을 섀도 엔드포인트로 미러링하고, 상태·지연·비용 드리프트를 보고합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/usage/shadow-traffic)
 
-## 사용 사례
 
-- **배포 전 검증** — 현재 vs 후보 버전 비교
-- **프로바이더 마이그레이션** — OpenAI → Anthropic 등을 위험 없이 시험
-- **설정 변경** — 새 토폴로지·라우팅 규칙 검증
-- **회귀 탐지** — 성능·품질 저하를 조기 포착
+
+Shadow traffic lets you compare two versions of Commander side-by-side without affecting production. A shadow proxy mirrors production requests to a shadow endpoint and reports drift in status, latency, and cost.
+
+## Use Cases
+
+
+- **Pre-deploy validation** — Compare current vs candidate version before rollout
+- **Provider migration** — Test switching from OpenAI to Anthropic without risk
+- **Configuration changes** — Validate new topology or routing rules
+- **Regression detection** — Catch performance or quality degradation early
 
 ## 빠른 시작
 
-### 1. 설정 파일
+
+### 1. Create Configuration
+
 
 ```bash
 cat > .commander/shadow-config.json <<EOF
@@ -26,46 +33,97 @@ cat > .commander/shadow-config.json <<EOF
 EOF
 ```
 
-### 2. 섀도 러너
+### 2. Start Shadow Runner
+
 
 ```bash
 npx tsx packages/core/src/cli/commands/shadow.ts runner --port=9999 &
 ```
 
-### 3. 프로덕션에서 프록시 활성화
+### 3. Enable Proxy in Production
+
 
 ```bash
 export COMMANDER_SHADOW_ENABLED=true
 npx tsx packages/core/src/cli/index.ts serve
 ```
 
-### 4. 드리프트 리포트
+### 4. View Drift Reports
+
 
 ```bash
 npx tsx packages/core/src/cli/commands/shadow.ts drift
 ```
 
-> monorepo 경로와 스크립트 이름은 제품 버전에 따라 다를 수 있습니다. 최신 엔트리는 `packages/core/src/cliEntry.ts` 와 monorepo 문서를 확인하세요.
+## 구성
 
-## 설정 필드 (요지)
 
-| 필드         | 의미                              |
-| ------------ | --------------------------------- |
-| `endpoint`   | 섀도 대상 URL                     |
-| `sampleRate` | 미러 비율 (0–1)                   |
-| `scrubPii`   | PII 스크럽                        |
-| `diffMode`   | status / cost / latency 비교 모드 |
-| `timeoutMs`  | 섀도 요청 타임아웃                |
+| Field | Default | Description |
+|-------|---------|-------------|
+| `enabled` | `false` | Enable shadow proxy |
+| `endpoint` | `http://localhost:9999` | Shadow runner URL |
+| `sampleRate` | `0.1` | Fraction of requests to mirror (0–1) |
+| `scrubPii` | `true` | Strip PII before forwarding |
+| `ignoreFields` | `["Authorization", "x-api-key", ...]` | Headers to always redact |
+| `diffMode` | `status_cost_latency` | What to compare: `status_cost_latency` or `full_output` |
+| `timeoutMs` | `5000` | Shadow request timeout |
 
-## 운영 주의
+## Drift Detection
 
-- 섀도는 **읽기 전용에 가깝게** 설계하세요. mutation이 있는 요청은 샘플링을 낮추거나 제외.
-- 비용이 이중으로 나갈 수 있으니 `sampleRate`를 보수적으로.
-- 드리프트가 크면 후보 버전을 롤백하거나 토폴로지·프로바이더를 재검토.
 
-## 관련
+The drift reporter compares production and shadow responses:
 
-- [배포](/ko/deployment)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [벤치마크](/ko/guide/benchmarks)
-- [문제 해결](/ko/guide/troubleshooting)
+| Metric | Drift Threshold | What it means |
+|--------|----------------|---------------|
+| Status delta | >5% | Different HTTP status codes |
+| Latency delta | >5% | Significant performance difference |
+| Cost delta | >5% | Token cost divergence |
+
+When any threshold is breached, a `DriftEntry` is recorded with full context.
+
+## PII Scrubbing
+
+
+Forced redacted headers (always redacted, not user-overridable):
+- `Authorization`
+- `x-api-key`
+- `x-auth-token`
+- `cookie`
+
+Body PII patterns (delegated to `UniversalSanitizer`):
+- API keys: OpenAI (`sk-`), Anthropic (`sk-ant-`), Stripe (`sk_live_`), Slack (`xox*`), GitHub (`ghp_*`), AWS (`AKIA*`)
+- Secrets: JWT tokens, PEM private keys, SSN, passwords
+- Personal: email addresses, phone numbers
+- XSS: `<script>` tags, event handlers, `javascript:` URLs
+
+## 문제 해결
+
+
+| Issue | Solution |
+|-------|----------|
+| Shadow returns 502 | Runner not started. Check process is alive on port 9999 |
+| No drift reports | `sampleRate` may be too low. Set to `1.0` for testing |
+| PII leaking | Check `.commander/shadow-config.json` `ignoreFields` list |
+| Timeout errors | Increase `timeoutMs` if shadow endpoint is slow |
+
+## Programmatic API
+
+
+```typescript
+import { ShadowProxy, DriftReporter } from '@commander/core';
+
+const proxy = new ShadowProxy({
+  enabled: true,
+  endpoint: 'http://localhost:9999',
+  sampleRate: 0.1,
+});
+
+const reporter = new DriftReporter();
+
+// Wrap your request handler
+app.use(proxy.middleware());
+
+// Check for drift
+const drift = reporter.getDriftEntries();
+const breaches = drift.filter(d => d.driftDetected);
+```

@@ -1,68 +1,123 @@
-# CLI 명령
+# CLI Commands
 
-예시는 빌드 후 `commander` 바이너리를 사용합니다. 소스 체크아웃에서는 다음으로 바꿉니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/commands)
+
+
+
+Examples use the `commander` binary (available after building `@commander/core`).  
+From a source checkout without a build, replace `commander` with:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts
 ```
 
-## 작업 실행
+## Task Execution
 
-| 명령                                | 설명                                       |
-| ----------------------------------- | ------------------------------------------ |
-| `commander <task>`                  | 빠른 작업 분석                             |
-| `commander run <task>`              | 전체 멀티 에이전트 파이프라인              |
-| `commander plan <task>`             | 심의 계획 (토폴로지, 에이전트, 예산)       |
-| `commander run <task> --stream`     | 실시간 SSE 스트림                          |
-| `commander run --file <tasks.json>` | 배치                                       |
-| `commander swarm <task>`            | 재귀 분해 + 병렬                           |
-| `commander drive <task>`            | 자율 단계 실행                             |
-| `commander goal <task>`             | 다중 라운드 수렴                           |
-| `commander company <task>`          | 품질 게이트·메모리 엔터프라이즈 파이프라인 |
 
-## 인터페이스
+| Command | Description |
+|---------|-------------|
+| `commander <task>` | Quick task analysis |
+| `commander run <task>` | Full multi-agent execution pipeline |
+| `commander plan <task>` | Show deliberation plan (topology, agents, budget) |
+| `commander run <task> --stream` | Execute with real-time SSE event stream |
+| `commander run --file <tasks.json>` | Batch process multiple tasks |
+| `commander swarm <task>` | Recursive decomposition with parallel execution |
+| `commander drive <task>` | Autonomous step-by-step execution |
+| `commander goal <task>` | Multi-round convergence loop |
+| `commander company <task>` | Enterprise pipeline with quality gates and memory |
 
-| 명령            | 설명                         |
-| --------------- | ---------------------------- |
-| `commander gui` | Agent War Room (React + API) |
-| `commander tui` | 터미널 대시보드              |
-| `commander web` | 웹 인터페이스                |
+## Interface
 
-## 분석 & 계획
 
-| 명령                         | 설명                          |
-| ---------------------------- | ----------------------------- |
-| `commander review`           | 코드 리뷰 (P0–P3)             |
-| `commander workers [topics]` | 병렬 리서치 워커              |
-| `commander status`           | 시스템·프로바이더·MetaLearner |
-| `commander cost`             | 비용 분석                     |
+| Command | Description |
+|---------|-------------|
+| `commander gui` | Agent War Room dashboard (React + API server) |
+| `commander tui` | Terminal dashboard with live event feed |
+| `commander web` | Start web interface |
 
-## 설정
+## Analysis & Planning
 
-| 명령                    | 설명           |
-| ----------------------- | -------------- |
-| `commander mode [mode]` | 승인 모드      |
-| `commander config`      | 설정 보기/변경 |
-| `commander doctor`      | 진단           |
-| `commander budget`      | 토큰 예산      |
-| `commander --debug`     | 상세 로그      |
 
-## Skills / 세션 / Saga
+| Command | Description |
+|---------|-------------|
+| `commander review [--commit\|--base\|--json]` | Code review with guidelines (P0-P3 findings) |
+| `commander workers [topics]` | Parallel research workers |
+| `commander status` | System status, provider, MetaLearner stats |
+| `commander cost` | Cost analysis and breakdown |
 
-- `skill list|view|create|pin`
-- `history` / `share`
-- `saga` · `checkpoint` · `compensation` · `resume` · `undo`
+## 구성
 
-## 예
+
+| Command | Description |
+|---------|-------------|
+| `commander mode [mode]` | Set approval mode (plan/read-only/auto-edit/full-auto/suggest) |
+| `commander config` | View or change settings |
+| `commander doctor` | Run diagnostics |
+| `commander budget` | Token budget management |
+| `commander --debug` | Enable verbose logging across all 74+ modules |
+
+## Skills
+
+
+| Command | Description |
+|---------|-------------|
+| `commander skill list` | List all available skills |
+| `commander skill view <name>` | View skill content |
+| `commander skill create <name>` | Create a new skill |
+| `commander skill pin <name>` | Pin a skill (always loaded) |
+
+## Session Management
+
+
+| Command | Description |
+|---------|-------------|
+| `commander history` | View session history |
+| `commander history view <id>` | View specific session |
+| `commander history prune` | Remove old sessions |
+| `commander history delete <id>` | Delete a session |
+| `commander share` | Share a session link |
+
+## Saga & Recovery
+
+
+| Command | Description |
+|---------|-------------|
+| `commander saga` | Saga transaction operations |
+| `commander checkpoint` | Checkpoint operations |
+| `commander compensation` | Compensation registry operations |
+| `commander resume` | Resume a paused or interrupted run |
+| `commander undo` | Undo last operation via compensation |
+
+## 고급
+
+
+| Command | Description |
+|---------|-------------|
+| `commander connect` | Connect to providers |
+| `commander plan --topology <name>` | Force specific topology |
+| `commander run --agent-count <n>` | Override agent count |
+| `commander plugin enable <name>` | Enable a plugin (e.g., `rag`) |
+| `commander plugin disable <name>` | Disable a plugin |
+| `commander intelligence` | View intelligence metrics and patterns |
+
+## Approval Modes
+
+
+| Mode | Behavior |
+|------|----------|
+| `plan` | Show plan only, no execution |
+| `read-only` | Read files, no edits |
+| `auto-edit` | Automatic edits without approval |
+| `full-auto` | Fully autonomous operation |
+| `suggest` | Suggest changes, wait for approval |
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
-npx tsx packages/core/src/cliEntry.ts doctor
+# Set mode globally
+export COMMANDER_MODE=auto-edit
+
+# Or at runtime (from monorepo source)
+npx tsx packages/core/src/cliEntry.ts mode plan
+
+# After building @commander/core
+commander mode plan
 ```
-
-## 관련
-
-- [빠른 시작](/ko/guide/getting-started)
-- [토폴로지 의사결정 트리](/ko/guide/usage/topology-decision-tree)
-- [설정](/ko/guide/configuration)

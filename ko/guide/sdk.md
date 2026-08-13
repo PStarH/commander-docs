@@ -1,12 +1,18 @@
 # Agent SDK (TypeScript)
 
-`@commander/sdk`로 앱에 Commander를 임베드합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/sdk)
 
-> **상태:** 패키지는 monorepo `packages/sdk`. **npm 공개는 아직 주 설치 경로가 아닙니다** — clone 후 workspace 빌드.
+
+
+Embed Commander in your own applications with `@commander/sdk`.
+
+> **Status:** Packages live under `packages/sdk` in the monorepo. **npm publication is not the primary install path yet** — clone the monorepo and build the workspace package.
 
 ## 설치
 
-### monorepo (오늘 권장)
+
+### From the monorepo (recommended today)
+
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
@@ -14,16 +20,19 @@ cd Commander && pnpm install
 pnpm --filter @commander/sdk build
 ```
 
-앱에서 `"@commander/sdk": "workspace:*"` 또는 개발 중 `packages/sdk` import.
+Then depend on the workspace package from your app (`"@commander/sdk": "workspace:*"`), or import from `packages/sdk` during development.
 
-### npm 공개 시 (예정)
+### When published to npm (upcoming)
+
 
 ```bash
-# 공개 후에만 — 빠른 시작 경로 아님
+# Not the quick-start path yet — only after public publish:
 pnpm add @commander/sdk
+# peer: @commander/core
 ```
 
 ## 빠른 시작
+
 
 ```typescript
 import { CommanderClient } from "@commander/sdk";
@@ -37,24 +46,27 @@ console.log(result.status, result.summary);
 await client.disconnect();
 ```
 
-제로 설정:
+Zero-config (auto-detect provider from environment):
 
 ```typescript
 import { createClient } from "@commander/sdk";
 
-const client = await createClient();
+const client = await createClient(); // connects for you
 const result = await client.run("audit this repo for security vulnerabilities");
 await client.disconnect();
 ```
 
-## 실행 없이 plan
+## Plan without executing
+
 
 ```typescript
 const plan = await client.plan("refactor the auth module");
+// Deliberation only — topology, agents, budget (no full execution)
 console.log(plan);
 ```
 
-## 실시간 이벤트
+## Real-time events
+
 
 ```typescript
 const unsub = client.onEvent((event) => {
@@ -65,11 +77,12 @@ await client.run("debug the failing test");
 unsub();
 ```
 
-## 설정
+## 구성
+
 
 ```typescript
 const client = new CommanderClient({
-  provider: "anthropic",
+  provider: "anthropic", // optional — auto-detect from env if omitted
   apiKey: process.env.ANTHROPIC_API_KEY,
   model: "claude-sonnet-4-20250514",
   tokenBudget: 64_000,
@@ -78,44 +91,49 @@ const client = new CommanderClient({
 });
 ```
 
-| 옵션 | 기본 | 설명 |
-|------|------|------|
-| `provider` | auto | `openai`, `anthropic`, `ollama`, … |
-| `apiKey` | env | 명시 키 |
-| `model` | provider default | 모델 오버라이드 |
-| `baseUrl` | provider default | OpenAI 호환 base URL |
-| `tokenBudget` | `64000` | 소프트 예산 |
-| `defaultTopology` | `SINGLE` | 폴백 토폴로지 |
-| `persistSessions` | `true` | 세션 요약 유지 |
+| Option            | Default          | Description                                      |
+| ----------------- | ---------------- | ------------------------------------------------ |
+| `provider`        | auto             | Provider id (`openai`, `anthropic`, `ollama`, …) |
+| `apiKey`          | env              | Explicit API key                                 |
+| `model`           | provider default | Model override                                   |
+| `baseUrl`         | provider default | Custom OpenAI-compatible base URL                |
+| `tokenBudget`     | `64000`          | Soft token budget                                |
+| `defaultTopology` | `SINGLE`         | Fallback topology                                |
+| `persistSessions` | `true`           | Keep recent session summaries in memory          |
 
-## 핵심 메서드
+## Core methods
 
-| 메서드 | 설명 |
-|--------|------|
-| `connect` / `disconnect` | 런타임·이벤트 버스 연결 |
-| `run(task)` | 멀티 에이전트 실행 → `ExecutionResult` |
-| `plan(task)` | 심의만 |
-| `onEvent(handler)` | 라이프사이클 이벤트 |
-| `createAgent(config)` | 에이전트 프로필 |
-| `writeMemory` / `queryMemory` | 3계층 메모리 |
 
-## HTTP API (서버 모드)
+| Method                        | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `connect()` / `disconnect()`  | Lifecycle — wires core runtime + event bus     |
+| `run(task)`                   | Full multi-agent execution → `ExecutionResult` |
+| `plan(task)`                  | Deliberation only                              |
+| `onEvent(handler)`            | Subscribe to agent/tool lifecycle events       |
+| `createAgent(config)`         | Register a named agent profile                 |
+| `writeMemory` / `queryMemory` | Three-layer memory helpers                     |
 
-`docker compose` 또는 `pnpm gui` 시 REST + SSE:
+## HTTP API (server mode)
+
+
+When you run the API server (`docker compose` or `pnpm gui`), Commander also exposes REST + SSE:
 
 ```bash
+# Health
 curl http://localhost:4000/health
 
+# Execute (Bearer auth when COMMANDER_API_KEY is set)
 curl -X POST http://localhost:4000/execute \
   -H "Authorization: Bearer $COMMANDER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"task":"analyze this repository","mode":"plan"}'
 ```
 
-[배포](/ko/deployment) · [Python SDK](/ko/guide/sdk-python).
+See [Deployment](/ko/deployment) for server configuration and [Python SDK](/ko/guide/sdk-python) for the HTTP client.
 
 ## 다음
 
-- [Python SDK](/ko/guide/sdk-python)  
-- [명령](/ko/guide/commands)  
-- [API 개요](/ko/api/overview)  
+
+- [Python SDK](/ko/guide/sdk-python) — thin httpx client against the API server
+- [Commands](/ko/guide/commands) — CLI equivalents of SDK calls
+- [Architecture](/ko/architecture/overview) — what runs under `client.run()`

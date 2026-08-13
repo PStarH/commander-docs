@@ -1,23 +1,29 @@
 # Model Context Protocol (MCP)
 
-Commander は [Model Context Protocol](https://modelcontextprotocol.io) をサポートします。外部 MCP サーバーへ接続し、Commander の能力を MCP サービスとして公開できます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/mcp)
 
-## 構造
+
+
+Commander supports the [Model Context Protocol](https://modelcontextprotocol.io) for connecting to external MCP servers and exposing Commander's capabilities as MCP services.
+
+## Architecture
+
 
 ```
 mcp/
-├── client.ts        ← 外部 MCP クライアント
-├── server.ts        ← Commander を公開する MCP サーバー
-├── a2aClient.ts     ← Agent-to-Agent (A2A) クライアント
-├── a2aServer.ts     ← A2A サーバー
-├── a2aCompliance.ts ← A2A 準拠検証
-├── types.ts
-└── index.ts
+├── client.ts        ← MCP client for connecting to external servers
+├── server.ts        ← MCP server for exposing Commander capabilities
+├── a2aClient.ts     ← Agent-to-Agent (A2A) protocol client
+├── a2aServer.ts     ← A2A protocol server
+├── a2aCompliance.ts ← A2A compliance validation
+├── types.ts         ← Shared MCP types
+└── index.ts         ← Public exports
 ```
 
-## MCP クライアント
+## MCP Client
 
-外部ツールで Commander を拡張します。
+
+Connect to any MCP-compatible server to extend Commander with external tools:
 
 ```typescript
 import { MCPClient } from '@commander/core';
@@ -28,38 +34,46 @@ const client = new MCPClient({
 });
 
 await client.connect();
+
+// List available tools from the MCP server
 const tools = await client.listTools();
+
+// Call an MCP tool
 const result = await client.callTool('external-tool', { arg: 'value' });
 ```
 
-## MCP サーバー
+## MCP Server
 
-他の AI エージェント向けにツールを公開します。
+
+Expose Commander's capabilities as an MCP server for other AI agents:
 
 ```typescript
 import { MCPServer } from '@commander/core';
 
 const server = new MCPServer({
   port: 8080,
-  tools: ['web_search', 'file_read', 'git'],
+  tools: ['web_search', 'file_read', 'git'], // which tools to expose
   auth: { apiKey: 'sk-...' },
 });
 
 await server.start();
 ```
 
-## Agent-to-Agent (A2A)
+## Agent-to-Agent (A2A) Protocol
 
-システム横断の直接委譲:
+
+Commander implements the A2A protocol for direct agent-to-agent communication across different systems:
 
 ```typescript
 import { A2AClient, A2AServer } from '@commander/core';
 
+// Server: expose an agent for remote delegation
 const a2aServer = new A2AServer({
   agent: myAgent,
   capabilities: ['task_delegation', 'status_reporting'],
 });
 
+// Client: delegate tasks to remote agents
 const a2aClient = new A2AClient({
   remoteUrl: 'http://other-agent:8081/a2a',
 });
@@ -71,14 +85,24 @@ const result = await a2aClient.delegateTask({
 
 ## MCP Tool Adapter
 
-MCP ツールをネイティブ Commander ツールとしてマウントし、トポロジ・品質ゲートと同じパイプラインに乗せます。
 
-> パッケージは monorepo `packages/core`。導入は clone + `pnpm install`。  
-> CLI: `npx tsx packages/core/src/cliEntry.ts`
+Mount MCP server tools as native Commander tools:
 
-## 関連
+```typescript
+import { MCPToolAdapter } from '@commander/core';
 
-- [ツール](/ja/architecture/tools)  
-- [エージェント・チーム](/ja/guide/advanced/agent-teams)  
-- [カスタムツール](/ja/guide/advanced/custom-tools)  
-- [セキュリティ](/ja/guide/security)  
+const adapter = new MCPToolAdapter({
+  serverUrl: 'http://localhost:8080/mcp',
+  toolName: 'external-api',
+});
+
+runtime.registerTool('external-api', adapter);
+```
+
+## Use Cases
+
+
+- **Extend toolset** — Connect to databases, APIs, or internal services via MCP
+- **Cross-platform A2A** — Commander agents collaborating with other AI agent systems
+- **Plugin ecosystem** — Third-party MCP servers providing specialized capabilities
+- **Legacy integration** — Wrap existing tools and services as MCP endpoints

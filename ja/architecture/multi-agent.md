@@ -1,48 +1,77 @@
 # マルチエージェント編成
 
-Commander の核心は **5 つの正規トポロジ** で複数エージェントを編成する能力です。Anthropic の “Building effective agents” オントロジーに揃えます。レガシー名 9 つは 2 バージョンの移行ウィンドウ中エイリアスとして残ります。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/multi-agent)
 
-## 正規トポロジ
 
-| トポロジ         | 説明                             | レガシー別名                      |
-| ---------------- | -------------------------------- | --------------------------------- |
-| **SINGLE**       | 1 エージェントが全体             | —                                 |
-| **CHAIN**        | 順次パイプライン                 | SEQUENTIAL                        |
-| **DISPATCH**     | 独立サブタスクを同時実行して合成 | PARALLEL                          |
-| **ORCHESTRATOR** | リードが分解・委譲して合成       | HIERARCHICAL / HYBRID             |
-| **REVIEW**       | 生成 → 批評 → 洗練               | DEBATE / ENSEMBLE / EVALUATOR-OPT |
 
-## トポロジ選択
+Commander's core differentiator is its ability to orchestrate multiple agents across **5 canonical topologies**, aligned with Anthropic's "Building effective agents" ontology. Nine legacy topology names remain as aliases for backward compatibility during a 2-version migration window.
 
-審議エンジン（`deliberation.ts`）がタスクを分類し最適トポロジを選びます。
+## Canonical Topologies
 
-| 複雑度                           | 依存 | 選択         |
-| -------------------------------- | ---- | ------------ |
-| Trivial                          | なし | SINGLE       |
-| Low                              | 順次 | CHAIN        |
-| Low                              | 独立 | DISPATCH     |
-| Medium                           | 混合 | ORCHESTRATOR |
-| High                             | 混合 | ORCHESTRATOR |
-| High-risk / Critical / Iterative | 任意 | REVIEW       |
 
-## 詳細
+| Topology | Description | Legacy Alias |
+|----------|-------------|--------------|
+| **SINGLE** | One agent handles the entire task | — |
+| **CHAIN** | Sequential pipeline, each agent builds on previous output | SEQUENTIAL |
+| **DISPATCH** | Independent subtasks run concurrently, results synthesized | PARALLEL |
+| **ORCHESTRATOR** | Lead agent decomposes and delegates to specialists | HIERARCHICAL / HYBRID |
+| **REVIEW** | Generate → critique → refine loop | DEBATE / ENSEMBLE / EVALUATOR-OPT |
 
-- **SINGLE** — 単純で範囲が明確な依頼
-- **CHAIN** — 多段変換、artifact 参照で積み上げ
-- **DISPATCH** — 並列可能な独立サブタスク
-- **ORCHESTRATOR** — リードが専門家に委譲し合成、適応リルーティング
-- **REVIEW** — 独立解を交差検証・洗練
+## Topology Selection
 
-## スケール
 
-`effortScaler.ts`：単純 1 · 中程度 2–5 · 複雑 5–10 · リサーチ 10–20。
+The deliberation engine (`deliberation.ts`) classifies every task and selects the optimal topology:
 
-## 通信
+| Complexity | Dependencies | Selected Topology |
+|------------|-------------|-------------------|
+| Trivial | None | SINGLE |
+| Low | Sequential | CHAIN |
+| Low | Independent | DISPATCH |
+| Medium | Mixed | ORCHESTRATOR |
+| High | Mixed | ORCHESTRATOR |
+| High-risk | Any | REVIEW |
+| Critical | Any | REVIEW |
+| Iterative | Any | REVIEW |
 
-Message bus · Agent handoff（永続 inbox）· Artifact system · Three-layer memory。
+## Topology Details
 
-## 関連
 
-- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)
-- [エージェントランタイム](/ja/architecture/agent-runtime)
-- [コア呼び出しチェーン](/ja/architecture/core-call-chain)
+### SINGLE
+
+One agent handles the entire task. Best for simple, well-scoped requests.
+
+### CHAIN
+
+Agents execute in order, each building on the previous output via artifact references. Best for multi-step transformations.
+
+### DISPATCH
+
+Independent subtasks run concurrently via sub-agents. Results are synthesized at the end. Best for parallelizable work.
+
+### ORCHESTRATOR
+
+A lead agent decomposes the task and delegates subtasks to specialist agents, then synthesizes results. Adaptive rerouting allows mixed parallel/sequential execution.
+
+### REVIEW
+
+Multiple agents independently produce solutions, then cross-validate and refine. Includes debate (cross-validation), ensemble (weighted voting), and evaluator-optimizer (generate-critique-refine) patterns.
+
+## Agent Scaling
+
+
+The `effortScaler.ts` module scales the number of agents dynamically:
+
+- **Simple tasks**: 1 agent
+- **Moderate tasks**: 2–5 agents
+- **Complex tasks**: 5–10 agents
+- **Research tasks**: 10–20 agents
+
+## Agent Communication
+
+
+Agents communicate through:
+
+- **Message bus** (`messageBus.ts`): Pub/sub for inter-agent and system events
+- **Agent handoff** (`agentHandoff.ts`): Direct agent-to-agent handoff with persistent inbox
+- **Artifact system** (`artifactSystem.ts`): Reference-based communication to prevent information loss
+- **Three-layer memory**: Shared working/episodic/long-term memory for context across agents

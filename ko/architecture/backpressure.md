@@ -1,30 +1,37 @@
-# 백프레셔 컨트롤러
+# Backpressure Controller
 
-백프레셔 컨트롤러는 Commander 런타임의 **통합 입장 제어(admission control)** 입니다. 수요가 용량을 넘을 때 과부하를 막으며, **Token Bucket → Ring Buffer → Circuit Breaker** 3단계 파이프라인을 씁니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/backpressure)
 
-## 구조
+
+
+The backpressure controller implements **unified admission control** for the Commander runtime, preventing overload when demand exceeds capacity. It uses a three-stage pipeline: Token Bucket → Ring Buffer → Circuit Breaker.
+
+## Architecture
+
 
 ```
 Producer → [Token Bucket] → [Ring Buffer] → [Circuit Breaker] → Consumer
-               rate-limit       absorb bursts     protect when overwhelmed
+              rate-limit       absorb bursts     protect when overwhelmed
 ```
 
-| 단계                | 역할                          | 패턴            |
-| ------------------- | ----------------------------- | --------------- |
-| **Token Bucket**    | 초당 토큰으로 입장 속도 제한  | Leaky bucket    |
-| **Ring Buffer**     | 버스트 흡수 (고정 크기, O(1)) | LMAX Disruptor  |
-| **Circuit Breaker** | 소비자 과부하 시 보호         | Hystrix 3-state |
+| Stage | Purpose | Pattern |
+|-------|---------|---------|
+| **Token Bucket** | Rate-limits admission (tokens per second) | Leaky bucket |
+| **Ring Buffer** | Absorbs burst traffic (fixed-size, O(1) insert/evict) | LMAX Disruptor |
+| **Circuit Breaker** | Protects consumer when overwhelmed | Hystrix 3-state |
 
-## 동작
+## How It Works
 
-1. **Token Bucket** — 요청이 토큰을 소비. 버킷이 비면 ring buffer로 spill.
-2. **Ring Buffer** — 고정 크기로 버스트 흡수. 가득 차면 가장 오래된 항목 제거(spill 집계).
-3. **Circuit Breaker** — spill 비율이 임계값을 넘으면 open, half-open까지 요청 drop.
 
-## 설정
+1. **Token Bucket** — Requests consume a token. When the bucket is empty, requests spill to the ring buffer.
+2. **Ring Buffer** — Fixed-size buffer absorbs bursts. When full, oldest entry is evicted (counted as spilled).
+3. **Circuit Breaker** — When spill rate exceeds threshold, the breaker opens and requests are dropped until half-open.
+
+## 구성
+
 
 ```typescript
-import { BackpressureController } from "@commander/core";
+import { BackpressureController } from '@commander/core';
 
 const controller = new BackpressureController({
   tokenBucket: {
@@ -35,54 +42,53 @@ const controller = new BackpressureController({
     capacity: 200,
   },
   circuitBreaker: {
-    failureThreshold: 0.5,
-    recoveryTimeoutMs: 30000,
-    halfOpenMaxRequests: 10,
+    failureThreshold: 0.5,    // 50% failure rate opens breaker
+    recoveryTimeoutMs: 30000, // Wait 30s before half-open
+    halfOpenMaxRequests: 10,  // Probe requests in half-open
   },
 });
 ```
 
-> 패키지는 monorepo `packages/core`에서 가져옵니다. npm 공개가 주 경로가 되기 전까지 workspace를 쓰세요.
+## 사용법
 
-## 사용
 
 ```typescript
+// Check if a request should be admitted
 const admission = controller.tryAdmit();
 
 if (admission.allowed) {
+  // Process the request
   const result = await processRequest(request);
   controller.recordSuccess();
 } else {
+  // Request rejected — return 429 or queue
   return { status: 429, reason: admission.reason };
 }
 ```
 
-## Lock-free
+## Lock-Free Design
 
-CAS(Compare-And-Swap) 기반 원자 카운터로 동시 읽기가 쓰기를 막지 않습니다 (NFR-PERF-05).
 
-## 메트릭
+The controller uses lock-free CAS (Compare-And-Swap) via atomic counter operations. Concurrent reads never block writes, satisfying constraint NFR-PERF-05.
 
-| 메트릭                                 | 설명                            |
-| -------------------------------------- | ------------------------------- |
-| `backpressure_tokens_available`        | 버킷 잔여 토큰                  |
-| `backpressure_ring_buffer_occupancy`   | 링 버퍼 점유율                  |
-| `backpressure_circuit_breaker_state`   | `CLOSED` / `OPEN` / `HALF_OPEN` |
-| `backpressure_requests_admitted_total` | 허용 요청                       |
-| `backpressure_requests_rejected_total` | 거절 요청                       |
-| `backpressure_requests_spilled_total`  | spill 수                        |
+## Metrics
 
-## 튜닝
 
-| 증상            | 조정                                     |
-| --------------- | ---------------------------------------- |
-| 429가 너무 많음 | `maxTokens` / `refillRatePerSecond` 증가 |
-| 메모리 압박     | ring `capacity` 감소                     |
-| 연쇄 장애       | `failureThreshold` 낮춰 조기 open        |
-| 회복이 느림     | `recoveryTimeoutMs` 증가                 |
+| Metric | Description |
+|--------|-------------|
+| `backpressure_tokens_available` | Current tokens in bucket |
+| `backpressure_ring_buffer_occupancy` | Ring buffer fill ratio |
+| `backpressure_circuit_breaker_state` | `CLOSED`, `OPEN`, or `HALF_OPEN` |
+| `backpressure_requests_admitted_total` | Total admitted requests |
+| `backpressure_requests_rejected_total` | Total rejected requests |
+| `backpressure_requests_spilled_total` | Total spilled from ring buffer |
 
-## 관련
+## When to Tune
 
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [에이전트 런타임](/ko/architecture/agent-runtime)
-- [문제 해결](/ko/guide/troubleshooting)
+
+| Symptom | Adjustment |
+|---------|------------|
+| Too many 429 errors | Increase `maxTokens` or `refillRatePerSecond` |
+| Memory pressure | Decrease ring buffer `capacity` |
+| Cascading failures | Lower `failureThreshold` to open breaker earlier |
+| Slow recovery | Increase `recoveryTimeoutMs` |

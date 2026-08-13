@@ -1,10 +1,15 @@
-# Reflection Engine
+# 反思引擎
 
-本页说明 Commander 中 **Reflection Engine** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/reflection-engine)
 
-## 快速入口
 
-```bash
+
+Post-execution self-reflection and pattern detection for continuous improvement.
+
+## Types
+
+
+```typescript
 type ReflectionType = 'post_execution' | 'pre_planning' | 'error_analysis' | 'pattern_detection';
 
 interface Reflection {
@@ -17,26 +22,39 @@ interface Reflection {
   actionable: boolean;
   insights: string[];
   recommendations: string[];
+  relatedOutcome?: 'success' | 'partial' | 'failure';
+}
+
+interface ReflectionStats {
+  totalSessions: number;
+  averageQuality: number;
+  patternCount: number;
+  topPatterns: ReflectionPattern[];
+  improvementTrend: 'improving' | 'declining' | 'stable';
+}
 ```
 
-
-## 说明
-
-### Types
-
-（对应英文文档章节 **Types** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### API
-
-（对应英文文档章节 **API** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+## API
 
 
-## 指标口径
+```typescript
+const engine = new ReflectionEngine();
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+// Start/complete session
+const sessionId = engine.startSession(taskId: string): string;
+engine.completeSession(sessionId: string, outcome?: 'success' | 'partial' | 'failure'): void;
 
-## 相关
+// Add reflection
+const reflection = engine.addReflection(
+  sessionId: string,
+  context: string,
+  question: string,
+  answer?: string
+): Reflection;
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+// Get recommendations
+engine.getRecommendations(reflectionId?: string): string[];
+
+// Generate report
+engine.generateReport(sessionId: string): string;
+```

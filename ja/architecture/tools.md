@@ -1,76 +1,117 @@
-# ツール (Tools)
+# ツール
 
-Commander はコードベースにさらに多くのクラスがあっても、LLM には既定で **18 の組み込みツール** を公開します。キャッシュ・エラー処理・ロールバックを前提にした本番向け設計です。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/tools)
 
-## ファイルシステム
 
-| Tool | 内部名 | 用途 |
-|------|--------|------|
-| `read` | `file_read` | ファイル読み（行/オフセット） |
-| `write` | `file_write` | 作成・上書き |
-| `edit` | `file_edit` | 完全一致置換 |
-| `glob` / `file_search` | `file_search` | パターン検索 |
-| `grep` / `file_list` | `file_list` | 内容検索・一覧 |
 
-## コードインテリジェンス
+Commander ships with **18 built-in tools** (exposed to the LLM by default, out of 48 tool classes available in the codebase) across 8 categories, each designed for production use with caching, error handling, and rollback support.
 
-| Tool | 用途 |
-|------|------|
-| `ast_grep_search` | AST 検索 |
-| `patches` | 構造化パッチ |
-| `refine` / `fix` | AI 洗練・修正 |
-| `lsp_*` | 診断・シンボル・参照・rename |
+## Filesystem Operations
 
-## Web & リサーチ
 
-| Tool | 用途 |
-|------|------|
-| `websearch` / `webfetch` | 検索・URL fetch |
-| `browser_*` | ブラウザ描画 |
-| `context7_*` | ライブラリ docs |
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `read` | `file_read` | File reading with line/offset support |
+| `write` | `file_write` | File creation and overwrite |
+| `edit` | `file_edit` | Exact string replacement |
+| `glob` / `file_search` | `file_search` | Pattern-based file discovery |
+| `grep` / `file_list` | `file_list` | Content search and directory listing |
 
-## コード実行
+## Code Intelligence
 
-| Tool | 用途 |
-|------|------|
-| `bash` / `shell_execute` | サンドボックスシェル |
-| `python` / `execute_script` | 隔離実行 |
 
-## メモリ & 永続化
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `ast_grep_search` | `code_search` | AST-aware code pattern search |
+| `patches` | `apply_patch` | Apply structured patches to files |
+| `refine` | `refine_code` | AI-powered code refinement |
+| `fix` | `fix_code` | Automatic code fix suggestions |
+| `lsp_diagnostics` | — | Language server diagnostics |
+| `lsp_symbols` | — | Document and workspace symbols |
+| `lsp_find_references` | — | Reference search across workspace |
+| `lsp_rename` | — | Safe symbol renaming |
 
-| Tool | 用途 |
-|------|------|
-| `memory_store` / `memory_recall` / `memory_list` | 永続メモリ |
-| `knowledge_search` | RAG 検索（builtin-rag） |
+## Web & Research
 
-## VCS · メディア
 
-| Tool | 用途 |
-|------|------|
-| `git` | status, diff, log, commit |
-| `look_at` / `vision_analyze` | 画像解析 |
-| `pdf_extract` / `screenshot` | PDF・画面 |
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `websearch` | `web_search` | Real-time web search |
+| `webfetch` | `web_fetch` | URL content fetching |
+| `browser_search` | `browser_search` | Browser-based web search |
+| `browser_fetch` | `browser_fetch` | Browser-based page rendering |
+| `context7_query_docs` | — | Library documentation queries |
+| `context7_resolve_library_id` | — | Library ID resolution |
 
-## オーケストレーション
+## Code Execution
 
-| Tool | 用途 |
-|------|------|
-| `task` / `agent` | サブエージェント委譲 |
-| `a2a_delegate` | A2A 委譲 |
-| `skill` / `meta` / `verify` | スキル・メタ・検証 |
-| `todowrite` / `question` | タスク追跡・質問 |
-| `mcp` / `saga` / `checkpoint` | MCP・サガ・チェックポイント |
 
-## 本番機能
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `bash` / `shell_execute` | `shell_execute` | Shell execution with sandbox |
+| `python` | `python_execute` | Isolated Python execution |
+| `execute_script` | `execute_script` | Run scripts from files |
 
-- **SHA-256 結果キャッシュ**（テナント隔離）  
-- **Compensation registry**  
-- **Circuit breaker**  
-- **Step error boundary**  
-- **Tool call repair**  
-- **DLP スキャン**（入力 6 パターン）  
+## Memory & Persistence
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `memory_store` | `memory_store` | Store data in persistent memory |
+| `memory_recall` | `memory_recall` | Recall stored memories by query |
+| `memory_list` | `memory_list` | List all stored memories |
+| `knowledge_search` | `knowledge_search` | RAG knowledge base search (builtin-rag plugin) |
+
+## Version Control
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `git` | `git` | Git operations (status, diff, log, commit) |
+
+## Media & Analysis
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `look_at` / `vision_analyze` | `vision_analyze` | Image/vision analysis |
+| `pdf_extract` | `pdf_extract` | PDF text extraction |
+| `screenshot` | `screenshot_capture` | Screen capture |
+| `lazyweb_*` | — | Screenshot similarity search |
+
+## Orchestration
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `task` / `agent` | `agent` | Sub-agent delegation (recursive) |
+| `a2a_delegate` | `a2a_delegate` | Agent-to-Agent (A2A) delegation |
+| `skill` | `skill_view` | Domain expertise loading |
+| `meta` | `meta_tool` | Meta-tool for multi-step workflows |
+| `verify` | `verify_answer` | Answer format and quality verification |
+| `todowrite` | — | Multi-step task tracking |
+| `question` | — | User clarification |
+| `mcp` | `mcp_tool_adapter` | MCP server tool integration |
+| `saga` | `saga_tool` | Saga transaction operations |
+| `checkpoint` | `checkpoint_tool` | Checkpoint management |
+
+## Production Features
+
+
+Every tool comes with:
+
+- **SHA-256 result caching** — per-tenant key isolation
+- **Compensation registry** — rollback failed mutation tools
+- **Circuit breaker** — protect downstream services
+- **Step error boundary** — skip/retry/abort per tool
+- **Tool call repair** — automatically fix malformed tool calls
+- **Tool output management** — structured output parsing and validation
+- **DLP scanning** — tool inputs scanned for 6 sensitive data patterns (API Key, private key, AWS Key, GitHub Token, JWT, password)
 
 ## カスタムツール
+
+
+Implement the `Tool` interface and register it:
 
 ```typescript
 import { Tool, ToolContext } from '@commander/core';
@@ -80,19 +121,9 @@ class MyCustomTool implements Tool {
   description = 'Does something useful';
 
   async execute(context: ToolContext, args: any) {
-    return { success: true, data: {} };
+    return { success: true, data: ... };
   }
 }
 
 runtime.registerTool('my-tool', new MyCustomTool());
 ```
-
-> monorepo workspace が主経路。  
-> CLI: `npx tsx packages/core/src/cliEntry.ts`
-
-## 関連
-
-- [エージェントランタイム](/ja/architecture/agent-runtime)  
-- [カスタムツール](/ja/guide/advanced/custom-tools)  
-- [MCP](/ja/architecture/mcp)  
-- [セキュリティ](/ja/guide/security)  

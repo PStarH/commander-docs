@@ -1,25 +1,31 @@
 # キャッシュ
 
-Commander は LLM 呼び出しを減らし、応答を速くし、重複計算を防ぐために **多層キャッシュ** を持ちます。すべてのキャッシュは **テナント単位で隔離** されます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/caching)
 
-## キャッシュ層
+
+
+Commander implements a multi-level caching layer to reduce LLM calls, improve response times, and prevent redundant computation. Each cache is per-tenant isolated.
+
+## Cache Layers
+
 
 ```
 Tool Call
   │
-  ├─ SingleFlightRequestCache  ── 同一の同時リクエストを重複排除
-  │   (最初だけ実行、他は結果待ち)
+  ├─ SingleFlightRequestCache  ── Deduplicates concurrent identical requests
+  │   (First request executes, subsequent wait for result)
   │
-  ├─ ToolResultCache           ── SHA-256 完全一致
-  │   (決定的ツール: ファイル読み、コード検索など)
+  ├─ ToolResultCache           ── SHA-256 exact-match cache
+  │   (Deterministic tools: read file, search code, etc.)
   │
-  └─ SemanticCache             ── 意味類似キャッシュ
-      (意味が近い非決定的 LLM 呼び出し)
+  └─ SemanticCache             ── Similarity-based semantic cache
+      (Non-deterministic LLM calls with similar meaning)
 ```
 
 ## ToolResultCache
 
-キーは `(tenantId + tool + args)` の SHA-256 です。
+
+An exact-match cache keyed by SHA-256 hash of `(tenantId + tool + args)`:
 
 ```typescript
 const cache = new ToolResultCache({ basePath: '/data/cache' });
@@ -33,56 +39,57 @@ const result = await executeTool(toolName, args);
 await cache.set(key, result);
 ```
 
-- 決定的ツール（読み取り、検索、grep）向け  
-- テナントキー隔離でクロステナント漏洩を防止  
-- TTL 設定可  
-- クォータ超過時は LRU 追い出し  
+- Perfect for deterministic tools: file reads, code search, grep operations
+- Per-tenant key isolation prevents cross-tenant data leaks
+- Cache entries have configurable TTLs
+- LRU eviction when storage exceeds quota
 
 ## SemanticCache
 
-非決定的処理（LLM）には埋め込み類似度を使います。
+
+For non-deterministic operations (LLM calls), Commander uses embedding-based similarity:
 
 ```typescript
 const semanticCache = new SemanticCache({ similarityThreshold: 0.95 });
 
+// Before LLM call
 const similar = await semanticCache.find(input, tenantId);
 if (similar) return similar.result;
 
+// After LLM call
 await semanticCache.store(input, result, tenantId);
 ```
 
-- コサイン類似度  
-- 閾値↑ = 誤ヒット↓ / ヒット↓ · 閾値↓ = ヒット↑  
-- TTL + LRU  
+- Embedding vectors are compared using cosine similarity
+- Configurable threshold: higher = fewer false positives, lower = more cache hits
+- Eviction policy: TTL + LRU combination
 
 ## SingleFlightRequestCache
 
-同一キーの **同時重複実行**（thundering herd）を防ぎます。
+
+Prevents duplicate concurrent execution of identical requests (the "thundering herd" problem):
 
 ```typescript
 const singleFlight = new SingleFlightRequestCache();
 
+// Three concurrent calls with the same key:
 const [a, b, c] = await Promise.all([
   singleFlight.execute('key-1', () => expensiveOperation()),
   singleFlight.execute('key-1', () => expensiveOperation()),
   singleFlight.execute('key-1', () => expensiveOperation()),
 ]);
-// expensiveOperation は 1 回だけ
+
+// Only ONE expensiveOperation runs, all three get the same result
 ```
 
-複数エージェントが同時に同じツール/LLM を叩くときに特に有効です。
+This is particularly valuable when multiple agents or runs start simultaneously and request the same tool execution or LLM call.
 
-## 統合順
+## Integration
 
-1. **SingleFlight** — 進行中の重複排除  
-2. **ToolResultCache** — 完全一致  
-3. **SemanticCache** — 類似意味  
-4. すべてミスのときだけ実実行  
 
-パッケージは monorepo `packages/core` 前提。導入は clone + `pnpm install` が主経路です。
+The caches are layered in the tool execution pipeline:
 
-## 関連
-
-- [マルチテナント](/ja/architecture/multi-tenancy)  
-- [エージェントランタイム](/ja/architecture/agent-runtime)  
-- [ツール](/ja/architecture/tools)  
+1. **SingleFlight** deduplicates in-flight requests
+2. **ToolResultCache** serves cached exact-match results
+3. **SemanticCache** serves cached similar-meaning results
+4. Only after all caches miss does the actual LLM call or tool execution proceed

@@ -1,78 +1,117 @@
-# 도구 (Tools)
+# 도구
 
-Commander는 코드베이스에 더 많은 클래스가 있어도, LLM에 기본적으로 **18개 내장 도구**를 노출합니다. 캐시·에러 처리·롤백을 염두에 둔 프로덕션용 설계입니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/tools)
 
-## 파일시스템
 
-| Tool | 내부 이름 | 용도 |
-|------|-----------|------|
-| `read` | `file_read` | 파일 읽기 (라인/오프셋) |
-| `write` | `file_write` | 생성·덮어쓰기 |
-| `edit` | `file_edit` | 정확 문자열 치환 |
-| `glob` / `file_search` | `file_search` | 패턴 검색 |
-| `grep` / `file_list` | `file_list` | 내용 검색·디렉터리 목록 |
 
-## 코드 인텔리전스
+Commander ships with **18 built-in tools** (exposed to the LLM by default, out of 48 tool classes available in the codebase) across 8 categories, each designed for production use with caching, error handling, and rollback support.
 
-| Tool | 용도 |
-|------|------|
-| `ast_grep_search` | AST 인식 검색 |
-| `patches` | 구조화 패치 적용 |
-| `refine` / `fix` | AI 리파인·수정 |
-| `lsp_*` | 진단, 심볼, 참조, rename |
+## Filesystem Operations
 
-## 웹 & 리서치
 
-| Tool | 용도 |
-|------|------|
-| `websearch` / `webfetch` | 검색·URL fetch |
-| `browser_*` | 브라우저 렌더 |
-| `context7_*` | 라이브러리 문서 |
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `read` | `file_read` | File reading with line/offset support |
+| `write` | `file_write` | File creation and overwrite |
+| `edit` | `file_edit` | Exact string replacement |
+| `glob` / `file_search` | `file_search` | Pattern-based file discovery |
+| `grep` / `file_list` | `file_list` | Content search and directory listing |
 
-## 코드 실행
+## Code Intelligence
 
-| Tool | 용도 |
-|------|------|
-| `bash` / `shell_execute` | 샌드박스 셸 |
-| `python` / `execute_script` | 격리 실행 |
 
-## 메모리 & 지속성
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `ast_grep_search` | `code_search` | AST-aware code pattern search |
+| `patches` | `apply_patch` | Apply structured patches to files |
+| `refine` | `refine_code` | AI-powered code refinement |
+| `fix` | `fix_code` | Automatic code fix suggestions |
+| `lsp_diagnostics` | — | Language server diagnostics |
+| `lsp_symbols` | — | Document and workspace symbols |
+| `lsp_find_references` | — | Reference search across workspace |
+| `lsp_rename` | — | Safe symbol renaming |
 
-| Tool | 용도 |
-|------|------|
-| `memory_store` / `memory_recall` / `memory_list` | 영속 메모리 |
-| `knowledge_search` | RAG 검색 (builtin-rag) |
+## Web & Research
 
-## 버전 관리 · 미디어
 
-| Tool | 용도 |
-|------|------|
-| `git` | status, diff, log, commit |
-| `look_at` / `vision_analyze` | 이미지 분석 |
-| `pdf_extract` / `screenshot` | PDF·스크린샷 |
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `websearch` | `web_search` | Real-time web search |
+| `webfetch` | `web_fetch` | URL content fetching |
+| `browser_search` | `browser_search` | Browser-based web search |
+| `browser_fetch` | `browser_fetch` | Browser-based page rendering |
+| `context7_query_docs` | — | Library documentation queries |
+| `context7_resolve_library_id` | — | Library ID resolution |
 
-## 오케스트레이션
+## Code Execution
 
-| Tool | 용도 |
-|------|------|
-| `task` / `agent` | 서브 에이전트 위임 |
-| `a2a_delegate` | A2A 위임 |
-| `skill` / `meta` / `verify` | 스킬·메타·검증 |
-| `todowrite` / `question` | 작업 추적·질문 |
-| `mcp` / `saga` / `checkpoint` | MCP·사가·체크포인트 |
 
-## 프로덕션 기능
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `bash` / `shell_execute` | `shell_execute` | Shell execution with sandbox |
+| `python` | `python_execute` | Isolated Python execution |
+| `execute_script` | `execute_script` | Run scripts from files |
 
-모든 도구에 공통:
+## Memory & Persistence
 
-- **SHA-256 결과 캐시** — 테넌트 키 격리  
-- **Compensation registry** — mutation 실패 롤백  
-- **Circuit breaker** — 다운스트림 보호  
-- **Step error boundary** — skip/retry/abort  
-- **Tool call repair** — 잘못된 호출 자동 수정  
-- **DLP 스캔** — 입력 6종 민감 패턴  
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `memory_store` | `memory_store` | Store data in persistent memory |
+| `memory_recall` | `memory_recall` | Recall stored memories by query |
+| `memory_list` | `memory_list` | List all stored memories |
+| `knowledge_search` | `knowledge_search` | RAG knowledge base search (builtin-rag plugin) |
+
+## Version Control
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `git` | `git` | Git operations (status, diff, log, commit) |
+
+## Media & Analysis
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `look_at` / `vision_analyze` | `vision_analyze` | Image/vision analysis |
+| `pdf_extract` | `pdf_extract` | PDF text extraction |
+| `screenshot` | `screenshot_capture` | Screen capture |
+| `lazyweb_*` | — | Screenshot similarity search |
+
+## Orchestration
+
+
+| Tool | Internal Name | Purpose |
+|------|--------------|---------|
+| `task` / `agent` | `agent` | Sub-agent delegation (recursive) |
+| `a2a_delegate` | `a2a_delegate` | Agent-to-Agent (A2A) delegation |
+| `skill` | `skill_view` | Domain expertise loading |
+| `meta` | `meta_tool` | Meta-tool for multi-step workflows |
+| `verify` | `verify_answer` | Answer format and quality verification |
+| `todowrite` | — | Multi-step task tracking |
+| `question` | — | User clarification |
+| `mcp` | `mcp_tool_adapter` | MCP server tool integration |
+| `saga` | `saga_tool` | Saga transaction operations |
+| `checkpoint` | `checkpoint_tool` | Checkpoint management |
+
+## Production Features
+
+
+Every tool comes with:
+
+- **SHA-256 result caching** — per-tenant key isolation
+- **Compensation registry** — rollback failed mutation tools
+- **Circuit breaker** — protect downstream services
+- **Step error boundary** — skip/retry/abort per tool
+- **Tool call repair** — automatically fix malformed tool calls
+- **Tool output management** — structured output parsing and validation
+- **DLP scanning** — tool inputs scanned for 6 sensitive data patterns (API Key, private key, AWS Key, GitHub Token, JWT, password)
 
 ## 커스텀 도구
+
+
+Implement the `Tool` interface and register it:
 
 ```typescript
 import { Tool, ToolContext } from '@commander/core';
@@ -82,19 +121,9 @@ class MyCustomTool implements Tool {
   description = 'Does something useful';
 
   async execute(context: ToolContext, args: any) {
-    return { success: true, data: {} };
+    return { success: true, data: ... };
   }
 }
 
 runtime.registerTool('my-tool', new MyCustomTool());
 ```
-
-> monorepo workspace 설치가 주 경로입니다.  
-> CLI: `npx tsx packages/core/src/cliEntry.ts`
-
-## 관련
-
-- [에이전트 런타임](/ko/architecture/agent-runtime)  
-- [커스텀 도구](/ko/guide/advanced/custom-tools)  
-- [MCP](/ko/architecture/mcp)  
-- [보안](/ko/guide/security)  

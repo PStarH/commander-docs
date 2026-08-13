@@ -1,30 +1,37 @@
-# バックプレッシャー・コントローラ
+# Backpressure Controller
 
-バックプレッシャー・コントローラは Commander ランタイムの **統合入場制御（admission control）** です。需要が容量を超えたときの過負荷を防ぎ、**Token Bucket → Ring Buffer → Circuit Breaker** の 3 段パイプラインを使います。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/backpressure)
 
-## 構造
+
+
+The backpressure controller implements **unified admission control** for the Commander runtime, preventing overload when demand exceeds capacity. It uses a three-stage pipeline: Token Bucket → Ring Buffer → Circuit Breaker.
+
+## Architecture
+
 
 ```
 Producer → [Token Bucket] → [Ring Buffer] → [Circuit Breaker] → Consumer
-               rate-limit       absorb bursts     protect when overwhelmed
+              rate-limit       absorb bursts     protect when overwhelmed
 ```
 
-| 段                  | 役割                             | パターン        |
-| ------------------- | -------------------------------- | --------------- |
-| **Token Bucket**    | 秒あたりトークンで入場速度を制限 | Leaky bucket    |
-| **Ring Buffer**     | バースト吸収（固定サイズ、O(1)） | LMAX Disruptor  |
-| **Circuit Breaker** | 消費者過負荷時の保護             | Hystrix 3-state |
+| Stage | Purpose | Pattern |
+|-------|---------|---------|
+| **Token Bucket** | Rate-limits admission (tokens per second) | Leaky bucket |
+| **Ring Buffer** | Absorbs burst traffic (fixed-size, O(1) insert/evict) | LMAX Disruptor |
+| **Circuit Breaker** | Protects consumer when overwhelmed | Hystrix 3-state |
 
-## 動作
+## How It Works
 
-1. **Token Bucket** — リクエストがトークンを消費。空なら ring buffer へ spill。
-2. **Ring Buffer** — 固定サイズでバーストを吸収。満杯なら最古を破棄（spill 集計）。
-3. **Circuit Breaker** — spill 率が閾値を超えると open、half-open まで drop。
+
+1. **Token Bucket** — Requests consume a token. When the bucket is empty, requests spill to the ring buffer.
+2. **Ring Buffer** — Fixed-size buffer absorbs bursts. When full, oldest entry is evicted (counted as spilled).
+3. **Circuit Breaker** — When spill rate exceeds threshold, the breaker opens and requests are dropped until half-open.
 
 ## 設定
 
+
 ```typescript
-import { BackpressureController } from "@commander/core";
+import { BackpressureController } from '@commander/core';
 
 const controller = new BackpressureController({
   tokenBucket: {
@@ -35,54 +42,53 @@ const controller = new BackpressureController({
     capacity: 200,
   },
   circuitBreaker: {
-    failureThreshold: 0.5,
-    recoveryTimeoutMs: 30000,
-    halfOpenMaxRequests: 10,
+    failureThreshold: 0.5,    // 50% failure rate opens breaker
+    recoveryTimeoutMs: 30000, // Wait 30s before half-open
+    halfOpenMaxRequests: 10,  // Probe requests in half-open
   },
 });
 ```
 
-> パッケージは monorepo の `packages/core` から。npm 公開が主経路になるまでは workspace を使ってください。
-
 ## 使い方
 
+
 ```typescript
+// Check if a request should be admitted
 const admission = controller.tryAdmit();
 
 if (admission.allowed) {
+  // Process the request
   const result = await processRequest(request);
   controller.recordSuccess();
 } else {
+  // Request rejected — return 429 or queue
   return { status: 429, reason: admission.reason };
 }
 ```
 
-## Lock-free
+## Lock-Free Design
 
-CAS ベースの原子カウンタで、同時読みが書きをブロックしません（NFR-PERF-05）。
 
-## メトリクス
+The controller uses lock-free CAS (Compare-And-Swap) via atomic counter operations. Concurrent reads never block writes, satisfying constraint NFR-PERF-05.
 
-| メトリクス                             | 説明                            |
-| -------------------------------------- | ------------------------------- |
-| `backpressure_tokens_available`        | バケット残トークン              |
-| `backpressure_ring_buffer_occupancy`   | リング占有率                    |
-| `backpressure_circuit_breaker_state`   | `CLOSED` / `OPEN` / `HALF_OPEN` |
-| `backpressure_requests_admitted_total` | 許可                            |
-| `backpressure_requests_rejected_total` | 拒否                            |
-| `backpressure_requests_spilled_total`  | spill                           |
+## Metrics
 
-## チューニング
 
-| 症状           | 調整                                         |
-| -------------- | -------------------------------------------- |
-| 429 が多すぎる | `maxTokens` / `refillRatePerSecond` を上げる |
-| メモリ圧       | ring `capacity` を下げる                     |
-| 連鎖障害       | `failureThreshold` を下げ早期 open           |
-| 回復が遅い     | `recoveryTimeoutMs` を延ばす                 |
+| Metric | Description |
+|--------|-------------|
+| `backpressure_tokens_available` | Current tokens in bucket |
+| `backpressure_ring_buffer_occupancy` | Ring buffer fill ratio |
+| `backpressure_circuit_breaker_state` | `CLOSED`, `OPEN`, or `HALF_OPEN` |
+| `backpressure_requests_admitted_total` | Total admitted requests |
+| `backpressure_requests_rejected_total` | Total rejected requests |
+| `backpressure_requests_spilled_total` | Total spilled from ring buffer |
 
-## 関連
+## When to Tune
 
-- [本番準備](/ja/architecture/production-readiness)
-- [エージェントランタイム](/ja/architecture/agent-runtime)
-- [トラブルシューティング](/ja/guide/troubleshooting)
+
+| Symptom | Adjustment |
+|---------|------------|
+| Too many 429 errors | Increase `maxTokens` or `refillRatePerSecond` |
+| Memory pressure | Decrease ring buffer `capacity` |
+| Cascading failures | Lower `failureThreshold` to open breaker earlier |
+| Slow recovery | Increase `recoveryTimeoutMs` |

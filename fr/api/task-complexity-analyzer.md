@@ -13,9 +13,19 @@
 ## Exemple d’orientation
 
 ```typescript
-import { /* composant correspondant */ } from '@commander/core';
-// Voir monorepo pour les signatures exactes et getGlobal*()
+import { TaskComplexityAnalyzer } from '@commander/core';
+// BatchComplexityAnalyzer est défini dans packages/core/src/taskComplexityAnalyzer.ts
+// et n'est pas ré-exporté depuis la racine de '@commander/core'.
+import { BatchComplexityAnalyzer } from 'packages/core/src/taskComplexityAnalyzer';
+
+const score = new TaskComplexityAnalyzer().analyze(task);
+// → ComplexityScore { level, score, factors, recommendedMode, tokenBudget, confidence }
+
+const orch = new BatchComplexityAnalyzer().getBatchOrchestration(scores);
+// → { mode, totalBudget, parallelGroups }
 ```
+
+`recommendedMode` est une `OrchestrationMode` : `SEQUENTIAL` | `PARALLEL` | `HANDOFF` | `MAGENTIC` | `CONSENSUS`. Voir le monorepo pour les signatures exactes et `getGlobal*()`.
 
 ## Quand l’utiliser
 

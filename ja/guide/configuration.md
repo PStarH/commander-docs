@@ -1,56 +1,107 @@
 # 設定
 
-Commander は環境変数と設定ファイルで構成します。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/configuration)
 
-## 環境変数
 
-### コア
 
-| 変数 | 既定 | 説明 |
-|------|------|------|
-| `COMMANDER_MODE` | `auto-edit` | `plan` / `read-only` / `auto-edit` / `full-auto` / `suggest` |
-| `COMMANDER_DEBUG` | `false` | 詳細ログ |
-| `COMMANDER_LOG_LEVEL` | `info` | `debug`…`error` |
-| `COMMANDER_MAX_CONCURRENCY` | `5` | 同時エージェント上限 |
-| `COMMANDER_TIMEOUT_MS` | `120000` | 実行タイムアウト (ms) |
+Commander is configured through environment variables and configuration files.
 
-### サーバー
+## Environment Variables
 
-| 変数 | 既定 | 説明 |
-|------|------|------|
-| `PORT` | `4000` | HTTP ポート |
-| `HOST` | `0.0.0.0` | バインド |
-| `CORS_ORIGIN` | `*` | CORS |
-| `RATE_LIMIT_*` | — | レート制限 |
 
-### マルチテナント · セキュリティ · 観測
+### Core
 
-| 変数 | 説明 |
-|------|------|
-| `TENANT_PROVIDER` | `null` または `simple` |
-| `COMMANDER_API_KEY` | API Bearer |
-| `COMMANDER_SECURITY_PROFILE` | サンドボックス・プロファイル |
-| `COMMANDER_EVENT_SOURCING_WAL` | WAL パス |
-| `OTEL_*` | OpenTelemetry |
 
-### プロバイダー
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COMMANDER_MODE` | `auto-edit` | Approval mode: `plan`, `read-only`, `auto-edit`, `full-auto`, `suggest` |
+| `COMMANDER_DEBUG` | `false` | Enable verbose debug logging |
+| `COMMANDER_LOG_LEVEL` | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| `COMMANDER_LOG_PERSIST` | `false` | Enable log persistence to disk (auto-degrades to Error-only when backlog >10000) |
+| `COMMANDER_MAX_CONCURRENCY` | `5` | Maximum concurrent agent executions |
+| `COMMANDER_TIMEOUT_MS` | `120000` | Default execution timeout (ms) |
 
-`OPENAI_API_KEY` 等 — [プロバイダー](/ja/guide/providers)。ローカルは `OLLAMA_BASE_URL`。
+### Server
 
-## ファイル
 
-`.commander.json` / `.env` / monorepo の `.env.example` を参照。秘密は git に入れない。
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `4000` | HTTP server port |
+| `HOST` | `0.0.0.0` | HTTP server host |
+| `CORS_ORIGIN` | `*` | CORS allowed origins |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window (ms) |
+| `RATE_LIMIT_MAX` | `100` | Max requests per window |
 
-## 例
+### マルチテナンシー
 
-```bash
-export COMMANDER_MODE=plan
-export OPENAI_API_KEY=sk-...
-npx tsx packages/core/src/cliEntry.ts plan "task"
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TENANT_PROVIDER` | `null` | `null` (single-tenant) or `simple` (multi-tenant) |
+| `TENANT_PROVIDER_CONFIG` | — | JSON config for tenant mapping |
+
+### セキュリティ
+
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COMMANDER_SECURITY_PROFILE` | `standard` | Sandbox profile: `strict`, `standard`, `permissive`, `hardened` |
+| `COMMANDER_EVENT_SOURCING_WAL` | `.commander_state/event-sourcing.wal` | Event sourcing WAL file path |
+| `WARROOM_STORAGE` | `memory` | War Room storage backend: `memory` or `sqlite` |
+
+### Observability
+
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | — | OpenTelemetry OTLP endpoint |
+| `OTEL_SERVICE_NAME` | `commander` | OpenTelemetry service name |
+
+## CLI Configuration
+
+
+Commander supports a `.commander.json` config file in your project root:
+
+```json
+{
+  "provider": "auto",
+  "model": "auto",
+  "mode": "balanced",
+  "topology": "auto",
+  "budget": "auto",
+  "mcpServers": [],
+  "a2a": {
+    "server": {
+      "enabled": false,
+      "port": 3002,
+      "host": "127.0.0.1"
+    },
+    "remoteAgents": []
+  }
+}
 ```
 
-## 関連
+| Field | Default | Description |
+|-------|---------|-------------|
+| `provider` | `auto` | Primary LLM provider |
+| `model` | `auto` | Model name |
+| `mode` | `balanced` | Execution mode: `fast`, `balanced`, `thorough` |
+| `topology` | `auto` | Orchestration topology: `auto`, `single`, `chain`, `dispatch`, `orchestrator`, `review` |
+| `budget` | `auto` | Token budget (integer ≥1000 or `auto`) |
+| `mcpServers` | `[]` | MCP server configurations |
+| `a2a` | — | Agent-to-Agent server and remote agent config |
 
-- [インストール](/ja/guide/installation)  
-- [セキュリティ](/ja/guide/security)  
-- [デプロイ](/ja/deployment)  
+API keys are never stored in the config file — they remain in environment variables or system keychain.
+
+## Provider Config
+
+
+Set **any single** provider key. Commander auto-detects and chains fallbacks:
+
+```bash
+export OPENAI_API_KEY=sk-...        # Primary: OpenAI | Fallback: DeepSeek → GLM → MiMo
+export ANTHROPIC_API_KEY=sk-ant-... # Anthropic Claude
+export GOOGLE_API_KEY=...           # Google Gemini
+```
+
+See the full [providers list](/ja/guide/providers).

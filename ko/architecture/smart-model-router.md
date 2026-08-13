@@ -1,23 +1,39 @@
 # 스마트 모델 라우터
 
-Smart Model Router는 **능력 기반 모델 선택**과 사용자 정의 라우팅 규칙을 제공합니다. 코어 `ModelRouter` 위에 모델 풀·규칙·예산 제약을 얹습니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/smart-model-router)
 
-## 능력 태그
 
-| Capability | 설명 |
-|------------|------|
-| `code` | 코드 생성·이해 |
-| `reasoning` | 논리·CoT |
-| `analysis` | 데이터 분석 |
-| `creative` | 창작·브레인스토밍 |
-| `math` | 수학 |
-| `multimodal` / `vision` / `image_generation` | 멀티모달·비전·이미지 생성 |
-| `long_context` | 긴 컨텍스트 |
-| `low_cost` / `fast` / `high_quality` | 비용·지연·품질 |
-| `function_calling` / `json_mode` / `streaming` | 도구·JSON·스트림 |
-| `translation` / `summarization` / `extraction` | 번역·요약·추출 |
 
-## 설정
+The Smart Model Router provides **capability-based model selection** with user-configurable routing rules. It wraps the core `ModelRouter` with an extended API for defining model pools, routing rules, and budget constraints.
+
+## Capabilities
+
+
+Models are tagged with capability types for matching:
+
+| Capability | Description |
+|------------|-------------|
+| `code` | Code generation and understanding |
+| `reasoning` | Logical reasoning and chain-of-thought |
+| `analysis` | Data analysis and interpretation |
+| `creative` | Creative writing and brainstorming |
+| `math` | Mathematical computation |
+| `multimodal` | Multiple input modalities |
+| `vision` | Image understanding |
+| `image_generation` | Image creation |
+| `long_context` | Large context window support |
+| `low_cost` | Cost-efficient inference |
+| `fast` | Low-latency inference |
+| `high_quality` | Highest quality output |
+| `function_calling` | Tool use support |
+| `json_mode` | Structured JSON output |
+| `streaming` | Streaming response support |
+| `translation` | Multi-language translation |
+| `summarization` | Text summarization |
+| `extraction` | Information extraction |
+
+## 구성
+
 
 ```typescript
 import { SmartModelRouter } from '@commander/core';
@@ -43,27 +59,107 @@ const router = new SmartModelRouter({
       contextWindow: 200000,
       tier: 'power',
     },
+    {
+      id: 'deepseek-chat',
+      provider: 'deepseek',
+      capabilities: ['code', 'reasoning', 'low_cost'],
+      costPer1MInput: 0.14,
+      costPer1MOutput: 0.28,
+      contextWindow: 64000,
+      tier: 'eco',
+    },
   ],
+  routingRules: [
+    {
+      taskType: 'code_review',
+      requiredCapabilities: ['code', 'reasoning'],
+      preferredTier: 'power',
+      maxCostPer1K: 0.05,
+    },
+    {
+      taskType: 'simple_query',
+      requiredCapabilities: ['reasoning'],
+      preferredTier: 'eco',
+      maxCostPer1K: 0.001,
+    },
+  ],
+  budget: {
+    maxCostPerTask: 1.0,
+    dailyBudget: 10.0,
+  },
 });
 ```
 
-## 모드
+## Routing Modes
 
-- **auto** — 능력·비용·지연으로 자동 선택  
-- **manual** — 고정 모델  
-- **cascade** — 규칙 우선, 실패 시 폴백 체인  
 
-## 운영
+| Mode | Behavior |
+|------|----------|
+| `auto` | Router selects best model based on task requirements and budget |
+| `manual` | Use only the `defaultModel` — no automatic selection |
+| `cascade` | Try models in tier order (eco → standard → power), failover on error |
 
-키 하나만 있어도 기본 라우터가 동작합니다. 풀·예산을 세밀히 쓰려면 monorepo 설정과 연동하세요.
+## Model Tiers
 
-```bash
-export OPENAI_API_KEY=sk-...
-npx tsx packages/core/src/cliEntry.ts run "task" --stream
+
+| Tier | Description | Examples |
+|------|-------------|---------|
+| `eco` | Cheapest, fastest, good for simple tasks | DeepSeek, Groq |
+| `standard` | Balanced cost/quality | GPT-4o-mini, Claude Haiku |
+| `power` | Highest quality, most expensive | GPT-4o, Claude Sonnet |
+| `consensus` | Used for multi-model voting | Any tier |
+
+## Routing Decision
+
+
+```
+Task → Analyze requirements → Match capabilities → Filter by budget
+                                                         │
+                    ┌────────────────────────────────────┘
+                    ▼
+            Select model by tier preference
+                    │
+                    ┌────────────────────────────────────┐
+                    ▼                                    ▼
+            Primary model                          Fallback chain
+            (best match)                           (next tier)
 ```
 
-## 관련
+## Programmatic API
 
-- [프로바이더](/ko/guide/providers)  
-- [Resilience](/ko/architecture/resilience)  
-- [인텔리전스](/ko/architecture/intelligence)  
+
+```typescript
+// Get routing decision for a task
+const decision = router.route({
+  taskType: 'code_generation',
+  requiredCapabilities: ['code', 'function_calling'],
+  estimatedTokens: 5000,
+});
+
+console.log(`Selected: ${decision.modelId}`);
+console.log(`Tier: ${decision.tier}`);
+console.log(`Estimated cost: $${decision.estimatedCost}`);
+
+// List available models for a capability set
+const models = router.listModels({
+  capabilities: ['code', 'reasoning'],
+  tier: 'power',
+});
+
+// Check budget status
+const budget = router.getBudgetStatus();
+console.log(`Daily spend: $${budget.spent} / $${budget.limit}`);
+```
+
+## Integration with Deliberation
+
+
+The Smart Model Router integrates with the deliberation engine to select the optimal model for each agent in a multi-agent run:
+
+```
+Deliberation → Topology Selection → Agent Count → Per-Agent Model Selection
+                                                        │
+                                                        ▼
+                                                SmartModelRouter
+                                                (capability matching)
+```

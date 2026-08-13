@@ -1,69 +1,91 @@
-# 코어 호출 체인
+# 핵심 호출 체인
 
-모든 Commander 실행은 구조화된 파이프라인을 따릅니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/core-call-chain)
 
-## 1. 심의 (Deliberation)
 
-```
+
+Every Commander execution follows a structured pipeline:
+
+## 1. Deliberation
+
+
+```bash
 CLI / HTTP / API
   │
-  ├─ deliberation.ts     ← "이 작업은 어떤 종류인가?"
+  ├─ deliberation.ts     ← "What kind of task is this?"
   │   └─ TaskComplexityAnalyzer
 ```
 
-복잡도·의존 그래프·도메인을 분석해 실행 전략을 정합니다.
+The deliberation engine analyzes the task's complexity, dependency graph, and domain requirements to determine the optimal execution strategy.
 
-## 2. 노력 스케일링
+## 2. Effort Scaling
 
-```
-  ├─ effortScaler.ts     ← "에이전트 몇 명?"
-```
-
-1–20 에이전트로 스케일. 단순 작업은 1명, 복잡한 리서치는 팀.
-
-## 3. 토폴로지 라우팅
-
-```
-  ├─ topologyRouter.ts   ← "어떤 토폴로지?"
-```
-
-5 정규 토폴로지: **SINGLE** · **CHAIN** · **DISPATCH** · **ORCHESTRATOR** · **REVIEW** (레거시 별칭 지원).
-
-## 4. 원자화
-
-```
-  ├─ atomizer.ts         ← "서브태스크로 분해"
-```
-
-ROMA 스타일 분해로 의존성 인식 원자 작업 생성.
-
-## 5. 실행
-
-```
-  ├─ agentRuntime.ts.execute(ctx)
-      ├─ acquireSlot / tenant check / storage
-      ├─ [Retry loop]
-      │   ├─ LLM callWithTimeout
-      │   ├─ ToolPlanner → executeTool → cache
-      │   ├─ verification (5 gates)
-      │   └─ checkpoint
-      └─ releaseSlot / flush traces
-```
-
-## 6. 검증 & 합성
-
-품질 게이트 통과 후 리드/합성기가 최종 결과를 만듭니다. 실패 시 재시도·DLQ·보상.
-
-## 로컬에서 따라가기
 
 ```bash
-npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
+  ├─ effortScaler.ts     ← "How many agents?"
 ```
 
-## 관련
+Based on complexity, Commander scales across 1–20 agents. Simple tasks get a single agent; complex research tasks get a team.
 
-- [아키텍처 개요](/ko/architecture/overview)  
-- [멀티 에이전트](/ko/architecture/multi-agent)  
-- [에이전트 런타임](/ko/architecture/agent-runtime)  
-- [검증](/ko/architecture/verification)  
+## 3. Topology Routing
+
+
+```bash
+  ├─ topologyRouter.ts   ← "Which topology fits?"
+```
+
+Selects the optimal execution topology from 5 canonical options:
+
+- **SINGLE** — Simple tasks, one agent
+- **CHAIN** — Dependent steps, chain-of-thought (legacy: SEQUENTIAL)
+- **DISPATCH** — Independent subtasks, max throughput (legacy: PARALLEL)
+- **ORCHESTRATOR** — Lead agent delegates to specialists (legacy: HIERARCHICAL / HYBRID)
+- **REVIEW** — Generate → critique → refine loop (legacy: DEBATE / ENSEMBLE / EVALUATOR-OPT)
+
+## 4. Atomization
+
+
+```bash
+  ├─ atomizer.ts         ← "Break into subtasks"
+```
+
+ROMA-style decomposition splits the task into atomic, dependency-aware subtasks.
+
+## 5. Execution
+
+
+```bash
+  ├─ agentRuntime.ts.execute(ctx)
+      │
+      ├─ acquireSlot()              ← Concurrency semaphore
+      ├─ [Tenant check]             ← Rate limit + concurrency quota
+      ├─ resolve tenant storage     ← Per-tenant isolation
+      │
+      ├─ [Retry loop: 0..maxRetries]
+      │   ├─ callWithTimeout()      ← LLM provider call
+      │   ├─ [Tool execution loop]
+      │   │   ├─ toolCache.get()    ← SHA-256 hash lookup
+      │   │   ├─ planner.plan()     ← Dependency-aware plan
+      │   │   ├─ executeTool()      ← StepErrorBoundary
+      │   │   └─ toolCache.set()    ← Cache result
+      │   ├─ verification.check()   ← 5 quality gates
+      │   └─ checkpoint()           ← Atomic state save
+      │
+      └─ → AgentExecutionResult
+```
+
+## 6. Quality Gates
+
+
+After execution, results pass through 5 verification gates:
+
+- Hallucination detection
+- Consistency check
+- Completeness verification
+- Accuracy validation
+- Safety check
+
+## 7. Completion
+
+
+Results are flushed to trace store, metrics are recorded, and the execution summary is returned.

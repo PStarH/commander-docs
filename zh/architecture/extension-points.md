@@ -1,10 +1,31 @@
-# Extension Points
+# 扩展点
 
-本页说明 Commander 中 **Extension Points** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/architecture/extension-points)
 
-## 快速入口
 
-```bash
+
+Commander is designed to be extended at every layer.
+
+## Plugin System (19 Hook Points)
+
+
+| Hook | When It Fires |
+|------|---------------|
+| `beforeLLMCall` | Before every LLM request |
+| `afterLLMCall` | After every LLM request |
+| `beforeToolCall` | Before every tool execution |
+| `afterToolCall` | After every tool execution |
+| `onAgentComplete` | Agent run finished |
+| `onError` | Run failed |
+
+Hooks can block, modify, or observe the execution.
+
+## Extension Interfaces
+
+
+### Custom LLM Provider
+
+```typescript
 class MyProvider implements LLMProvider {
   async call(messages: Message[], options: CallOptions): Promise<LLMResponse> {
     // Your implementation
@@ -13,28 +34,47 @@ class MyProvider implements LLMProvider {
 runtime.registerProvider('my-provider', new MyProvider());
 ```
 
+### Custom Tool
 
-## 说明
+```typescript
+class MyTool implements Tool {
+  name = 'my-tool';
+  async execute(ctx: ToolContext, args: any): Promise<ToolResult> {
+    // Your implementation
+  }
+}
+runtime.registerTool('my-tool', new MyTool());
+```
 
-### Plugin System (19 Hook Points)
+### Custom Topology
 
-（对应英文文档章节 **Plugin System (19 Hook Points)** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+Add a new case in `topologyRouter.ts` to define a new orchestration pattern.
 
-### Extension Interfaces
+### Channel Adapter
 
-（对应英文文档章节 **Extension Interfaces** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+```typescript
+class TelegramAdapter implements ChannelAdapter {
+  // Telegram integration
+}
+```
 
-### Meta-Learner
+### Plugin
 
-（对应英文文档章节 **Meta-Learner** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+```typescript
+class MyPlugin implements CommanderPlugin {
+  hooks = {
+    beforeLLMCall: async (params) => { /* modify params */ },
+    afterToolCall: async (result) => { /* observe result */ },
+  };
+}
+getHookManager().register(new MyPlugin());
+```
+
+## Meta-Learner
 
 
-## 指标口径
+Commander includes a self-evolution system based on **Thompson Sampling + Reflexion**:
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
-
-## 相关
-
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+- Tracks which strategies work best over time
+- Automatically adjusts topology selection
+- Learns from failures and successes across runs

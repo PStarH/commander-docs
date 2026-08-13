@@ -1,45 +1,13 @@
-# Custom Providers
+# カスタムプロバイダー
 
-**Custom Providers.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
-
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
-
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
-
-## 参照表
-
-| Factor | Behavior |
-|--------|----------|
-| Task complexity | Harder tasks → stronger models |
-| Cost constraints | Simple tasks → cheaper providers |
-| Latency requirements | Time-sensitive → fast inference (Groq, Together) |
-| Availability | Fallback chain if primary unavailable |
-| Historical accuracy | MetaLearner tracks success rates |
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/advanced/custom-providers)
 
 
-## 主な内容
 
-### Provider Interface
+Connect Commander to any LLM provider by implementing the `LLMProvider` interface.
 
-運用では **Provider Interface** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-providers)を参照してください。
+## Provider Interface
 
-### Example: Custom Provider
-
-運用では **Example: Custom Provider** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-providers)を参照してください。
-
-### Registering a Provider
-
-運用では **Registering a Provider** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-providers)を参照してください。
-
-### Provider Fallback Chain
-
-運用では **Provider Fallback Chain** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-providers)を参照してください。
-
-### Provider Selection Strategy
-
-運用では **Provider Selection Strategy** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-providers)を参照してください。
-
-## 例（コードは英語のまま）
 
 ```typescript
 interface LLMProvider {
@@ -54,6 +22,9 @@ interface LLMProvider {
   isAvailable(): boolean;
 }
 ```
+
+## Example: Custom Provider
+
 
 ```typescript
 import { BaseLLMProvider, Message, CallOptions, LLMResponse } from '@commander/core';
@@ -95,6 +66,9 @@ class MyCustomProvider extends BaseLLMProvider {
 }
 ```
 
+## Registering a Provider
+
+
 ```typescript
 import { CommanderRuntime } from '@commander/core';
 
@@ -102,17 +76,30 @@ const runtime = new CommanderRuntime();
 runtime.registerProvider('my-provider', new MyCustomProvider());
 ```
 
-## 運用
+## Provider Fallback Chain
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+
+Commander supports automatic fallback between providers:
+
+```typescript
+runtime.setFallbackChain('my-provider', ['openai', 'anthropic']);
 ```
 
-## 関連
+If the primary provider fails (rate limited, timeout, down), Commander automatically:
+1. Detects the failure
+2. Logs the error with full context
+3. Falls back to the next provider in the chain
+4. Retries with appropriate backoff
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+## Provider Selection Strategy
+
+
+Commander selects providers based on:
+
+| Factor | Behavior |
+|--------|----------|
+| Task complexity | Harder tasks → stronger models |
+| Cost constraints | Simple tasks → cheaper providers |
+| Latency requirements | Time-sensitive → fast inference (Groq, Together) |
+| Availability | Fallback chain if primary unavailable |
+| Historical accuracy | MetaLearner tracks success rates |

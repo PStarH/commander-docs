@@ -1,78 +1,90 @@
-# クックブック: モジュールを安全にリファクタ
+# Cookbook: Refactor a module safely
 
-**ゴール:** plan モードでリファクタをプレビューし、制御された承認で実行する。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/cookbook/refactor-module)
 
-**時間:** 約 15 分 · **リスク:** ファイル書き込み — `plan` / `suggest` から
 
-## 1. 準備
+
+**Goal:** Use plan mode to preview a refactor, then execute with controlled approval.
+
+**Time:** ~15 minutes · **Risk:** writes files — start in `plan` / `suggest`
+
+## 1. Setup
+
 
 ```bash
-cd /path/to/your-project   # または dry-run 用 Commander モノレポ
+cd /path/to/your-project   # or the Commander monorepo for a dry run
 export OPENAI_API_KEY=sk-...
 export COMMANDER_MODE=plan
 ```
 
-実アプリに対してはクリーンなブランチ:
+If you run against a real app, use a clean git branch:
 
 ```bash
 git checkout -b chore/commander-refactor
 git status
 ```
 
-## 2. plan をプレビュー
+## 2. Preview the plan
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module to reduce duplication; keep public API stable"
 ```
 
-**期待:** トポロジ（多くは CHAIN または ORCHESTRATOR）、手順、ツール、予算 — **ファイル編集なし**。
+**Expect:** topology (often CHAIN or ORCHESTRATOR), steps, tools, budget — **no file edits**.
 
-確認:
+Review:
 
-- 意図したモジュールだけか？
-- リスクの高い変更なら REVIEW が適切か？
+- Does the plan touch only the modules you intend?  
+- Is REVIEW topology appropriate for a risky change?  
 
-## 3. suggest モード（人が介在）
+## 3. Suggest mode (human in the loop)
+
 
 ```bash
 export COMMANDER_MODE=suggest
 npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
 ```
 
-モードに応じてターミナルの承認プロンプトで編集を許可/拒否します。
+Approve/deny edits according to your terminal prompts (if approval UI is active for your mode).
 
-## 4. auto-edit（plan を信頼できるとき）
+## 4. Auto-edit (when you trust the plan)
+
 
 ```bash
 export COMMANDER_MODE=auto-edit
 npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
 ```
 
-## 5. ローカル検証
+## 5. Verify locally
+
 
 ```bash
 git diff
-# プロジェクト固有:
-pnpm test   # または npm test / cargo test / など
+# project-specific:
+pnpm test   # or npm test / cargo test / etc.
 ```
 
-## 6. 成功チェックリスト
+## 6. Success checklist
 
-- [ ] 書き込み前に plan が妥当
-- [ ] diff が意図ファイルに限定
-- [ ] テスト / 型チェック通過
-- [ ] 必要なら `git checkout -- .` で戻せる
+
+- [ ] Plan looked correct before any write  
+- [ ] Diff is limited to intended files  
+- [ ] Tests / typecheck still pass  
+- [ ] You can `git checkout -- .` to undo if needed  
 
 ## 失敗モード
 
-| 問題                           | 対処                                            |
-| ------------------------------ | ----------------------------------------------- |
-| 過剰な編集                     | `plan` / `suggest` のまま；プロンプト範囲を縮小 |
-| モジュール違い                 | パスを明示: `packages/foo/src/auth/*`           |
-| 不安定なマルチエージェント結合 | `--topology chain` または `--topology review`   |
+
+| Issue | Action |
+|-------|--------|
+| Over-eager edits | Stay in `plan` / `suggest`; shrink the prompt scope |
+| Wrong module | Name paths explicitly: `packages/foo/src/auth/*` |
+| Flaky multi-agent merge | Force `--topology chain` or `--topology review` |
 
 ## 関連
 
-- [Plan モード](/ja/guide/usage/plan-mode)
-- [タスク実行](/ja/guide/usage/running-tasks)
-- [FAQ の承認モード](/ja/guide/faq)
+
+- [Plan Mode](/ja/guide/usage/plan-mode)  
+- [Running Tasks](/ja/guide/usage/running-tasks)  
+- [Approval modes in FAQ](/ja/guide/faq)  

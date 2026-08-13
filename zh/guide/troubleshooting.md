@@ -1,39 +1,151 @@
 # 故障排除
 
-本页说明 Commander 中 **故障排除** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/troubleshooting)
 
-## 快速入口
 
-```bash
+
+Common issues and their solutions.
+
+> **CLI note:** From a monorepo checkout use  
+> `npx tsx packages/core/src/cliEntry.ts <command>`  
+> After building `@commander/core`, use `commander <command>` instead.
+
+## Installation issues
+
+
+### `pnpm install` fails
+
+
+```
 Error: Cannot find module '@commander/core'
 ```
 
+**Solution:** Run from the monorepo root and install all workspaces:
 
-## 说明
+```bash
+pnpm install
+pnpm build
+```
 
-### Installation issues
-
-（对应英文文档章节 **Installation issues** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Provider issues
-
-（对应英文文档章节 **Provider issues** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Execution issues
-
-（对应英文文档章节 **Execution issues** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Build issues
-
-（对应英文文档章节 **Build issues** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+### TypeScript errors after install
 
 
-## 指标口径
+```
+error TS2307: Cannot find module 'xyz'
+```
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+**Solution:**
 
-## 相关
+```bash
+pnpm build
+# or
+npx tsc --noEmit
+```
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+## Provider issues
+
+
+### "Provider not available"
+
+
+Commander can't find a valid API key. Check:
+
+```bash
+# Verify the key is set
+echo $OPENAI_API_KEY
+
+# Run diagnostics
+npx tsx packages/core/src/cliEntry.ts doctor
+```
+
+### "Rate limited" errors
+
+
+You're hitting provider rate limits. Solutions:
+
+- Wait and retry (Commander auto-retries with backoff)
+- Use multiple providers with a fallback chain
+- Reduce concurrency: `export COMMANDER_MAX_CONCURRENCY=1`
+
+### "Timeout" errors
+
+
+The LLM provider took too long to respond.
+
+- Check your network connection
+- Try a faster provider (Groq, Together)
+- Increase timeout: `export COMMANDER_TIMEOUT_MS=120000`
+
+## Execution issues
+
+
+### Task hangs or never completes
+
+
+```bash
+npx tsx packages/core/src/cliEntry.ts status
+npx tsx packages/core/src/cliEntry.ts doctor
+```
+
+### "Circuit breaker open"
+
+
+The circuit breaker tripped due to repeated failures. Wait ~30s for automatic recovery, or:
+
+```bash
+npx tsx packages/core/src/cliEntry.ts doctor --reset
+```
+
+### Agent produces wrong results
+
+
+Force a stricter topology:
+
+```bash
+# Canonical topologies: single | chain | dispatch | orchestrator | review
+npx tsx packages/core/src/cliEntry.ts run "task" --topology review
+npx tsx packages/core/src/cliEntry.ts plan "task"
+```
+
+## Build issues
+
+
+### Docker build fails
+
+
+```bash
+docker info
+docker compose build --no-cache
+```
+
+### Test failures
+
+
+```bash
+cd packages/core
+npx tsx --test tests/integration.test.ts
+npx tsx --test tests/*.test.ts
+```
+
+## Debug mode
+
+
+```bash
+export COMMANDER_DEBUG=true
+npx tsx packages/core/src/cliEntry.ts run "task"
+```
+
+This enables verbose output across modules, including:
+
+- LLM provider selection and calls
+- Tool execution with full arguments
+- Agent deliberation steps
+- Cache hits and misses
+- Circuit breaker state changes
+
+## Still stuck?
+
+
+- [FAQ](/zh/guide/faq)
+- [GitHub Issues](https://github.com/PStarH/Commander/issues)
+- [Architecture overview](/zh/architecture/overview)

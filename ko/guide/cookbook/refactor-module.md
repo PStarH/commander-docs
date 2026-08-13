@@ -1,78 +1,90 @@
-# 쿡북: 모듈을 안전하게 리팩터
+# Cookbook: Refactor a module safely
 
-**목표:** plan 모드로 리팩터를 미리 본 뒤, 통제된 승인으로 실행합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/cookbook/refactor-module)
 
-**시간:** 약 15분 · **위험:** 파일 쓰기 — `plan` / `suggest`부터
 
-## 1. 준비
+
+**Goal:** Use plan mode to preview a refactor, then execute with controlled approval.
+
+**Time:** ~15 minutes · **Risk:** writes files — start in `plan` / `suggest`
+
+## 1. Setup
+
 
 ```bash
-cd /path/to/your-project   # 또는 dry-run용 Commander 모노레포
+cd /path/to/your-project   # or the Commander monorepo for a dry run
 export OPENAI_API_KEY=sk-...
 export COMMANDER_MODE=plan
 ```
 
-실제 앱에 돌릴 때는 깨끗한 브랜치:
+If you run against a real app, use a clean git branch:
 
 ```bash
 git checkout -b chore/commander-refactor
 git status
 ```
 
-## 2. plan 미리보기
+## 2. Preview the plan
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts plan "refactor the authentication module to reduce duplication; keep public API stable"
 ```
 
-**기대:** 토폴로지(대개 CHAIN 또는 ORCHESTRATOR), 단계, 도구, 예산 — **파일 수정 없음**.
+**Expect:** topology (often CHAIN or ORCHESTRATOR), steps, tools, budget — **no file edits**.
 
-점검:
+Review:
 
-- 의도한 모듈만 건드리는가?
-- 위험한 변경에 REVIEW가 더 맞는가?
+- Does the plan touch only the modules you intend?  
+- Is REVIEW topology appropriate for a risky change?  
 
-## 3. suggest 모드 (사람 개입)
+## 3. Suggest mode (human in the loop)
+
 
 ```bash
 export COMMANDER_MODE=suggest
 npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
 ```
 
-모드에 따라 터미널 승인 프롬프트로 편집을 승인/거부합니다.
+Approve/deny edits according to your terminal prompts (if approval UI is active for your mode).
 
-## 4. auto-edit (plan을 신뢰할 때)
+## 4. Auto-edit (when you trust the plan)
+
 
 ```bash
 export COMMANDER_MODE=auto-edit
 npx tsx packages/core/src/cliEntry.ts run "refactor the authentication module to reduce duplication; keep public API stable" --stream
 ```
 
-## 5. 로컬 검증
+## 5. Verify locally
+
 
 ```bash
 git diff
-# 프로젝트별:
-pnpm test   # 또는 npm test / cargo test / 등
+# project-specific:
+pnpm test   # or npm test / cargo test / etc.
 ```
 
-## 6. 성공 체크리스트
+## 6. Success checklist
 
-- [ ] 쓰기 전에 plan이 타당했음
-- [ ] diff가 의도 파일로 제한됨
-- [ ] 테스트 / 타입체크 통과
-- [ ] 필요 시 `git checkout -- .`로 되돌릴 수 있음
+
+- [ ] Plan looked correct before any write  
+- [ ] Diff is limited to intended files  
+- [ ] Tests / typecheck still pass  
+- [ ] You can `git checkout -- .` to undo if needed  
 
 ## 실패 모드
 
-| 문제                        | 조치                                        |
-| --------------------------- | ------------------------------------------- |
-| 과도한 편집                 | `plan` / `suggest` 유지; 프롬프트 범위 축소 |
-| 잘못된 모듈                 | 경로를 명시: `packages/foo/src/auth/*`      |
-| 불안정한 멀티 에이전트 병합 | `--topology chain` 또는 `--topology review` |
+
+| Issue | Action |
+|-------|--------|
+| Over-eager edits | Stay in `plan` / `suggest`; shrink the prompt scope |
+| Wrong module | Name paths explicitly: `packages/foo/src/auth/*` |
+| Flaky multi-agent merge | Force `--topology chain` or `--topology review` |
 
 ## 관련
 
-- [Plan 모드](/ko/guide/usage/plan-mode)
-- [작업 실행](/ko/guide/usage/running-tasks)
-- [FAQ의 승인 모드](/ko/guide/faq)
+
+- [Plan Mode](/ko/guide/usage/plan-mode)  
+- [Running Tasks](/ko/guide/usage/running-tasks)  
+- [Approval modes in FAQ](/ko/guide/faq)  

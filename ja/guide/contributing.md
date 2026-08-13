@@ -1,50 +1,21 @@
 # Contributing to the docs
 
-**Contributing to the docs.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/contributing)
 
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
 
-## 参照表
+Thank you for improving Commander documentation.
+
+## Repos
+
 
 | Repo | Role |
 |------|------|
 | [Commander](https://github.com/PStarH/Commander) | Product, CLI, SDK, tests |
 | [commander-docs](https://github.com/PStarH/commander-docs) | This VitePress site |
 
+## Local docs dev
 
-## 主な内容
-
-### Repos
-
-運用では **Repos** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### Local docs dev
-
-運用では **Local docs dev** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### Content rules
-
-運用では **Content rules** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### i18n
-
-運用では **i18n** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### PR checklist
-
-運用では **PR checklist** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### Security
-
-運用では **Security** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-### Product code contributions
-
-運用では **Product code contributions** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/contributing)を参照してください。
-
-## 例（コードは英語のまま）
 
 ```bash
 git clone https://github.com/PStarH/commander-docs.git
@@ -55,17 +26,37 @@ npm run check    # content guards
 npm run build
 ```
 
-## 運用
+## Content rules
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
 
-## 関連
+1. **Metrics:** `25 providers` · `5 topologies` · `18 built-in tools` · `6700+ tests`  
+2. **CLI from source:** `npx tsx packages/core/src/cliEntry.ts …`  
+3. **CLI after build:** `commander …`  
+4. **Vue internal links:** always `withBase()` (GH Pages base `/commander-docs/`)  
+5. **themeConfig.logo:** `/logo.svg` only — never hardcode `/commander-docs/`  
+6. **Localhost URLs** in install docs are fine; CI allows them as dead-link exceptions  
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+## i18n
+
+
+- English is the source of truth under `/guide`, `/architecture`, `/api`  
+- Chinese entry path: `/zh/` (Quick Start, Why, FAQ, cookbook samples)  
+- When you change EN quick-start commands, update `zh/guide/getting-started.md` if applicable  
+
+## PR checklist
+
+
+- [ ] `npm run check` passes  
+- [ ] `npm run build` passes  
+- [ ] No new `cli.ts` / wrong provider counts / 17-tools strings  
+- [ ] Screenshots or demos use accurate product claims  
+
+## セキュリティ
+
+
+Do **not** open public issues for vulnerabilities. See [Security](/ja/guide/security).
+
+## Product code contributions
+
+
+Use the main [Commander](https://github.com/PStarH/Commander) repository for runtime, tools, and providers. Docs-only changes belong here.

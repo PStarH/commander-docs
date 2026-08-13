@@ -41,13 +41,14 @@ await c.disconnect();
 ### HTTP (server)
 
 ```bash
-curl http://localhost:4000/health
-curl http://localhost:4000/metrics
+# Ops health server — default port 8081 (COMMANDER_OPS_HEALTH_PORT)
+curl http://localhost:8081/health   # → 200 {"status":"ok"}
+curl http://localhost:8081/ready    # → 200 (ready) / 503 (fail-closed)
 
-curl -X POST http://localhost:4000/execute \
-  -H "Authorization: Bearer $COMMANDER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"task":"analyze this repository","mode":"plan"}'
+# HTTP API base used by the Web Console client — default :4000 (VITE_API_BASE_URL).
+# Requests carry `Authorization: Bearer <token>` when a token is configured.
+curl http://localhost:4000/v1/actions \
+  -H "Authorization: Bearer <token>"
 ```
 
 Architecture V2 durable API: `POST /v1/runs` — see [V2 Migration](/guide/migration-v2).
@@ -70,12 +71,10 @@ These modules power deliberation, budgeting, memory, and verification inside `@c
 | Component | Purpose |
 |-----------|---------|
 | [Task Complexity Analyzer](/api/task-complexity-analyzer) | Score task → recommend topology |
-| [Adaptive Orchestrator](/api/adaptive-orchestrator) | Multi-agent plan + coordination |
 | [Token Budget Allocator](/api/token-budget-allocator) | Budget split across agents |
 | [Three-Layer Memory](/api/three-layer-memory) | Working · episodic · long-term |
 | [Reflection Engine](/api/reflection-engine) | Post-run evaluation |
 | [Consensus Checker](/api/consensus-checker) | Multi-model votes for high risk |
-| [Inspector Agent](/api/inspector-agent) | Health / issue detection |
 
 ### When to use Layer 2
 
@@ -91,11 +90,7 @@ These modules power deliberation, budgeting, memory, and verification inside `@c
 ### Minimal Layer 2 example
 
 ```typescript
-import {
-  TaskComplexityAnalyzer,
-  AdaptiveOrchestrator,
-  TokenBudgetAllocator,
-} from '@commander/core';
+import { TaskComplexityAnalyzer } from '@commander/core';
 
 const analyzer = new TaskComplexityAnalyzer();
 const complexity = analyzer.analyze({
@@ -103,39 +98,20 @@ const complexity = analyzer.analyze({
   description: 'Build distributed logging system',
   riskLevel: 'high',
 });
-
-const allocator = new TokenBudgetAllocator({ baseBudget: 100_000 });
-const budget = allocator.allocate(
-  complexity.recommendedTopology,
-  complexity.score,
-  3,
-);
-
-const orchestrator = new AdaptiveOrchestrator();
-orchestrator.registerAgent({
-  id: 'lead',
-  name: 'Lead',
-  role: 'architect',
-  capabilities: [],
-});
-
-const plan = orchestrator.createPlan(
-  [{ id: 'task-1', description: '...', complexity: complexity.score }],
-  complexity.recommendedTopology,
-);
+// complexity: { level, score, factors, recommendedMode, tokenBudget, confidence }
 ```
+
+Run-time budget splitting is handled internally by the token budget manager — see [Token Budget Allocator](/api/token-budget-allocator).
 
 ### Global accessors
 
 Some components expose process singletons (used by the runtime/SDK helpers):
 
-- `getGlobalTaskComplexityAnalyzer()`
-- `getGlobalAdaptiveOrchestrator()`
-- `getGlobalTokenBudgetAllocator()`
 - `getGlobalThreeLayerMemory()`
 - `getGlobalReflectionEngine()`
-- `getGlobalConsensusChecker()`
-- `getGlobalInspectorAgent()`
+- `getGlobalLogger()` / `getGlobalMetrics()`
+- `getGlobalTenantProvider()`
+- `getGlobalMemoryRegistry()`
 
 Prefer `CommanderClient` unless you are sure you need process-wide shared state.
 

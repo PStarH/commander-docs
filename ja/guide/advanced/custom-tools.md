@@ -1,34 +1,13 @@
-# Custom Tools
+# カスタムツール
 
-**Custom Tools.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/advanced/custom-tools)
 
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
 
-## 主な内容
+Extend Commander with your own tools by implementing the `Tool` interface.
 
-### Tool Interface
+## Tool Interface
 
-運用では **Tool Interface** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-tools)を参照してください。
-
-### Example: Webhook Tool
-
-運用では **Example: Webhook Tool** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-tools)を参照してください。
-
-### Registering a Tool
-
-運用では **Registering a Tool** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-tools)を参照してください。
-
-### Tool Features
-
-運用では **Tool Features** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-tools)を参照してください。
-
-### Loading Tools from Files
-
-運用では **Loading Tools from Files** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/advanced/custom-tools)を参照してください。
-
-## 例（コードは英語のまま）
 
 ```typescript
 interface Tool {
@@ -39,6 +18,9 @@ interface Tool {
   execute(context: ToolContext, args: any): Promise<ToolResult>;
 }
 ```
+
+## Example: Webhook Tool
+
 
 ```typescript
 import { Tool, ToolContext } from '@commander/core';
@@ -80,6 +62,9 @@ class WebhookTool implements Tool {
 }
 ```
 
+## Registering a Tool
+
+
 ```typescript
 import { CommanderRuntime } from '@commander/core';
 
@@ -87,17 +72,25 @@ const runtime = new CommanderRuntime();
 runtime.registerTool('webhook', new WebhookTool());
 ```
 
-## 運用
+## Tool Features
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+
+Every registered tool automatically gets:
+
+- **SHA-256 caching** — Results are cached per-tenant, per-argument hash
+- **Compensation registry** — Register a rollback action for mutations
+- **Circuit breaker** — Protects downstream services from overload
+- **Step error boundary** — Isolated failure handling (skip/retry/abort)
+
+## Loading Tools from Files
+
+
+```json
+// .commander.json
+{
+  "customTools": [
+    "./tools/webhook-tool.ts",
+    "./tools/database-tool.ts"
+  ]
+}
 ```
-
-## 関連
-
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)

@@ -1,37 +1,49 @@
 # 슈퍼비전 트리
 
-Commander는 **Erlang/OTP 스타일 슈퍼비전 트리**로 장애를 격리합니다. 모든 오류를 에이전트 안에서 잡기보다, 에이전트가 크래시하면 슈퍼바이저가 자동 재시작합니다 — “Let It Crash”.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/supervision-tree)
 
-## 왜 슈퍼비전 트리인가
 
-전통적 에러 핸들링은 모든 실패를 catch하려 해 코드가 취약해집니다. 슈퍼비전 트리는 모델을 뒤집습니다.
 
-- **장애 격리** — 한 에이전트 크래시가 시스템을 죽이지 않음  
-- **자동 복구** — 사람 없이 재시작  
-- **에스컬레이션** — 자식이 계속 죽으면 부모로 상승  
-- **우아한 종료** — 시작 역순으로 자식 종료  
+Commander implements an **Erlang/OTP-inspired supervision tree** for fault isolation. Instead of handling every possible error within an agent, agents crash and supervisors restart them automatically — the "Let It Crash" philosophy.
 
-## 구조
+## Why Supervision Trees
+
+
+Traditional error handling tries to catch and recover from every failure. This leads to complex, fragile code. Supervision trees flip the model: let agents crash, and have a supervisor restart them with fresh state.
+
+Benefits:
+- **Fault isolation** — One agent crash doesn't kill the system
+- **Automatic recovery** — Supervisors restart failed agents without human intervention
+- **Escalation** — If a child keeps crashing, the supervisor escalates to its parent
+- **Graceful shutdown** — Supervisors shut down children in reverse start order
+
+## Architecture
+
 
 ```
                     ┌──────────────────┐
                     │  Root Supervisor │
-                    │  (one_for_one)   │
+                    │  (strategy: one_for_one) │
                     └────────┬─────────┘
               ┌──────────────┼──────────────┐
               ▼              ▼              ▼
-        Agent 1         Agent 2         Agent N
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │ Agent 1  │  │ Agent 2  │  │ Agent N  │
+        │ (child)  │  │ (child)  │  │ (child)  │
+        └──────────┘  └──────────┘  └──────────┘
 ```
 
-## 재시작 전략
+## Restart Strategies
 
-| 전략 | 동작 | 언제 |
-|------|------|------|
-| `one_for_one` | 죽은 자식만 재시작 | 자식이 독립적 |
-| `one_for_all` | 모든 자식 재시작 | 상호 의존 |
-| `rest_for_one` | 죽은 자식 + 그 이후 시작분 | 시작 순서 의존 |
 
-## 설정
+| Strategy | Behavior | Use when |
+|----------|----------|----------|
+| `one_for_one` | Restart only the crashed child | Children are independent |
+| `one_for_all` | Restart ALL children | Children are co-dependent |
+| `rest_for_one` | Restart crashed child + all children started after it | Children have startup order dependencies |
+
+## 구성
+
 
 ```typescript
 import { Supervisor } from '@commander/core';
@@ -39,29 +51,113 @@ import { Supervisor } from '@commander/core';
 const supervisor = new Supervisor({
   id: 'agent-pool',
   strategy: 'one_for_one',
-  maxRestarts: 10,
-  maxRestartIntervalMs: 60000,
-  defaultShutdownMs: 5000,
-  publishEvents: true,
+  maxRestarts: 10,           // Max restarts across ALL children
+  maxRestartIntervalMs: 60000, // Within this time window
+  defaultShutdownMs: 5000,    // Graceful shutdown timeout
+  publishEvents: true,        // Publish to message bus
 });
 ```
 
-## 자식 추가
+## Adding Children
+
 
 ```typescript
 const handle = await supervisor.startChild({
   id: 'agent-1',
   start: async () => {
     const runtime = await createAgentRuntime({ /* config */ });
-    return runtime;
+    return {
+      id: 'agent-1',
+      isAlive: () => runtime.isRunning(),
+      healthCheck: async () => runtime.healthCheck(),
+    };
   },
+  stop: async (handle) => {
+    await runtime.shutdown();
+  },
+  shutdownMs: 10000,
+  maxRestarts: 5,
+  maxRestartIntervalMs: 30000,
 });
 ```
 
-재시작 한도를 넘기면 슈퍼바이저가 부모로 에스컬레이션하거나 풀을 중단합니다. MessageBus로 이벤트를 발행할 수 있습니다.
+## Restart Intensity
 
-## 관련
 
-- [에이전트 런타임](/ko/architecture/agent-runtime)  
-- [Resilience](/ko/architecture/resilience)  
-- [멀티 에이전트](/ko/architecture/multi-agent)  
+If a child restarts more than `maxRestarts` times within `maxRestartIntervalMs`, the supervisor itself crashes — escalating to its parent supervisor.
+
+```
+Agent crashes → Supervisor restarts (1/5)
+Agent crashes → Supervisor restarts (2/5)
+Agent crashes → Supervisor restarts (3/5)
+Agent crashes → Supervisor restarts (4/5)
+Agent crashes → Supervisor restarts (5/5)
+Supervisor CRASHES → Parent supervisor restarts both
+```
+
+## Supervision Events
+
+
+Supervisors publish events to the message bus:
+
+| Event | Description |
+|-------|-------------|
+| `child_started` | Child successfully started |
+| `child_crashed` | Child process crashed |
+| `child_restarted` | Child restarted after crash |
+| `child_stopped` | Child gracefully stopped |
+| `supervisor_crashed` | Supervisor exceeded restart limit |
+| `supervisor_recovered` | Supervisor recovered from crash |
+
+```typescript
+supervisor.onEvent((event) => {
+  console.log(`[${event.type}] ${event.supervisorId}/${event.childId}: ${event.message}`);
+});
+```
+
+## Health Checks
+
+
+Supervisors can run periodic health checks on children:
+
+```typescript
+await supervisor.startChild({
+  id: 'agent-1',
+  start: async () => ({
+    id: 'agent-1',
+    isAlive: () => true,
+    healthCheck: async () => {
+      const healthy = await checkAgentHealth();
+      return { healthy, issues: healthy ? [] : ['Agent not responding'] };
+    },
+  }),
+});
+```
+
+## API 참조
+
+
+### `Supervisor`
+
+
+| Method | Description |
+|--------|-------------|
+| `startChild(spec)` | Start a new child |
+| `stopChild(id, force?)` | Stop a child gracefully (or force-kill) |
+| `restartChild(id)` | Restart a specific child |
+| `getChildState(id)` | Get child state and history |
+| `getSupervisionHistory()` | Get all supervision events |
+| `shutdown()` | Graceful shutdown of all children |
+
+### `ChildSpec`
+
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `string` | required | Unique child ID |
+| `start` | `() => Promise<ChildHandle>` | required | Factory function |
+| `stop` | `(handle) => Promise<void>` | — | Graceful shutdown |
+| `restartStrategy` | `RestartStrategy` | supervisor default | Override strategy |
+| `shutdownMs` | `number` | `5000` | Shutdown timeout |
+| `maxRestarts` | `number` | `5` | Max restarts in interval |
+| `maxRestartIntervalMs` | `number` | `60000` | Restart window |

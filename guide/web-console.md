@@ -47,28 +47,32 @@ docker compose up -d
 
 Exact labels may evolve with the `apps/web` package — treat this as the product map, not a pixel-perfect UI spec.
 
+Live routes (from `apps/web`): `/`, `/agents`, `/missions`, `/execution`, `/memory`, `/governance`, `/security`, `/slo`, `/chat`, `/dlq`, `/audit`, `/cost`, `/knowledge`, `/alerts`, `/onboarding`, `/users`, `/settings`, `/settings/sso`, `/workflows`, `/poc`, `/research`, and `/actions` (Action Gateway).
+
 ## Preview
 
 ![Commander Web Console — mission board, live topology, execution feed, chat](/console-mockup.svg)
 
 ## Health checks
 
+Ops health server — default port `8081`, override with `COMMANDER_OPS_HEALTH_PORT`:
+
 ```bash
-curl http://localhost:4000/health
-curl http://localhost:4000/health/detailed
-curl http://localhost:4000/readyz
-curl http://localhost:4000/metrics
+curl http://localhost:8081/health   # → 200 {"status":"ok"}
+curl http://localhost:8081/ready    # → 200 (ready) / 503 (fail-closed)
 ```
+
+The console client talks to the API base on `:4000` (default, `VITE_API_BASE_URL`).
 
 ## Auth
 
-If `COMMANDER_API_KEY` is set, API clients (including the console) must send:
+The console signs API requests with a bearer token persisted in `localStorage` under `commander.auth.token`. When a token is present, a global fetch interceptor adds:
 
 ```http
-Authorization: Bearer <COMMANDER_API_KEY>
+Authorization: Bearer <token>
 ```
 
-Never commit the key. Rotate if leaked.
+A `401` response clears the stored token and notifies the app to re-authenticate. Never commit tokens; rotate if leaked.
 
 ## When to use Console vs CLI
 
@@ -83,7 +87,7 @@ Never commit the key. Rotate if leaked.
 | Issue         | Fix                                                        |
 | ------------- | ---------------------------------------------------------- |
 | Blank UI      | Confirm API is up on `:4000`; check browser console CORS   |
-| 401           | Set matching `COMMANDER_API_KEY` on API and client         |
+| 401           | Re-authenticate in the console — the stored token is cleared automatically |
 | No models     | Export a provider key in the shell that started `pnpm gui` |
 | Port conflict | Stop other services on 4000/5173/3000                      |
 

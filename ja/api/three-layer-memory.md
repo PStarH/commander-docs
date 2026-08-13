@@ -1,35 +1,13 @@
-# Three-Layer Memory
+# 3 層メモリ
 
-**Three-Layer Memory.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
-
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
-
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
-
-## 参照表
-
-| Layer | Max Entries | Max Memory | Decay |
-|-------|-------------|------------|-------|
-| Working | 50 | 100KB | None |
-| Episodic | 500 | 500KB | Time-based |
-| Long-term | 10000 | 5MB | None |
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/api/three-layer-memory)
 
 
-## 主な内容
 
-### Types
+Manages working, episodic, and long-term memory with embedding-based retrieval.
 
-運用では **Types** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/api/three-layer-memory)を参照してください。
+## Types
 
-### API
-
-運用では **API** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/api/three-layer-memory)を参照してください。
-
-### Layer Configuration
-
-運用では **Layer Configuration** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/api/three-layer-memory)を参照してください。
-
-## 例（コードは英語のまま）
 
 ```typescript
 type MemoryLayer = 'working' | 'episodic' | 'longterm';
@@ -58,6 +36,9 @@ interface MemoryQuery {
 }
 ```
 
+## API
+
+
 ```typescript
 const memory = new ThreeLayerMemory(config?: Partial<Record<MemoryLayer, LayerConfig>>);
 
@@ -84,17 +65,11 @@ memory.searchRelated(content: string, limit?: number): MemoryEntry[];
 memory.applyTimeDecay(hoursElapsed: number): number;
 ```
 
-## 運用
+## Layer Configuration
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
 
-## 関連
-
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+| Layer | Max Entries | Max Memory | Decay |
+|-------|-------------|------------|-------|
+| Working | 50 | 100KB | None |
+| Episodic | 500 | 500KB | Time-based |
+| Long-term | 10000 | 5MB | None |

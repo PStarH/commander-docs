@@ -1,47 +1,73 @@
 # トポロジ決定木
 
-どの編成トポロジを使うか迷ったら、この木に従ってください。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/usage/topology-decision-tree)
 
-## クイック参照
+
+
+Not sure which orchestration topology to use? Follow this decision tree.
+
+## Quick Reference
+
 
 ```
-タスクは単純で明確か？
+Is the task simple and well-defined?
 ├── YES → SINGLE
-└── NO  → サブタスクは独立か？
+└── NO  → Are subtasks independent?
     ├── YES → DISPATCH
-    └── NO  → 互いに依存するか？
+    └── NO  → Do subtasks depend on each other?
         ├── YES → CHAIN
-        └── NO  → 明確なリードがあるか？
+        └── NO  → Is there a clear lead agent?
             ├── YES → ORCHESTRATOR
             └── NO  → REVIEW
 ```
 
-## 詳細
+## Topology Details
 
-| トポロジ     | いつ                     | エージェント目安 |
-| ------------ | ------------------------ | ---------------- |
-| SINGLE       | 単純・範囲明確           | 1                |
-| CHAIN        | 前段依存の多段変換       | 2–3              |
-| DISPATCH     | 並列可能な独立サブタスク | 2–10             |
-| ORCHESTRATOR | 分解パスがある複雑タスク | 3–8              |
-| REVIEW       | 高リスク・交差検証       | 2–5              |
 
-## 複雑度スコア
+### SINGLE
 
-| スコア |   自動選択   |
-| :----: | :----------: |
-|  0–20  |    SINGLE    |
-| 20–40  |    CHAIN     |
-| 40–60  |   DISPATCH   |
-| 60–80  | ORCHESTRATOR |
-| 80–100 |    REVIEW    |
+**When**: Simple, well-scoped tasks
+**Example**: "Explain this function", "Format this file"
+**Agents**: 1
 
+### CHAIN
+
+**When**: Multi-step transformations where each step depends on the previous
+**Example**: "Read the file → analyze the code → generate a report"
+**Agents**: 2–3
+
+### DISPATCH
+
+**When**: Independent subtasks that can run simultaneously
+**Example**: "Search for bugs in all modules at once"
+**Agents**: 2–10
+
+### ORCHESTRATOR
+
+**When**: Complex task with a clear decomposition path
+**Example**: A lead architect decomposes the work and delegates to specialists
+**Agents**: 3–8
+
+### REVIEW
+
+**When**: High-risk decisions requiring cross-validation, iterative refinement, or consensus
+**Example**: "Is this security vulnerability real or a false positive?"
+**Agents**: 2–5
+
+## Complexity-Based Selection
+
+
+Commander automatically selects the topology based on task complexity:
+
+| Score | Auto-Selected Topology |
+|:-----:|:----------------------:|
+| 0–20 | SINGLE |
+| 20–40 | CHAIN |
+| 40–60 | DISPATCH |
+| 60–80 | ORCHESTRATOR |
+| 80–100 | REVIEW |
+
+Override the automatic selection:
 ```bash
 npx tsx packages/core/src/cliEntry.ts run "task" --topology review
 ```
-
-## 関連
-
-- [マルチエージェント](/ja/architecture/multi-agent)
-- [トポロジ探索](/ja/guide/topology-explorer)
-- [タスク実行](/ja/guide/usage/running-tasks)

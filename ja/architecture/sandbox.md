@@ -1,28 +1,48 @@
-# セキュリティ・サンドボックス
+# セキュリティサンドボックス
 
-Commander のサンドボックスはすべての実行を隔離し、Petri net スケジューラで資源を形式的に割り当てます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/sandbox)
 
-## 構造
+
+
+Commander's sandbox system provides secure execution isolation for all operations, with formal resource allocation via Petri net scheduling.
+
+## Architecture
+
 
 ```
 sandbox/
-├── execPolicy.ts / approval.ts / profiles.ts / platforms.ts
-├── manager.ts / executionRouter.ts / lane.ts
-├── seccompBpf.ts / teeEnclave.ts / petriNetScheduler.ts
-├── networkProxy.ts / backends/ (local, ssh, docker)
-└── types.ts
+├── execPolicy.ts           ← Execution policy definitions
+├── approval.ts             ← Approval workflow for sensitive operations
+├── profiles.ts             ← Security profiles (READ_ONLY, WORKSPACE_WRITE, FULL_ACCESS, HARDENED)
+├── platforms.ts            ← Platform-specific sandbox configurations
+├── manager.ts              ← Sandbox lifecycle management
+├── executionRouter.ts      ← Route executions to appropriate backends
+├── lane.ts                 ← Execution lane management
+├── seccompBpf.ts           ← seccomp-BPF system call filtering (Linux)
+├── teeEnclave.ts           ← Trusted Execution Environment sandbox
+├── petriNetScheduler.ts    ← Petri net resource allocation
+├── networkProxy.ts         ← Network proxy sandbox
+├── backends/               ← Sandbox backend implementations
+│   ├── localBackend.ts     ← Local execution
+│   ├── sshBackend.ts       ← Remote SSH execution
+│   └── dockerExecBackend.ts ← Docker container execution
+└── types.ts                ← Shared types
 ```
 
-## セキュリティ・プロファイル
+## Security Profiles
 
-| プロファイル | Shell | 書き込み | ネットワーク | 用途 |
-|--------------|-------|----------|--------------|------|
-| **READ_ONLY** | なし | 読み取りのみ | 遮断 | レビュー、非信頼入力 |
-| **WORKSPACE_WRITE** | サンドボックス可 | プロジェクト | 可 | 開発 |
-| **FULL_ACCESS** | 全面 | 任意 | 可 | CI/CD |
-| **HARDENED** | なし | 拒否 | 遮断 | 非信頼コード |
 
-## ExecPolicy
+| Profile | Shell Access | File Write | Network | Best For |
+|---------|-------------|-----------|---------|----------|
+| **READ_ONLY** (strict) | None | Read-only | Blocked | Code review, untrusted input |
+| **WORKSPACE_WRITE** (standard) | Allowed (sandboxed) | Project files | Allowed | Development |
+| **FULL_ACCESS** (permissive) | Full | Any | Allowed | CI/CD, automation |
+| **HARDENED** | None | Denied | Blocked | Untrusted code execution |
+
+## Execution Policies
+
+
+Policies control what operations are permitted:
 
 ```typescript
 interface ExecPolicy {
@@ -37,34 +57,78 @@ interface ExecPolicy {
 }
 ```
 
-## Petri Net スケジューラ
+## Petri Net Scheduler
 
-| Place | 容量 | 用途 |
-|-------|------|------|
-| `pending` | 無制限 | 待機 |
-| `v8_slots` | 10 | V8 isolate |
-| `seccomp_slots` | 4 | seccomp-BPF |
-| `wasm_slots` | 2 | WASM |
-| `tee_slots` | 1 | TEE |
-| `executing` / `completed` | 無制限 | 実行中 / 完了 |
 
-遷移 `admit_*` / `complete_*`。デッドロック・飽和・安全状態を解析してから入場。
+The sandbox uses a Petri net model for formal resource allocation, ensuring deadlock-free concurrent execution:
 
-## バックエンド
+| Place | Capacity | Purpose |
+|-------|----------|---------|
+| `pending` | Unbounded | Requests waiting for execution |
+| `v8_slots` | 10 | V8 isolate execution slots |
+| `seccomp_slots` | 4 | seccomp-BPF sandbox slots |
+| `wasm_slots` | 2 | WebAssembly execution slots |
+| `tee_slots` | 1 | Trusted Execution Environment slots |
+| `executing` | Unbounded | Currently executing requests |
+| `completed` | Unbounded | Finished requests |
 
-local · ssh · docker。
+Transitions: `admit_<tier>` (pending + slot → executing) and `complete_<tier>` (executing → completed + slot returned).
 
-## 運用
+The scheduler includes deadlock analysis (true deadlock, unsafe, saturated, safe) and safe-state verification before admitting new requests.
 
-```bash
-export COMMANDER_MODE=read-only
-npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+## Trusted Execution Environment (TEE)
+
+
+The TEE sandbox uses Node.js `worker_threads` for isolated V8 Isolates, replacing `new Function()` to prevent code injection:
+
+- Code executes in an isolated worker thread
+- No access to main process memory or modules
+- Communication via message passing only
+- Enforced CPU and memory limits
+
+## seccomp-BPF (Linux)
+
+
+On Linux, the sandbox uses seccomp-BPF for system call filtering:
+
+- Allowlist approach: only approved syscalls are permitted
+- Per-profile filter customization
+- Blocks `ptrace`, `process_vm_readv`, and other escalation vectors
+
+## Approval Workflow
+
+
+Sensitive operations require human approval:
+
+```typescript
+import { ApprovalManager } from '@commander/core';
+
+const approval = new ApprovalManager();
+
+// Operations that trigger approval:
+// - File deletion
+// - External network requests
+// - Shell commands with sudo
+// - Modifying git configuration
 ```
 
-非信頼コードには HARDENED + ネットワーク遮断を既定に。
+The approval system defaults to fail-closed — unknown or high-risk tools are denied unless explicitly approved.
 
-## 関連
+## Platform Support
 
-- [セキュリティ](/ja/guide/security)  
-- [セキュリティゲートウェイ](/ja/architecture/security-gateway)  
-- [ツール](/ja/architecture/tools)  
+
+| Platform | Sandbox Method |
+|----------|---------------|
+| macOS | Native sandbox + seccomp |
+| Linux | Docker / seccomp-BPF / TEE |
+| Windows | Windows Sandbox / WSL |
+
+## 使い方
+
+
+Set the security profile via environment:
+
+```bash
+export COMMANDER_SECURITY_PROFILE=strict
+npx tsx packages/core/src/cliEntry.ts run "review this code"
+```

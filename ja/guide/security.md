@@ -1,82 +1,130 @@
 # セキュリティ
 
-Commander はコード・ツール・信頼できないモデル出力を扱うマルチエージェント負荷向けです。運用者向け要約。深掘り: [Security Gateway](/ja/architecture/security-gateway)、[Sandbox](/ja/architecture/sandbox)、[マルチテナント](/ja/architecture/multi-tenancy)。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/security)
+
+
+
+Commander is designed for multi-agent workloads that touch code, tools, and untrusted model output. This page is the operator-facing summary. Deep dives: [Security Gateway](/ja/architecture/security-gateway), [Sandbox](/ja/architecture/sandbox), [Multi-Tenancy](/ja/architecture/multi-tenancy).
 
 ## 脆弱性の報告
 
-**セキュリティバグを公開 GitHub Issue にしないでください。**
 
-**sampan090611@gmail.com** に次を送ってください。
+**Do not open public GitHub issues for security bugs.**
 
-- 種類と影響
-- パス / コミット
-- 再現手順
-- 可能なら PoC
+Email **sampan090611@gmail.com** with:
 
-**48 時間以内** の受領確認を目指します（製品 [SECURITY.md](https://github.com/PStarH/Commander/blob/master/SECURITY.md)）。
+- Issue type and impact  
+- Paths / commits involved  
+- Reproduction steps  
+- PoC if available  
+
+Expect acknowledgment within **48 hours** (see product [SECURITY.md](https://github.com/PStarH/Commander/blob/master/SECURITY.md)).
 
 ## 脅威モデル（要約）
 
-| 脅威                    | 緩和                                                    |
-| ----------------------- | ------------------------------------------------------- |
-| プロンプト / ツール注入 | ツール出力スキャン、sanitizer、不可逆ツールの可逆ゲート |
-| シークレット漏洩        | DLP、シークレットを出さない構造化ログ                   |
-| 暴走エージェント        | 承認モード、トークン予算、タイムアウト、ブレーカー      |
-| プロバイダー障害 / 乱用 | フェイルオーバー、rate limit、テナントクォータ          |
-| クロステナント          | ストレージ・メモリ・キャッシュ・rate limit 隔離         |
-| サプライチェーン        | CI npm audit；キーを git に入れない                     |
 
-## 設定すべきコントロール
+| Threat | Mitigations in Commander |
+|--------|---------------------------|
+| Prompt / tool injection | Injection scanning on tool output, sanitizers, reversibility gates for irreversible tools |
+| Secrets leakage | DLP patterns, structured logging without secrets, vault patterns in enterprise gateway |
+| Runaway agents | Approval modes, token budgets, timeouts, circuit breakers |
+| Provider outage / abuse | Failover chains, rate limits, per-tenant quotas |
+| Cross-tenant bleed | Tenant isolation (storage, memory, cache, rate limits) |
+| Supply-chain / deps | CI npm audit; keep keys out of git |
 
-### 1. 承認モード
+## 設定すべき制御
 
-| モード      | 用途                   |
-| ----------- | ---------------------- |
-| `plan`      | プレビューのみ         |
-| `read-only` | 分析 / 監査            |
-| `suggest`   | 人が書き込み承認       |
-| `auto-edit` | 信頼できるローカル開発 |
-| `full-auto` | PR レビュー付き CI     |
+
+### 1. Approval modes
+
+
+| Mode | Use when |
+|------|----------|
+| `plan` | Preview only |
+| `read-only` | Analysis / audit |
+| `suggest` | Human approves writes |
+| `auto-edit` | Trusted local dev |
+| `full-auto` | CI with PR review |
 
 ```bash
 export COMMANDER_MODE=read-only
 ```
 
-### 2. API 認証
+### 2. API authentication
+
+
+When running the HTTP server:
 
 ```bash
 export COMMANDER_API_KEY="long-random-secret"
 ```
 
-Bearer 必須。TLS・認証なしで `:4000` を公開しない。
+Require Bearer tokens on API routes; do not expose `:4000` to the public internet without TLS and auth.
 
-### 3. ネットワーク
+### 3. Network binding
 
-API は localhost 寄り。本番はリバースプロキシで TLS・認証（[デプロイ](/ja/deployment)）。
 
-### 4. 機微コード
+Default posture favors localhost for the API. In production, put TLS termination and auth at the reverse proxy ([Deployment](/ja/deployment)).
 
-**Ollama / vLLM** でコードを外に出さない:
+### 4. Local / sensitive code
+
+
+Prefer **Ollama / vLLM** so code never leaves your network:
 
 ```bash
 export OLLAMA_BASE_URL=http://localhost:11434
 ```
 
-### 5. マルチテナント本番
+### 5. Multi-tenant production
 
-テナントプロバイダーとクォータ — [マルチテナント](/ja/architecture/multi-tenancy)。
 
-## セキュリティベンチマーク
+Enable tenant provider and quotas — see [Multi-Tenancy](/ja/architecture/multi-tenancy).
+
+## Security benchmarks (in monorepo)
+
+
+| Suite | Purpose |
+|-------|---------|
+| Red Team (47 scenarios) | Attack categories against defenses |
+| AgentDojo | Indirect injection robustness |
+| Tenant isolation fuzz | Cross-tenant mutation tests |
+
+Run from the product repo:
 
 ```bash
 pnpm benchmark:redteam
 pnpm benchmark:agentdojo
 ```
 
-詳細: [ベンチマーク](/ja/guide/benchmarks)。
+Details: [Benchmarks](/ja/guide/benchmarks) · product `BENCHMARK.md`.
+
+## アーキテクチャマップ
+
+
+```
+Request / CLI
+  → Auth / rate limit / tenant context
+  → Deliberation + topology
+  → Agent runtime (tools under policy)
+  → Security gateway / sandbox / DLP
+  → Quality gates (incl. SAFETY)
+  → Result + audit / event log
+```
+
+## 本番前チェックリスト
+
+
+- [ ] `COMMANDER_API_KEY` set; no default example keys  
+- [ ] Approval mode appropriate for environment  
+- [ ] Provider keys only in secret store / env  
+- [ ] Health + metrics endpoints monitored  
+- [ ] DLQ / compensation reviewed for write-heavy tools  
+- [ ] Backup strategy for SQLite/Postgres state  
 
 ## 関連
 
-- [本番準備](/ja/architecture/production-readiness)
-- [Web コンソール](/ja/guide/web-console)
-- [FAQ](/ja/guide/faq)
+
+- [Security Gateway](/ja/architecture/security-gateway)  
+- [Sandbox](/ja/architecture/sandbox)  
+- [Cookbook: security audit](/ja/guide/cookbook/security-audit)  
+- [Community / responsible disclosure](/ja/community)  

@@ -47,28 +47,32 @@ docker compose up -d
 
 Les libellés exacts évoluent avec le package `apps/web` — lisez ceci comme une **carte produit**, pas une spec pixel-perfect.
 
+Routes en direct (package `apps/web`) : `/`, `/agents`, `/missions`, `/execution`, `/memory`, `/governance`, `/security`, `/slo`, `/chat`, `/dlq`, `/audit`, `/cost`, `/knowledge`, `/alerts`, `/onboarding`, `/users`, `/settings`, `/settings/sso`, `/workflows`, `/poc`, `/research`, et `/actions` (Action Gateway).
+
 ## Aperçu
 
 ![Console web Commander — mission board, topologie live, flux d’exécution, chat](/console-mockup.svg)
 
 ## Health checks
 
+Serveur de santé ops — port par défaut `8081`, surchargeable via `COMMANDER_OPS_HEALTH_PORT` :
+
 ```bash
-curl http://localhost:4000/health
-curl http://localhost:4000/health/detailed
-curl http://localhost:4000/readyz
-curl http://localhost:4000/metrics
+curl http://localhost:8081/health   # → 200 {"status":"ok"}
+curl http://localhost:8081/ready    # → 200 (ready) / 503 (fail-closed)
 ```
+
+Le client console utilise la base API sur `:4000` (défaut, `VITE_API_BASE_URL`).
 
 ## Auth
 
-Si `COMMANDER_API_KEY` est défini, les clients API (console comprise) doivent envoyer :
+La console signe ses requêtes API avec un jeton bearer persisté dans `localStorage` sous `commander.auth.token`. Quand un jeton est présent, un interceptor fetch global ajoute :
 
 ```http
-Authorization: Bearer <COMMANDER_API_KEY>
+Authorization: Bearer <token>
 ```
 
-Ne commitez jamais la clé. En cas de fuite, rotatez immédiatement.
+Une réponse `401` efface le jeton stocké et notifie l'app pour se ré-authentifier. Ne commitez jamais les jetons ; rotatez-les en cas de fuite.
 
 ## Console vs CLI
 
@@ -83,7 +87,7 @@ Ne commitez jamais la clé. En cas de fuite, rotatez immédiatement.
 | Problème         | Action                                                         |
 | ---------------- | -------------------------------------------------------------- |
 | UI blanche       | API sur `:4000` ; CORS dans la console navigateur              |
-| 401              | Même `COMMANDER_API_KEY` côté API et client                    |
+| 401              | Ré-authentifiez-vous dans la console — le jeton stocké est effacé automatiquement |
 | Pas de modèles   | Exporter une clé provider dans le shell qui a lancé `pnpm gui` |
 | Conflit de ports | Arrêter les services sur 4000/5173/3000                        |
 

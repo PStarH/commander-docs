@@ -1,20 +1,36 @@
 # Saga トランザクション
 
-Commander は多段操作の一貫性のため **サガ・パターン**（ステップごとの補償ロールバック）を実装します。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/saga)
 
-## 構造
+
+
+Commander implements the saga pattern for distributed compensating transactions — ensuring data consistency across multi-step operations where each step can be rolled back independently.
+
+## Architecture
+
 
 ```
 SagaBuilder.define()
   │
-  ├─ Step 1 → Compensation 1
-  ├─ Step 2 → Compensation 2
-  └─ Coordinator.execute
-       ├─ 成功: 順次
-       └─ 失敗: 逆順で補償
+  ├─ Step 1: Create resource   → Compensation: Delete resource
+  ├─ Step 2: Update resource   → Compensation: Revert update
+  ├─ Step 3: Send notification → Compensation: Void notification
+  │
+  └─ Coordinator.execute(saga)
+       │
+       ├─ Step 1 → success
+       ├─ Step 2 → success
+       ├─ Step 3 → FAILURE
+       │
+       └─ Compensate
+            ├─ Undo Step 2 (revert update)
+            └─ Undo Step 1 (delete resource)
 ```
 
 ## SagaBuilder
+
+
+Define sagas with forward actions and their compensating rollbacks:
 
 ```typescript
 const saga = new SagaBuilder('deploy-service')
@@ -32,32 +48,78 @@ const saga = new SagaBuilder('deploy-service')
       await fs.unlink(ctx.path);
     },
   })
+  .step('restart-service', async (ctx) => {
+    await service.restart();
+  }, {
+    compensate: async (ctx) => {
+      await service.restore(ctx.prevVersion);
+    },
+  })
   .build();
 ```
 
 ## Coordinator
 
-順序実行 · 失敗時は逆順補償 · 状態 PENDING/COMPLETED/COMPENSATING/FAILED · 回復不能時は DLQ。
+
+The `Coordinator` manages saga execution with error handling:
+
+- Executes steps in order
+- On step failure, executes compensations in reverse order
+- Tracks saga state (PENDING, COMPLETED, COMPENSATING, FAILED)
+- Integrates with the dead letter queue for unrecoverable states
 
 ## WorkerPool
 
-独立ステップは並列化可能:
+
+Steps that can execute concurrently run through a worker pool:
 
 ```typescript
 const pool = new WorkerPool({ maxConcurrency: 5 });
-pool.execute(steps);
+pool.execute(steps);  // Independent steps run in parallel
 ```
 
-## ツール連携
+## Checkpointer
 
-mutation ツールは Compensation Registry に登録。CLI: `saga` / `compensation` / `undo`。
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
+Saga state is checkpointed at every step transition, enabling recovery:
+
+```
+Step 1 complete → checkpoint
+Step 2 complete → checkpoint
+Step 3 fails → load last checkpoint → start compensation
 ```
 
-## 関連
+## ApprovalManager
 
-- [本番準備](/ja/architecture/production-readiness)  
-- [Resilience](/ja/architecture/resilience)  
-- [ツール](/ja/architecture/tools)  
+
+For sensitive operations (deployments, financial transactions, permission changes), the approval manager can pause execution for human approval:
+
+```typescript
+const approvalManager = new ApprovalManager();
+await approvalManager.requestApproval('deploy-to-production', {
+  timeoutMs: 3600000,  // 1 hour timeout
+  requiredApprovers: ['ops-lead'],
+});
+// Saga pauses here until approved or rejected
+```
+
+## RetryController
+
+
+Each step can have its own retry policy:
+
+| Policy | Behavior |
+|--------|----------|
+| No retry | Fail immediately, begin compensation |
+| Fixed retries | Retry N times with fixed delay |
+| Exponential backoff | Retry with doubling delay, up to max |
+| Circuit breaker | Use shared circuit breaker state |
+
+## Stores
+
+
+The saga subsystem supports pluggable persistence backends:
+
+- **InMemorySagaStore** — Development/testing, no persistence
+- **FileSagaStore** — JSON-file based, suitable for single-node deployments
+- Custom stores via the `SagaStore` interface

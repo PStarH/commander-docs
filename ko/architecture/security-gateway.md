@@ -1,83 +1,170 @@
-# 엔터프라이즈 보안 게이트웨이
+# Enterprise Security Gateway
 
-`EnterpriseSecurityGateway`는 모든 LLM 호출과 도구 실행에 적용되는 **7계층 심층 방어**입니다. 우회할 수 없습니다. 비용 검사는 LLM 호출 **전후** 모두 실행됩니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/security-gateway)
 
-## 7계층 방어
 
-| 계층 | 이름                 | 역할                            |
-| ---- | -------------------- | ------------------------------- |
-| 1    | Zero-Trust Signature | 무결성 검증 + 재전송 방지       |
-| 2    | Authentication       | 타이밍 안전 비교의 API Key 검증 |
-| 3    | Rate Limiting        | 전역 토큰 버킷 + IP 티어 제한   |
-| 4    | Input Scanning       | 콘텐츠 인젝션 탐지 + 입력 검증  |
-| 5    | Cost Pre-Check       | 청구 폭주 방지 (사전 추정)      |
-| 6    | Request Processing   | 비즈니스 로직 실행              |
-| 7    | Output Scanning      | DLP 유출 방지 + 비용 기록       |
 
-### 설계 원칙
+Commander's `EnterpriseSecurityGateway` provides a 7-layer defense-in-depth architecture that is invoked during all LLM calls and tool executions. It cannot be bypassed — cost checks execute both before and after LLM calls.
 
-- **심층 방어** — 독립 계층, 책임이 분리
-- **Fail fast** — 가장 저렴한 계층에서 조기 거절
-- **관측 가능** — 모든 결정에 보안 메타데이터 로그
-- **테넌트 격리** — 검사는 테넌트 단위
-- **우회 불가** — 비용 검사는 호출 전후 모두
+## 7-Layer Defense
 
-## DLP (Data Loss Prevention)
 
-`dataLossPrevention.ts`가 모든 egress를 5단계 파이프로 스캔합니다.
+| Layer | Name | Purpose |
+|-------|------|---------|
+| 1 | Zero-Trust Signature | Integrity verification + replay prevention |
+| 2 | Authentication | API Key validation with timing-safe comparison |
+| 3 | Rate Limiting | Global token bucket + tiered IP limits |
+| 4 | Input Scanning | Content injection detection + input validation |
+| 5 | Cost Pre-Check | Bill explosion prevention (pre-call estimation) |
+| 6 | Request Processing | Business logic execution |
+| 7 | Output Scanning | DLP data leak prevention + cost recording |
 
-### 탐지 패턴 (12+)
+### Design Principles
 
-| 패턴                 | 예                            |
-| -------------------- | ----------------------------- |
-| API Key              | `sk-...`, `sk-ant-...`        |
-| JWT                  | `eyJ...`                      |
-| Private Key (PEM)    | `-----BEGIN PRIVATE KEY-----` |
-| Credit Card (Luhn)   | `4111 1111 1111 1111`         |
-| SSN                  | `123-45-6789`                 |
-| Email / Phone        | `user@example.com`            |
-| Internal IP          | `10.0.0.1`                    |
-| DB connection string | `mongodb://user:pass@host`    |
-| 클라우드 자격증명    | `AKIA...`, `AIza...`          |
-| 중국 신분증 등       | 체크섬 검증                   |
 
-### 레댁션 전략
+- **Defense in depth** — Multiple independent layers, each with distinct responsibility
+- **Fail fast** — Reject early at the cheapest layer
+- **Observable** — Every decision is logged with security metadata
+- **Tenant isolation** — All checks are per-tenant
+- **Unbypassable** — Cost checks execute both before and after LLM calls
 
-| 전략     | 동작                      |
-| -------- | ------------------------- |
-| `REDACT` | `[REDACTED]` 로 치환      |
-| `MASK`   | 부분 마스킹 (`sk-...abc`) |
-| `HASH`   | SHA-256                   |
-| `ALLOW`  | 통과 (로그만)             |
+## Data Loss Prevention (DLP)
 
-적용 지점: API 응답 · 로그 · 도구 결과 · 에이전트 출력 · SSE 스트림.
 
-도구 입력은 실행 전 API Key / Private Key / AWS / GitHub Token / JWT / Password 6종을 스캔합니다.
+The `dataLossPrevention.ts` module scans all egress points for sensitive data across a 5-stage pipeline.
+
+### Detected Patterns (12+)
+
+
+| Pattern | Example |
+|---------|---------|
+| API Key | `sk-...`, `sk-ant-...` |
+| JWT | `eyJ...` |
+| Private Key (PEM) | `-----BEGIN PRIVATE KEY-----` |
+| Credit Card (Luhn) | `4111 1111 1111 1111` |
+| SSN | `123-45-6789` |
+| Email | `user@example.com` |
+| Phone | `+1-555-0123` |
+| Internal IP | `10.0.0.1`, `192.168.1.1` |
+| Database Connection String | `mongodb://user:pass@host:port` |
+| AWS/GCP/Azure Credentials | `AKIA...`, `AIza...` |
+| China ID Card (checksum) | `110101199003077735` |
+| Bank Account | Numeric with branch code |
+
+### Redaction Strategies
+
+
+| Strategy | Behavior |
+|----------|----------|
+| `REDACT` | Replace with `[REDACTED]` |
+| `MASK` | Partial masking (`sk-...abc`) |
+| `HASH` | SHA-256 hash |
+| `ALLOW` | Pass through (logged only) |
+
+### Egress Points
+
+
+DLP is applied at all output boundaries:
+
+- API responses
+- Log entries
+- Tool results
+- Agent outputs
+- SSE event streams
+
+### Tool Input Scanning
+
+
+Tool inputs are scanned for 6 specific sensitive patterns before execution:
+
+1. API Key
+2. Private Key
+3. AWS Key
+4. GitHub Token
+5. JWT
+6. Password
 
 ## Capability Tokens
 
-`capabilityToken.ts`가 단기 HMAC 서명 토큰을 발급합니다.
 
-- 짧은 TTL · 스코프 바인딩 · HMAC 위변조 방지 · 만료 전 폐기 가능
-- 도구 실행 지점에서 토큰 검증 필수
+The `capabilityToken.ts` module issues short-lived HMAC-signed authorization tokens:
+
+- **Short TTL** — Tokens expire automatically, limiting exposure window
+- **Scope-bound** — Each token carries specific capabilities (tool, resource, duration)
+- **HMAC-signed** — Tamper-proof via server-side secret
+- **Revocable** — Can be invalidated before expiry
+
+All tool executions require capability token validation at execution points.
 
 ## Audit Chain Ledger
 
-`auditChainLedger.ts`가 보안 이벤트를 해시 체인으로 기록해 변조 탐지가 가능합니다.
 
-## 운영 팁
+The `auditChainLedger.ts` creates a tamper-proof hash chain of all security-relevant events:
 
-```bash
-export COMMANDER_API_KEY="long-random-secret"
-npx tsx packages/core/src/cliEntry.ts doctor
-curl -s http://localhost:4000/health/detailed
+```
+entry_1 → SHA256(prev_hash | entry_1) → hash_1
+entry_2 → SHA256(hash_1 | entry_2) → hash_2
 ```
 
-공개 인터넷에 `:4000`을 TLS·인증 없이 노출하지 마세요. 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
+Any modification to historical entries breaks the chain, making tampering detectable.
 
-## 관련
+## Agent Lineage
 
-- [보안 가이드](/ko/guide/security)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [멀티 테넌시](/ko/architecture/multi-tenancy)
-- [Sandbox](/ko/architecture/sandbox)
+
+The `agentLineage.ts` module tracks immutable parent-child relationships between agents:
+
+- `spawnChild()` validates parent node existence in the lineage tree
+- Lineage is immutable once recorded
+- Enables complete audit trail of agent delegation chains
+
+## Additional Security Components
+
+
+| Component | Purpose |
+|-----------|---------|
+| `guardianAgent.ts` | Semantic drift, anomaly, and safety monitoring |
+| `securityMonitor.ts` | Continuous monitoring + anomaly detection + alerting |
+| `zeroTrustValidator.ts` | Zero-trust request validation |
+| `billExplosionGuard.ts` | Cost explosion prevention |
+| `memoryPoisoningDefenseEngine.ts` | Memory poisoning attack defense |
+| `toolPoisoningGuard.ts` | Tool poisoning detection |
+| `mcpToolPoisoningGuard.ts` | MCP tool poisoning detection |
+| `mlInjectionDetector.ts` | ML injection detection |
+| `taintTracker.ts` | Taint tracking across data flows |
+| `supplyChainScanner.ts` | Dependency supply chain scanning |
+| `owaspAgenticAiTop10.ts` | OWASP Agentic AI Top 10 compliance |
+| `mitreAtlasMapper.ts` | MITRE ATLAS threat mapping |
+| `redTeamFramework.ts` | Red team testing framework |
+| `postQuantumCrypto.ts` | Post-quantum cryptography |
+| `gdprCompliance.ts` | GDPR compliance checking |
+| `euAiActCompliance.ts` | EU AI Act compliance |
+
+## Plugin Permission Enforcement
+
+
+Third-party plugins receive a **sandboxed load context** that deliberately excludes the raw `HookManager`:
+
+```typescript
+// buildSandboxedLoadContext() — only for third-party plugins
+const sandboxContext = {
+  registerHook: enforcer.wrapRegisterHook(...),
+  readFile: enforcer.wrapReadFile(...),
+  writeFile: enforcer.wrapWriteFile(...),  // mode 0o600
+  fetch: enforcer.wrapFetch(...),          // domain + port check
+  getEnvVar: enforcer.wrapGetEnvVar(...),
+  getConfig: enforcer.wrapGetConfig(...),
+  log: enforcer.wrapLog(...),
+};
+// hookManager is NOT included — prevents privilege escalation
+```
+
+Built-in plugins (no enforcer) still receive the full `hookManager`.
+
+### Permission Constraints
+
+
+- Plugin permissions must **never exceed** main system permissions
+- `updateConfig()` routes through the same sandbox context as `register()`
+- `withTimeout()` uses `Math.min(plugin.maxExecutionTimeMs, globalTimeoutMs)` — the stricter value wins
+- Network requests are URL-parsed and checked via `enforcer.checkNetwork()`
+- All failures are reported via `reportSilentFailure` (never throws to plugin)

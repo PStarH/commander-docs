@@ -1,14 +1,20 @@
-# 이벤트 소싱 & 복구
+# 이벤트 소싱 및 복구
 
-Commander의 이벤트 소싱은 **크래시 안전 실행**, 변조 방지 감사 추적, 결정적 재생, 좀비 런 자동 복구를 제공합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/event-sourcing)
+
+
+
+Commander's event sourcing system provides crash-safe execution with tamper-proof audit trails, deterministic replay, and automatic zombie run recovery.
 
 ## EventSourcingEngine
 
-`EventSourcingEngine`은 WAL(Write-Ahead Log)과 SHA-256 해시 체인으로 IEventSourcingEngine 계약(Pillar I)을 구현합니다.
+
+The `EventSourcingEngine` implements the IEventSourcingEngine contract (Pillar I) with a Write-Ahead Log (WAL) and SHA-256 hash chain for tamper protection.
 
 ### Write-Ahead Log
 
-이벤트는 `.commander_state/event-sourcing.wal` 에 원자적으로 추가됩니다 (`COMMANDER_EVENT_SOURCING_WAL` 로 경로 변경 가능).
+
+Every event is atomically appended to the WAL file at `.commander_state/event-sourcing.wal` (configurable via `COMMANDER_EVENT_SOURCING_WAL`):
 
 ```
 [event 1] → SHA256("") → hash_1
@@ -16,87 +22,109 @@ Commander의 이벤트 소싱은 **크래시 안전 실행**, 변조 방지 감�
 [event 3] → SHA256(hash_2 | type | id | timestamp | payload) → hash_3
 ```
 
-쓰기 락이 append를 직렬화해 해시 체인 손상을 막습니다.
+A write lock serializes appends to prevent hash chain corruption.
 
-### 해시 체인 무결성
+### Hash Chain Integrity
 
-각 이벤트 해시는 이전 해시를 포함합니다. `verifyIntegrity()`가 전체를 재계산해 변조를 탐지합니다.
 
-### 비결정 입력 기록
+Each event's hash incorporates the previous event's hash, creating a tamper-evident chain. `verifyIntegrity()` recalculates all hashes to detect any tampering.
 
-재생 시 재계산 대신 로그의 사용합니다.
+### Non-Deterministic Input Recording
 
-- 타임스탬프 · 난수(UUID, salt) · LLM 응답 · 도구 결과  
 
-제약 IF-05(결정적 재생): 로그를 재생하면 동일한 상태 전이가 나옵니다.
+All non-deterministic inputs are recorded in the event log and used during replay instead of recomputation:
 
-### 스냅샷 & 압축
+- Timestamps (wall clock readings)
+- Random values (UUIDs, salt generation)
+- LLM responses (model output, token counts)
+- Tool call results (external API responses)
 
-- `snapshot()` — 전체 재생 없이 빠른 복구용 스냅샷  
-- `compact()` — 스냅샷 이전 이벤트 제거, WAL 재작성  
-- `readFrom(snapshotId)` — 스냅샷 이후 이벤트 스트림  
+This satisfies constraint IF-05 (deterministic event replay) — replaying the log produces identical state transitions.
 
-### 헬스
+### Snapshot & Compaction
 
-| 메트릭 | Degraded | Unhealthy |
+
+- `snapshot()` — Creates a named snapshot for fast recovery without full log replay
+- `compact()` — Removes events before a snapshot, rewrites the WAL to reclaim space
+- `readFrom(snapshotId)` — AsyncIterable stream of events after a snapshot
+
+### Health Monitoring
+
+
+`EventSourcingHealth` monitors four metrics:
+
+| Metric | Degraded | Unhealthy |
 |--------|----------|-----------|
 | WAL write latency (p95) | 50ms | 200ms |
 | WAL file size | 100MB | 500MB |
 | Event backlog ratio | 1000 | 10000 |
-| Hash chain integrity | — | 어떤 끊김이든 |
+| Hash chain integrity | — | Any break |
 
-`/health/detailed` 로 노출됩니다.
+Health data is exposed via `/health/detailed` and used by the background monitor and recovery pre-check.
 
 ### EventSourcingSubscriber
 
-MessageBus에 구독해 메인 루프를 침범하지 않고 비동기 WAL 기록. WAL 불가 시 graceful degrade.
+
+The subscriber pattern connects to MessageBus without侵入 the agentRuntime main loop:
+
+- Subscribes to relevant system events
+- Writes to the event log asynchronously
+- Never blocks execution
+- Graceful degradation if WAL is unavailable
 
 ## RecoveryBootstrapper
 
-프로세스 기동 시 좀비 런을 스캔합니다.
 
-1. **RunLedger 스캔** — EXECUTING / VERIFYING / PAUSED  
-2. **Lease 확인** — 만료 lease  
-3. **Fencing lease 획득** — holder `recovery-{pid}`, TTL 30s  
-4. **결정**  
-   - PAUSED + 복구 가능 체크포인트 → resume  
-   - EXECUTING/VERIFYING → abort + compensate (안전 기본값)  
-   - 이미 처리됨 → skip  
-5. **DLQ 기록** · MessageBus에 복구 이벤트  
+On process startup, `RecoveryBootstrapper.bootstrap()` automatically scans for zombie runs:
 
-### 멱등성
+### Recovery Flow
 
-두 프로세스가 동시에 기동해도 두 번째는 lease를 보고 skip. CI에서는 `forceAbort`로 abort+compensate 강제 가능.
+
+1. **Scan RunLedger** — Find runs in EXECUTING, VERIFYING, or PAUSED state
+2. **Lease check** — Cross-reference with LeaseManager for expired leases
+3. **Acquire fencing lease** — Isolates any surviving zombie processes (holder: `recovery-{pid}`, TTL: 30s)
+4. **Recovery decision**:
+   - PAUSED + recoverable checkpoint → resume (caller takes ownership)
+   - EXECUTING/VERIFYING → abort + compensate (safe default)
+   - No lease or already reclaimed → skip (log only)
+5. **Record DLQ entries** for recovered runs
+6. **Publish recovery events** to MessageBus
+
+### Idempotency
+
+
+Two processes competing for startup will not conflict — the second discovers the lease is already acquired and skips. The `forceAbort` option forces abort+compensate for CI-safe scenarios.
+
+### Recovery Result
+
 
 ```typescript
 interface RecoveryResult {
-  scanned: number;
-  recovered: number;
-  aborted: number;
-  skipped: number;
+  scanned: number;      // Total zombie runs found
+  recovered: number;   // Successfully resumed
+  aborted: number;      // Aborted with compensation
+  skipped: number;      // Already handled by another process
   details: RecoveryDetail[];
 }
 ```
 
-## 복구 우선순위
+## Recovery Strategy Priority
 
-1. **이벤트 재생** — 가장 정확  
-2. **체크포인트** — 빠르지만 최근 상태 손실 가능  
-3. **Abort + compensate** — 안전 폴백  
 
-## 연동
+The system follows a strict priority order for recovery:
 
-| 컴포넌트 | 역할 |
-|----------|------|
-| `RunLedger` | 런 상태 소스 오브 트루스 |
-| `LeaseManager` | 배타 소유 fencing |
-| `CheckpointStore` | SQLite 체크포인트 |
-| `DeadLetterQueue` | 복구/중단 런 기록 |
-| `MessageBus` | 복구 이벤트 |
-| `CompensationBridge` | 중단 시 롤백 |
+1. **Event replay recovery** — Full event log replay for complete state restoration (most accurate)
+2. **Checkpoint recovery** — Resume from last valid checkpoint (fast, may lose recent state)
+3. **Abort + compensate** — Degrade gracefully with compensation (safe fallback)
 
-## 관련
+## Integration Points
 
-- [프로덕션 준비](/ko/architecture/production-readiness)  
-- [에이전트 런타임](/ko/architecture/agent-runtime)  
-- [V2 마이그레이션](/ko/guide/migration-v2)  
+
+| Component | Role |
+|-----------|------|
+| `RunLedger` | Source of truth for run states |
+| `LeaseManager` | Fencing tokens for exclusive ownership |
+| `CheckpointStore` | SQLite-backed checkpoint persistence |
+| `DeadLetterQueue` | Records recovered/aborted runs |
+| `MessageBus` | Publishes recovery events for subscribers |
+| `CompensationBridge` | Triggers rollback for aborted runs |

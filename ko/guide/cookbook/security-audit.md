@@ -1,69 +1,80 @@
-# 쿡북: 저장소 보안 감사
+# Cookbook: Security audit a repository
 
-**목표:** 라이브 스트리밍과 읽기 쉬운 결과로 멀티 에이전트 보안 감사를 실행합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/cookbook/security-audit)
 
-**시간:** 약 10분 · **위험:** 읽기 위주 (`read-only` 또는 `plan` 권장)
 
-## 1. 준비
+
+**Goal:** Run a multi-agent security-oriented audit with live streaming and readable findings.
+
+**Time:** ~10 minutes · **Risk:** read-heavy (prefer `read-only` or `plan` first)
+
+## 1. Setup
+
 
 ```bash
-cd /path/to/Commander   # 모노레포 루트
-export OPENAI_API_KEY=sk-...   # 또는 지원되는 아무 키
+cd /path/to/Commander   # monorepo root
+export OPENAI_API_KEY=sk-...   # or any supported key
 ```
 
-학습 중 쓰기를 제한하려면:
+Optional: restrict writes while learning:
 
 ```bash
 export COMMANDER_MODE=read-only
 ```
 
-## 2. 먼저 plan
+## 2. Plan first
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts plan "audit this repository for security vulnerabilities, secrets, and risky dependencies"
 ```
 
-**기대:** 분류(대개 ANALYSIS), 복잡도, 토폴로지(대개 DISPATCH 또는 REVIEW), 에이전트 역할.
+**Expect:** classification (often ANALYSIS), complexity score, topology (often DISPATCH or REVIEW), agent roles.
 
-## 3. stream으로 실행
+## 3. Execute with stream
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts run "audit this repository for security vulnerabilities, secrets, and risky dependencies" --stream
 ```
 
-**스트림에서 기대하는 것:**
+**Expect in the stream:**
 
-- 심의 배너 (작업 클래스 + 토폴로지)
-- 여러 에이전트 또는 순차 도구 (grep, package audit 등)
-- 품질 게이트 줄 (ACCURACY / COMPLETENESS / SAFETY …)
-- 종합된 findings 요약
+- Deliberation banner (task class + topology)  
+- Multiple agents or sequential tools (grep, package audit, etc.)  
+- Quality gate lines (ACCURACY / COMPLETENESS / SAFETY …)  
+- A synthesized findings summary  
 
-## 4. 토폴로지 고정 (선택)
+## 4. Tighten the topology (optional)
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts run "audit this repository for security vulnerabilities" --stream --topology review
 ```
 
-REVIEW는 더 엄격한 검증이 필요할 때 produce → critique 스타일을 강제합니다.
+REVIEW forces produce → critique style execution when you want higher scrutiny.
 
-## 5. 성공 체크리스트
+## 5. Success checklist
 
-- [ ] Plan이 크래시 없이 토폴로지를 출력
-- [ ] Stream에 에이전트/도구 활동이 보임
-- [ ] 최종 요약에 구체적 findings 또는 범위와 함께 “없음”
-- [ ] 설명 없는 행 (2분 이상 이벤트 0) 없음
+
+- [ ] Plan printed a topology without crashing  
+- [ ] Stream showed agent/tool activity  
+- [ ] Final summary lists concrete findings or explicit “none found” with scope  
+- [ ] No unexplained hang (>2 min with zero events)  
 
 ## 실패 모드
 
-| 문제                 | 조치                                                 |
-| -------------------- | ---------------------------------------------------- |
-| 프로바이더 없음      | `doctor`; 현재 셸의 env 확인                         |
-| 얕은 감사            | 실제 코드베이스 경로 지정; 프롬프트를 더 구체적으로  |
-| SAFETY 게이트 플래그 | 시크릿 유사 패턴이 있으면 정상 신호로 취급           |
-| 비용/지연 큼         | `plan`만 사용하거나 빠른 프로바이더(Groq)로 트리아지 |
+
+| Issue | Action |
+|-------|--------|
+| No provider | `doctor`; verify env var in current shell |
+| Empty / shallow audit | Point at a real codebase path; increase specificity in the prompt |
+| SAFETY gate flags | Expected if secrets-like patterns exist — treat as signal |
+| Cost / latency high | Use `plan` only, or a faster provider (Groq) for triage |
 
 ## 관련
 
-- [보안](/ko/guide/security)
-- [토폴로지 의사결정 트리](/ko/guide/usage/topology-decision-tree)
-- [Watch 모드](/ko/guide/usage/watch-mode)
+
+- [Security](/ko/guide/security)  
+- [Topology Decision Tree](/ko/guide/usage/topology-decision-tree)  
+- [Watch Mode](/ko/guide/usage/watch-mode)  

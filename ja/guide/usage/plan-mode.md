@@ -1,27 +1,39 @@
-# Plan モード
+# プランモード
 
-Plan モードは、Commander が **実際に動く前に** 何をするかを見せます。実行戦略・エージェント配分・ツール呼び出しをゼロリスクで確認できます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/usage/plan-mode)
 
-## なぜ使うか
 
-- **安全** — ファイル変更前に計画をレビュー  
-- **学習** — 分解とアプローチを理解  
-- **デバッグ** — トポロジ・エージェント・ツールを確認  
-- **協働** — チームで計画を共有・反復  
+
+Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes.
+
+## Why Use Plan Mode
+
+
+- **Safety** — Review the full plan before any files are modified
+- **Learning** — Understand how Commander decomposes and approaches tasks
+- **Debugging** — See which topology, agents, and tools will be used
+- **Collaboration** — Share and iterate on the plan with team members
 
 ## 使い方
 
-> monorepo ソース。ビルド後は `commander` に置き換え可。
+
+> From monorepo source; after build use `commander` instead of `npx tsx packages/core/src/cliEntry.ts`.
 
 ```bash
+# Set plan mode
 npx tsx packages/core/src/cliEntry.ts mode plan
+
+# Then run any task
 npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 
-# 一回だけ
+# Or use the --plan flag for one-off plan mode
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
 
-## 出力の例
+## Plan Output
+
+
+When you run a task in plan mode, Commander shows:
 
 ```
 ┃ → Deliberating task...
@@ -30,14 +42,18 @@ npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ┃ → Agents: 4 (1 lead + 3 specialists)
 ┃ → Provider: deepseek (fallback: openai → anthropic)
 ┃ → Token budget: 100,000
-┃ → Subtasks: ...
+┃
+┃ → Subtasks:
+┃   1. Analyze existing database schema
+┃   2. Design migration plan
+┃   3. Implement changes (parallel: 2 agents)
+┃   4. Verify and test
+┃
 ┃ → Estimated duration: 45s
+┃ → Total tools calls: ~12
 ```
 
-ファイルは変更されません。問題なければ `suggest` / `auto-edit` で本実行します。
+## Visual Indicator
 
-## 関連
 
-- [タスク実行](/ja/guide/usage/running-tasks)  
-- [Watch モード](/ja/guide/usage/watch-mode)  
-- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)  
+The terminal shows a **plan mode indicator** in the lower-right corner when active, so you always know whether Commander is in plan or execution mode.

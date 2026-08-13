@@ -1,8 +1,18 @@
 # Agent SDK (TypeScript)
 
-本页说明 Commander 中 **Agent SDK (TypeScript)** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/sdk)
 
-## 快速入口
+
+
+Embed Commander in your own applications with `@commander/sdk`.
+
+> **Status:** Packages live under `packages/sdk` in the monorepo. **npm publication is not the primary install path yet** — clone the monorepo and build the workspace package.
+
+## 安装
+
+
+### From the monorepo (recommended today)
+
 
 ```bash
 git clone https://github.com/PStarH/Commander.git
@@ -10,32 +20,120 @@ cd Commander && pnpm install
 pnpm --filter @commander/sdk build
 ```
 
+Then depend on the workspace package from your app (`"@commander/sdk": "workspace:*"`), or import from `packages/sdk` during development.
 
-## 说明
-
-### Installation
-
-（对应英文文档章节 **Installation** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Quick Start
-
-（对应英文文档章节 **Quick Start** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Plan without executing
-
-（对应英文文档章节 **Plan without executing** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Real-time events
-
-（对应英文文档章节 **Real-time events** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+### When published to npm (upcoming)
 
 
-## 指标口径
+```bash
+# Not the quick-start path yet — only after public publish:
+pnpm add @commander/sdk
+# peer: @commander/core
+```
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+## 快速开始
 
-## 相关
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+```typescript
+import { CommanderClient } from "@commander/sdk";
+
+const client = new CommanderClient({ provider: "openai" });
+await client.connect();
+
+const result = await client.run("analyze this repository structure");
+console.log(result.status, result.summary);
+
+await client.disconnect();
+```
+
+Zero-config (auto-detect provider from environment):
+
+```typescript
+import { createClient } from "@commander/sdk";
+
+const client = await createClient(); // connects for you
+const result = await client.run("audit this repo for security vulnerabilities");
+await client.disconnect();
+```
+
+## Plan without executing
+
+
+```typescript
+const plan = await client.plan("refactor the auth module");
+// Deliberation only — topology, agents, budget (no full execution)
+console.log(plan);
+```
+
+## Real-time events
+
+
+```typescript
+const unsub = client.onEvent((event) => {
+  console.log(`[${event.type}]`, event.data);
+});
+
+await client.run("debug the failing test");
+unsub();
+```
+
+## 配置
+
+
+```typescript
+const client = new CommanderClient({
+  provider: "anthropic", // optional — auto-detect from env if omitted
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: "claude-sonnet-4-20250514",
+  tokenBudget: 64_000,
+  defaultTopology: "SINGLE",
+  persistSessions: true,
+});
+```
+
+| Option            | Default          | Description                                      |
+| ----------------- | ---------------- | ------------------------------------------------ |
+| `provider`        | auto             | Provider id (`openai`, `anthropic`, `ollama`, …) |
+| `apiKey`          | env              | Explicit API key                                 |
+| `model`           | provider default | Model override                                   |
+| `baseUrl`         | provider default | Custom OpenAI-compatible base URL                |
+| `tokenBudget`     | `64000`          | Soft token budget                                |
+| `defaultTopology` | `SINGLE`         | Fallback topology                                |
+| `persistSessions` | `true`           | Keep recent session summaries in memory          |
+
+## Core methods
+
+
+| Method                        | Description                                    |
+| ----------------------------- | ---------------------------------------------- |
+| `connect()` / `disconnect()`  | Lifecycle — wires core runtime + event bus     |
+| `run(task)`                   | Full multi-agent execution → `ExecutionResult` |
+| `plan(task)`                  | Deliberation only                              |
+| `onEvent(handler)`            | Subscribe to agent/tool lifecycle events       |
+| `createAgent(config)`         | Register a named agent profile                 |
+| `writeMemory` / `queryMemory` | Three-layer memory helpers                     |
+
+## HTTP API (server mode)
+
+
+When you run the API server (`docker compose` or `pnpm gui`), Commander also exposes REST + SSE:
+
+```bash
+# Health
+curl http://localhost:4000/health
+
+# Execute (Bearer auth when COMMANDER_API_KEY is set)
+curl -X POST http://localhost:4000/execute \
+  -H "Authorization: Bearer $COMMANDER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task":"analyze this repository","mode":"plan"}'
+```
+
+See [Deployment](/zh/deployment) for server configuration and [Python SDK](/zh/guide/sdk-python) for the HTTP client.
+
+## 下一步
+
+
+- [Python SDK](/zh/guide/sdk-python) — thin httpx client against the API server
+- [Commands](/zh/guide/commands) — CLI equivalents of SDK calls
+- [Architecture](/zh/architecture/overview) — what runs under `client.run()`

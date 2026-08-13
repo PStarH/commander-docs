@@ -1,58 +1,123 @@
 # Asignador de presupuesto de tokens
 
-Documentación en español de **Asignador de presupuesto de tokens**, alineada con el monorepo y la guía inglesa.
+Divide el presupuesto de tokens de una ejecución entre un agente líder (modelo grande, toma de decisiones) y agentes especialistas (modelo pequeño, ejecución), y luego reporta los tokens, costes y ahorro resultantes frente a ejecutar todo con el modelo líder.
 
-## Entrada rápida
+> **Fuente:** `packages/core/src/ultimateFramework.ts` (módulo Ultimate Framework).
+> La raíz del paquete `@commander/core` re-exporta los tipos de soporte (`TokenBudgetAllocation`, `ModelTierConfig`, `AllocatedBudget`) y `DEFAULT_MODEL_CONFIG`, pero **no** la clase `TokenBudgetAllocator` en sí. El runtime gestiona los presupuestos a través del gestor de presupuesto de tokens (`getTokenBudgetManager()`) en `packages/core/src/runtime/tokenBudgetManager.ts`.
+
+## Idea central
+
+- El modelo líder (grande) toma decisiones: **40 %** de los tokens
+- Los modelos especialistas (pequeños) ejecutan: **50 %** de los tokens
+- Overhead de coordinación: **10 %** de los tokens
+
+Esta división logra un **ahorro del 70–90 %** en costes sin pérdida medible de calidad.
+
+## Tipos
 
 ```typescript
-interface TokenBudget {
-  totalBudget: number;
-  perAgentBudget: number;
-  reservedForTools: number;
-  reservedForVerification: number;
+interface TokenBudgetAllocation {
+  leadAgent: number;        // fraction for the lead model (e.g. 0.4)
+  specialistAgents: number; // fraction for specialist models (e.g. 0.5)
+  overhead: number;         // coordination overhead (e.g. 0.1)
 }
 
-interface AllocationResult {
-  lead: number;
-  specialists: number;
-  evaluation: number;
-  overhead: number;
+interface ModelTierConfig {
+  leadModel: {
+    name: string;
+    minTokens: number;
+    maxTokens: number;
+    costPerToken: number;
+  };
+  specialistModel: {
+    name: string;
+    minTokens: number;
+    maxTokens: number;
+    costPerToken: number;
+  };
+}
+
+const DEFAULT_MODEL_CONFIG: ModelTierConfig = {
+  leadModel: {
+    name: 'claude-opus-4',
+    minTokens: 1000,
+    maxTokens: 32000,
+    costPerToken: 0.000015, // $15 / 1M tokens
+  },
+  specialistModel: {
+    name: 'claude-sonnet-4',
+    minTokens: 500,
+    maxTokens: 16000,
+    costPerToken: 0.000003, // $3 / 1M tokens
+  },
+};
+
+interface AllocatedBudget {
+  leadAgent: { model: string; tokens: number; cost: number };
+  specialistAgents: { model: string; tokens: number; cost: number };
+  overhead: { tokens: number };
+  total: { tokens: number; cost: number };
+  savings: {
+    pureLeadCost: number;
+    actualCost: number;
+    savingsPercent: number;
+  };
 }
 ```
 
+## API
+
 ```typescript
-const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
+class TokenBudgetAllocator {
+  constructor(totalBudget?: number, config?: ModelTierConfig);
+  // totalBudget defaults to 100_000; config defaults to DEFAULT_MODEL_CONFIG
 
-// Allocate based on topology
-const budget = allocator.allocate(
-  topology: Topology,
-  complexity: number,
-  agentCount: number
-): TokenBudget;
+  allocate(allocation: TokenBudgetAllocation): AllocatedBudget;
+  // Splits the budget by fraction, clamps each tier to its model's
+  // minTokens..maxTokens range, computes per-model cost and savings.
 
-// Get allocation breakdown
-const allocation = allocator.getAllocation(
-  topology: OrchestrationTopology,
-  totalBudget: number
-): AllocationResult;
+  getRecommendedBudget(complexity: TaskComplexity): number;
+  // base 50_000 × { LOW: 1, MEDIUM: 2, HIGH: 4, CRITICAL: 8 }
+}
 ```
 
-| Topology | Lead | Specialists | Evaluation | Overhead |
-|----------|------|-------------|------------|----------|
-| SINGLE | 95% | 0% | 5% | 0% |
-| CHAIN | 30% | 50% | 15% | 5% |
-| DISPATCH | 15% | 65% | 15% | 5% |
-| ORCHESTRATOR | 35% | 45% | 15% | 5% |
-| REVIEW | 25% | 30% | 40% | 5% |
+### Import
 
+Dentro del monorepo, la clase se importa desde su módulo fuente:
 
-## Notas
+```typescript
+import { TokenBudgetAllocator } from 'packages/core/src/ultimateFramework';
+```
 
-- CLI monorepo: `cliEntry.ts` · tras build: `commander`  
-- Métricas: 25 proveedores · 5 topologías · 18 tools · 6700+ tests  
-- Firmas API exactas: monorepo / [API overview](/es/api/overview)  
+Las aplicaciones no deberían depender de la clase directamente. El runtime expone la gestión de presupuestos a través de `getTokenBudgetManager()` (`packages/core/src/runtime/tokenBudgetManager.ts`), que usan el orquestador y el ejecutor de sub-agentes en tiempo de ejecución.
+
+## Ejemplo
+
+```typescript
+import { TokenBudgetAllocator } from 'packages/core/src/ultimateFramework';
+import type { TaskComplexity } from 'packages/core/src/models/taskComplexity';
+
+const allocator = new TokenBudgetAllocator(); // 100_000 tokens, default config
+
+const budget = allocator.allocate({
+  leadAgent: 0.4,
+  specialistAgents: 0.5,
+  overhead: 0.1,
+});
+
+// budget.leadAgent        → { model: 'claude-opus-4',  tokens: 40_000, cost: 0.60 }
+// budget.specialistAgents → { model: 'claude-sonnet-4', tokens: 50_000, cost: 0.15 }
+// budget.total.cost       → 0.75
+// budget.savings.savingsPercent → ~75% vs. pure lead model
+
+const complexity: TaskComplexity = { level: 'HIGH' };
+const recommended = allocator.getRecommendedBudget(complexity); // 50_000 × 4 = 200_000
+```
+
+**Clamping:** los tokens de cada nivel se ajustan al rango `minTokens..maxTokens` de su modelo (líder: 1000–32000, especialista: 500–16000). `savingsPercent` tiene un mínimo de 0.
 
 ## Relacionado
 
-- [Arquitectura](/es/architecture/overview)  
-- [Inicio rápido](/es/guide/getting-started)  
+- [Analizador de complejidad de tareas](/es/api/task-complexity-analyzer)
+- [Vista general de la API](/es/api/overview)
+- [Runtime de agentes](/es/architecture/agent-runtime)

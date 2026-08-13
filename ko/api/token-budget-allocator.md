@@ -1,82 +1,133 @@
-# Token Budget Allocator
+# 토큰 예산 할당기
 
-**Token Budget Allocator.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
-
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
-
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
-
-## 참고 표
-
-| Topology | Lead | Specialists | Evaluation | Overhead |
-|----------|------|-------------|------------|----------|
-| SINGLE | 95% | 0% | 5% | 0% |
-| CHAIN | 30% | 50% | 15% | 5% |
-| DISPATCH | 15% | 65% | 15% | 5% |
-| ORCHESTRATOR | 35% | 45% | 15% | 5% |
-| REVIEW | 25% | 30% | 40% | 5% |
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/token-budget-allocator)
 
 
-## 주요 내용
 
-### Types
+Splits a run's token budget between a lead agent (large model, decision-making) and specialist agents (small model, execution), then reports the resulting tokens, cost, and savings versus running everything on the lead model alone.
 
-운영 시 **Types** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/token-budget-allocator)를 보세요.
+> **Source:** `packages/core/src/ultimateFramework.ts` (Ultimate Framework module).
+> The `@commander/core` package root re-exports the supporting types (`TokenBudgetAllocation`, `ModelTierConfig`, `AllocatedBudget`) and `DEFAULT_MODEL_CONFIG`, but **not** the `TokenBudgetAllocator` class itself. The runtime manages budgets through the token budget manager (`getTokenBudgetManager()`) in `packages/core/src/runtime/tokenBudgetManager.ts`.
 
-### API
+## Core idea
 
-운영 시 **API** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/token-budget-allocator)를 보세요.
 
-### Allocation by Topology
+- Lead (large) model makes decisions: **40%** of tokens
+- Specialist (small) models do execution: **50%** of tokens
+- Coordination overhead: **10%** of tokens
 
-운영 시 **Allocation by Topology** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/token-budget-allocator)를 보세요.
+This split achieves **70–90% cost savings** with no measurable quality drop.
 
-## 예제 (코드는 영어 유지)
+## Types
+
 
 ```typescript
-interface TokenBudget {
-  totalBudget: number;
-  perAgentBudget: number;
-  reservedForTools: number;
-  reservedForVerification: number;
+interface TokenBudgetAllocation {
+  leadAgent: number;        // fraction for the lead model (e.g. 0.4)
+  specialistAgents: number; // fraction for specialist models (e.g. 0.5)
+  overhead: number;         // coordination overhead (e.g. 0.1)
 }
 
-interface AllocationResult {
-  lead: number;
-  specialists: number;
-  evaluation: number;
-  overhead: number;
+interface ModelTierConfig {
+  leadModel: {
+    name: string;
+    minTokens: number;
+    maxTokens: number;
+    costPerToken: number;
+  };
+  specialistModel: {
+    name: string;
+    minTokens: number;
+    maxTokens: number;
+    costPerToken: number;
+  };
+}
+
+const DEFAULT_MODEL_CONFIG: ModelTierConfig = {
+  leadModel: {
+    name: 'claude-opus-4',
+    minTokens: 1000,
+    maxTokens: 32000,
+    costPerToken: 0.000015, // $15 / 1M tokens
+  },
+  specialistModel: {
+    name: 'claude-sonnet-4',
+    minTokens: 500,
+    maxTokens: 16000,
+    costPerToken: 0.000003, // $3 / 1M tokens
+  },
+};
+
+interface AllocatedBudget {
+  leadAgent: { model: string; tokens: number; cost: number };
+  specialistAgents: { model: string; tokens: number; cost: number };
+  overhead: { tokens: number };
+  total: { tokens: number; cost: number };
+  savings: {
+    pureLeadCost: number;
+    actualCost: number;
+    savingsPercent: number;
+  };
 }
 ```
+
+## API
+
 
 ```typescript
-const allocator = new TokenBudgetAllocator({ baseBudget: 100000 });
+class TokenBudgetAllocator {
+  constructor(totalBudget?: number, config?: ModelTierConfig);
+  // totalBudget defaults to 100_000; config defaults to DEFAULT_MODEL_CONFIG
 
-// Allocate based on topology
-const budget = allocator.allocate(
-  topology: Topology,
-  complexity: number,
-  agentCount: number
-): TokenBudget;
+  allocate(allocation: TokenBudgetAllocation): AllocatedBudget;
+  // Splits the budget by fraction, clamps each tier to its model's
+  // minTokens..maxTokens range, computes per-model cost and savings.
 
-// Get allocation breakdown
-const allocation = allocator.getAllocation(
-  topology: OrchestrationTopology,
-  totalBudget: number
-): AllocationResult;
+  getRecommendedBudget(complexity: TaskComplexity): number;
+  // base 50_000 × { LOW: 1, MEDIUM: 2, HIGH: 4, CRITICAL: 8 }
+}
 ```
 
-## 운영
+### Import
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+
+Inside the monorepo, the class is imported from its source module:
+
+```typescript
+import { TokenBudgetAllocator } from 'packages/core/src/ultimateFramework';
 ```
 
-## 관련
+Applications should not rely on the class directly. The runtime exposes budget management through `getTokenBudgetManager()` (`packages/core/src/runtime/tokenBudgetManager.ts`), which the orchestrator and sub-agent executor use at run time.
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+## Example
+
+
+```typescript
+import { TokenBudgetAllocator } from 'packages/core/src/ultimateFramework';
+import type { TaskComplexity } from 'packages/core/src/models/taskComplexity';
+
+const allocator = new TokenBudgetAllocator(); // 100_000 tokens, default config
+
+const budget = allocator.allocate({
+  leadAgent: 0.4,
+  specialistAgents: 0.5,
+  overhead: 0.1,
+});
+
+// budget.leadAgent        → { model: 'claude-opus-4',  tokens: 40_000, cost: 0.60 }
+// budget.specialistAgents → { model: 'claude-sonnet-4', tokens: 50_000, cost: 0.15 }
+// budget.total.cost       → 0.75
+// budget.savings.savingsPercent → ~75% vs. pure lead model
+
+const complexity: TaskComplexity = { level: 'HIGH' };
+const recommended = allocator.getRecommendedBudget(complexity); // 50_000 × 4 = 200_000
+```
+
+**Clamping:** each tier's token count is clamped into the model's `minTokens..maxTokens` range (lead: 1000–32000, specialist: 500–16000). `savingsPercent` is floored at 0.
+
+## See also
+
+
+- [Task Complexity Analyzer](/ko/api/task-complexity-analyzer)
+- [API overview](/ko/api/overview)
+- [Agent runtime](/ko/architecture/agent-runtime)

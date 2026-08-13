@@ -1,30 +1,23 @@
-# Plan Mode
+# 플랜 모드
 
-**Plan Mode.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/usage/plan-mode)
 
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
 
-## 주요 내용
+Plan mode lets you see what Commander will do **before** it does it. Switch to plan mode to review the execution strategy, agent allocation, and tool calls — with zero risk of unintended changes.
 
-### Why Use Plan Mode
+## Why Use Plan Mode
 
-운영 시 **Why Use Plan Mode** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/usage/plan-mode)를 보세요.
 
-### 사용법
+- **Safety** — Review the full plan before any files are modified
+- **Learning** — Understand how Commander decomposes and approaches tasks
+- **Debugging** — See which topology, agents, and tools will be used
+- **Collaboration** — Share and iterate on the plan with team members
 
-운영 시 **Usage** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/usage/plan-mode)를 보세요.
+## 사용법
 
-### Plan Output
 
-운영 시 **Plan Output** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/usage/plan-mode)를 보세요.
-
-### Visual Indicator
-
-운영 시 **Visual Indicator** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/guide/usage/plan-mode)를 보세요.
-
-## 예제 (코드는 영어 유지)
+> From monorepo source; after build use `commander` instead of `npx tsx packages/core/src/cliEntry.ts`.
 
 ```bash
 # Set plan mode
@@ -36,6 +29,11 @@ npx tsx packages/core/src/cliEntry.ts run "refactor the database layer"
 # Or use the --plan flag for one-off plan mode
 npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ```
+
+## Plan Output
+
+
+When you run a task in plan mode, Commander shows:
 
 ```
 ┃ → Deliberating task...
@@ -55,17 +53,7 @@ npx tsx packages/core/src/cliEntry.ts plan "implement search feature"
 ┃ → Total tools calls: ~12
 ```
 
-## 운영
+## Visual Indicator
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
 
-## 관련
-
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+The terminal shows a **plan mode indicator** in the lower-right corner when active, so you always know whether Commander is in plan or execution mode.

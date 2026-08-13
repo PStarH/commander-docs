@@ -40,13 +40,14 @@ await c.disconnect();
 ### HTTP (servidor)
 
 ```bash
-curl http://localhost:4000/health
-curl http://localhost:4000/metrics
+# Ops health server — default port 8081 (COMMANDER_OPS_HEALTH_PORT)
+curl http://localhost:8081/health   # → 200 {"status":"ok"}
+curl http://localhost:8081/ready    # → 200 (ready) / 503 (fail-closed)
 
-curl -X POST http://localhost:4000/execute \
-  -H "Authorization: Bearer $COMMANDER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"task":"analyze this repository","mode":"plan"}'
+# HTTP API base used by the Web Console client — default :4000 (VITE_API_BASE_URL).
+# Requests carry `Authorization: Bearer <token>` when a token is configured.
+curl http://localhost:4000/v1/actions \
+  -H "Authorization: Bearer <token>"
 ```
 
 API durable Architecture V2: `POST /v1/runs` — ver [Migración V2](/es/guide/migration-v2).
@@ -69,12 +70,10 @@ Estos módulos impulsan deliberación, presupuesto, memoria y verificación dent
 | Componente | Propósito |
 |------------|-----------|
 | [Analizador de complejidad](/es/api/task-complexity-analyzer) | Puntuar tarea → recomendar topología |
-| [Orquestador adaptativo](/es/api/adaptive-orchestrator) | Plan multi-agente + coordinación |
 | [Presupuesto de tokens](/es/api/token-budget-allocator) | Reparto de presupuesto entre agentes |
 | [Memoria de 3 capas](/es/api/three-layer-memory) | Working · episodic · long-term |
 | [Motor de reflexión](/es/api/reflection-engine) | Evaluación post-run |
 | [Consenso](/es/api/consensus-checker) | Votos multi-modelo en alto riesgo |
-| [Inspector](/es/api/inspector-agent) | Salud / detección de issues |
 
 ### Cuándo usar la capa 2
 
@@ -90,11 +89,7 @@ Estos módulos impulsan deliberación, presupuesto, memoria y verificación dent
 ### Ejemplo mínimo capa 2
 
 ```typescript
-import {
-  TaskComplexityAnalyzer,
-  AdaptiveOrchestrator,
-  TokenBudgetAllocator,
-} from '@commander/core';
+import { TaskComplexityAnalyzer } from '@commander/core';
 
 const analyzer = new TaskComplexityAnalyzer();
 const complexity = analyzer.analyze({
@@ -102,26 +97,20 @@ const complexity = analyzer.analyze({
   description: 'Build distributed logging system',
   riskLevel: 'high',
 });
-
-const allocator = new TokenBudgetAllocator({ baseBudget: 100_000 });
-const budget = allocator.allocate(
-  complexity.recommendedTopology,
-  complexity.score,
-  3,
-);
+// complexity: { level, score, factors, recommendedMode, tokenBudget, confidence }
 ```
+
+El reparto del presupuesto en runtime lo gestiona internamente el gestor de presupuesto de tokens — ver [Presupuesto de tokens](/es/api/token-budget-allocator).
 
 ### Accesores globales
 
 Algunos componentes exponen singletons de proceso (usados por runtime/SDK):
 
-- `getGlobalTaskComplexityAnalyzer()`
-- `getGlobalAdaptiveOrchestrator()`
-- `getGlobalTokenBudgetAllocator()`
 - `getGlobalThreeLayerMemory()`
 - `getGlobalReflectionEngine()`
-- `getGlobalConsensusChecker()`
-- `getGlobalInspectorAgent()`
+- `getGlobalLogger()` / `getGlobalMetrics()`
+- `getGlobalTenantProvider()`
+- `getGlobalMemoryRegistry()`
 
 Prefiere `CommanderClient` salvo que necesites estado compartido a nivel proceso.
 

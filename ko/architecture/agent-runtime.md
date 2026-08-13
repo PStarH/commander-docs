@@ -1,76 +1,81 @@
 # 에이전트 런타임
 
-Commander의 핵심 실행 엔진입니다. `AgentRuntime`은 단일 에이전트의 전체 수명주기를 관리합니다. LLM 호출, 도구 실행, 검증, 체크포인트, 재시도 — 모두 설정 가능한 토큰·스텝 예산 안에서.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/agent-runtime)
 
-## 구조
+
+
+The execution engine at the heart of Commander. The `AgentRuntime` manages the full lifecycle of a single agent: LLM calls, tool execution, verification, checkpointing, and retry — all within configurable token and step budgets.
+
+## Architecture
+
 
 ```
 AgentRuntime.execute(ctx)
   │
-  ├─ acquireSlot()        ← 동시성 세마포어
-  ├─ [Tenant check]       ← rate limit + 동시성 쿼터
-  ├─ resolve storage      ← 테넌트 스코프 메모리 + 캐시
+  ├─ acquireSlot()        ← Concurrency semaphore
+  ├─ [Tenant check]       ← Rate limit + concurrency quota
+  ├─ resolve storage      ← Tenant-scoped memory + caching
   │
   ├─ [Retry loop: 0..maxRetries]
-  │   ├─ callWithTimeout()       ← LLM 프로바이더
+  │   ├─ callWithTimeout()       ← LLM provider call
   │   ├─ [Tool execution loop]
-  │   │   ├─ planner.plan()      ← 의존성 인식 실행 계획
+  │   │   ├─ planner.plan()      ← Dependency-aware execution plan
   │   │   ├─ executeTool()       ← StepErrorBoundary → tool.execute()
-  │   │   └─ cache.set()
-  │   ├─ verification.check()    ← 5 품질 게이트
-  │   └─ checkpoint()            ← atomic 저장
+  │   │   └─ cache.set()         ← Cache result
+  │   ├─ verification.check()    ← 5 quality gates
+  │   └─ checkpoint()            ← Atomic save
   │
   ├─ releaseSlot()
   └─ flush traces + samples
 ```
 
-## 메인 루프
+## Main Loop
 
-1. **슬롯 획득** — 최대 동시 run 초과 방지
-2. **테넌트 검증** — rate limit·동시성 쿼터
-3. **LLM 호출** — 타임아웃 설정 가능
-4. **도구 실행** — `ToolPlanner`가 의존성을 분석해 병렬 가능 도구를 동시 실행
-5. **검증** — 5 게이트 실패 시 재시도
-6. **체크포인트** — 단계마다 atomic 영속화
-7. **트레이싱** — 실행 트레이스·LLM 샘플 flush
 
-## 핵심 컴포넌트
+Each agent run follows this sequence:
 
-| 컴포넌트             | 파일                            | 역할                    |
-| -------------------- | ------------------------------- | ----------------------- |
-| `AgentRuntime`       | `runtime/agentRuntime.ts`       | 메인 루프               |
-| `ToolPlanner`        | `runtime/toolPlanner.ts`        | 의존성 인식 도구 계획   |
-| `ToolOrchestrator`   | `runtime/toolOrchestrator.ts`   | 계획된 도구 실행        |
-| `StepErrorBoundary`  | `runtime/stepErrorBoundary.ts`  | 단계별 skip/retry/abort |
-| `StepTimeoutManager` | `runtime/stepTimeoutManager.ts` | 단계 타임아웃           |
-| `ContextCompactor`   | `runtime/contextCompactor.ts`   | 토큰 인식 메시지 압축   |
-| `ContextWindow`      | `runtime/contextWindow.ts`      | 슬라이딩 윈도우         |
-| `TokenGovernor`      | `runtime/tokenGovernor.ts`      | 토큰 예산               |
-| `CycleDetector`      | `runtime/cycleDetector.ts`      | 무한 루프 탐지          |
-| `ToolOutputManager`  | `runtime/toolOutputManager.ts`  | 도구 출력 토큰 예산     |
+1. **Slot acquisition** — A concurrency semaphore prevents exceeding max concurrent runs
+2. **Tenant validation** — Rate limits and concurrency quotas are checked per tenant
+3. **LLM call** — The provider is called with a configurable timeout
+4. **Tool execution** — The LLM's tool requests are executed. The `ToolPlanner` builds a dependency-aware execution plan so parallelizable tools run concurrently
+5. **Verification** — The output passes through a 5-gate verification pipeline. If it fails, the runtime retries
+6. **Checkpointing** — State is persisted atomically at every step for crash recovery
+7. **Tracing** — Execution traces and LLM samples are flushed to persistent stores
 
-## 설정
+## Key Components
+
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `AgentRuntime` | `runtime/agentRuntime.ts` | Main execution loop |
+| `ToolPlanner` | `runtime/toolPlanner.ts` | Dependency-aware tool execution plan |
+| `ToolOrchestrator` | `runtime/toolOrchestrator.ts` | Executes planned tool calls |
+| `StepErrorBoundary` | `runtime/stepErrorBoundary.ts` | Per-step recovery: skip, retry, or abort |
+| `StepTimeoutManager` | `runtime/stepTimeoutManager.ts` | Per-step timeout enforcement |
+| `ContextCompactor` | `runtime/contextCompactor.ts` | Token-aware message compaction |
+| `ContextWindow` | `runtime/contextWindow.ts` | Sliding window context management |
+| `TokenGovernor` | `runtime/tokenGovernor.ts` | Token budget enforcement |
+| `CycleDetector` | `runtime/cycleDetector.ts` | Loop detection to prevent infinite execution |
+| `ToolOutputManager` | `runtime/toolOutputManager.ts` | Token-budgeted tool output management |
+
+## 구성
+
 
 ```typescript
 interface AgentRuntimeConfig {
-  maxStepsPerRun: number; // run당 최대 LLM→tool 사이클
-  maxRetries: number; // 검증 재시도
-  timeoutMs: number; // LLM 호출 타임아웃
-  maxConcurrency: number; // 최대 동시 에이전트
-  budgetHardCapTokens: number; // 절대 토큰 상한
+  maxStepsPerRun: number;      // Max LLM→tool cycles per run
+  maxRetries: number;          // Max verification retries
+  timeoutMs: number;           // Per-LLM-call timeout
+  maxConcurrency: number;      // Max concurrent agent runs
+  budgetHardCapTokens: number; // Absolute token ceiling
 }
 ```
 
-## 실행 계획
+## Execution Plan
 
-도구는 LLM 응답 순서 그대로가 아닙니다. `ToolPlanner`가 의존성을 분석합니다.
 
-- 독립 도구는 동시 실행
-- 종속 도구는 선행 후 순차
-- 순환 의존성은 실행 전에 검증
+Tools are not executed in LLM response order. The `ToolPlanner` analyzes dependencies between tool calls and produces a parallel-aware execution plan:
 
-## 관련
-
-- [검증 파이프라인](/ko/architecture/verification)
-- [멀티 에이전트](/ko/architecture/multi-agent)
-- [코어 호출 체인](/ko/architecture/core-call-chain)
+- Independent tools execute concurrently
+- Dependent tools execute sequentially after their prerequisites
+- The plan is validated before any tool runs, catching circular dependencies early

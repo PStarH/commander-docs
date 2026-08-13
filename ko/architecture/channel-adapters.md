@@ -1,8 +1,15 @@
 # 채널 어댑터
 
-Commander는 어댑터 시스템으로 여러 커뮤니케이션 채널을 지원합니다. 에이전트가 Telegram 등 다양한 플랫폼에서 사용자와 대화할 수 있습니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/channel-adapters)
 
-## 인터페이스
+
+
+Commander supports multiple communication channels through its adapter system, allowing agents to interact with users across different platforms.
+
+## Architecture
+
+
+Channel adapters implement the `ChannelAdapter` interface:
 
 ```typescript
 interface ChannelAdapter {
@@ -14,7 +21,10 @@ interface ChannelAdapter {
 }
 ```
 
-## Telegram 어댑터
+## Telegram Adapter
+
+
+Built-in Telegram support for interacting with Commander agents via chat:
 
 ```typescript
 import { TelegramAdapter } from '@commander/core';
@@ -35,7 +45,8 @@ adapter.onMessage(async (msg) => {
 await adapter.connect();
 ```
 
-## 커스텀 어댑터
+## Creating Custom Adapters
+
 
 ```typescript
 import { ChannelAdapter, InboundMessage, OutboundMessage } from '@commander/core';
@@ -52,25 +63,26 @@ class DiscordAdapter implements ChannelAdapter {
   }
 
   onMessage(handler: (msg: InboundMessage) => void): void {
-    // Wire inbound events
+    // Register Discord message handler
   }
 
   async disconnect(): Promise<void> {
     // Cleanup
   }
 }
+
+runtime.registerChannelAdapter('discord', new DiscordAdapter());
 ```
 
-## 운영 메모
+## Built-in Adapters
 
-- 공개 봇은 `allowedChatIds` 로 화이트리스트  
-- 시크릿 토큰은 env에만 두고 git에 넣지 않기  
-- 프로덕션에서는 `COMMANDER_API_KEY` 와 동일하게 게이트웨이 인증을 맞출 것  
 
-패키지는 monorepo `packages/core`. CLI: `npx tsx packages/core/src/cliEntry.ts`.
-
-## 관련
-
-- [웹 콘솔](/ko/guide/web-console)  
-- [보안](/ko/guide/security)  
-- [MCP](/ko/architecture/mcp)  
+| Adapter | Status | Features |
+|---------|--------|----------|
+| Terminal | ✅ Built-in | Full interaction, streaming, plan mode |
+| HTTP (REST) | ✅ Built-in | Execute, plan, watch endpoints |
+| SSE | ✅ Built-in | Real-time event streaming |
+| Telegram | ✅ Built-in | Async agent interaction via chat |
+| Discord | 🔲 Planned | Server/channel-based interaction |
+| Slack | 🔲 Planned | Workspace integration |
+| WebSocket | 🔲 Planned | Bidirectional real-time communication |

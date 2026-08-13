@@ -1,8 +1,15 @@
-# チャネル・アダプタ
+# チャネルアダプター
 
-Commander はアダプタ経由で複数の通信チャネルをサポートします。エージェントが Telegram など各プラットフォームでユーザーと対話できます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/channel-adapters)
 
-## インターフェース
+
+
+Commander supports multiple communication channels through its adapter system, allowing agents to interact with users across different platforms.
+
+## Architecture
+
+
+Channel adapters implement the `ChannelAdapter` interface:
 
 ```typescript
 interface ChannelAdapter {
@@ -14,7 +21,10 @@ interface ChannelAdapter {
 }
 ```
 
-## Telegram アダプタ
+## Telegram Adapter
+
+
+Built-in Telegram support for interacting with Commander agents via chat:
 
 ```typescript
 import { TelegramAdapter } from '@commander/core';
@@ -35,20 +45,44 @@ adapter.onMessage(async (msg) => {
 await adapter.connect();
 ```
 
-## カスタム・アダプタ
+## Creating Custom Adapters
 
-`ChannelAdapter` を実装して Discord 等を追加できます。`connect` / `send` / `onMessage` / `disconnect` を満たせばランタイムに載せられます。
 
-## 運用
+```typescript
+import { ChannelAdapter, InboundMessage, OutboundMessage } from '@commander/core';
 
-- 公開ボットは `allowedChatIds` でホワイトリスト  
-- トークンは env のみ  
-- 本番はゲートウェイ認証と揃える  
+class DiscordAdapter implements ChannelAdapter {
+  readonly name = 'discord';
 
-monorepo `packages/core`。CLI: `npx tsx packages/core/src/cliEntry.ts`。
+  async connect(): Promise<void> {
+    // Initialize Discord client
+  }
 
-## 関連
+  async send(message: OutboundMessage): Promise<void> {
+    // Send message to Discord channel
+  }
 
-- [Web コンソール](/ja/guide/web-console)  
-- [セキュリティ](/ja/guide/security)  
-- [MCP](/ja/architecture/mcp)  
+  onMessage(handler: (msg: InboundMessage) => void): void {
+    // Register Discord message handler
+  }
+
+  async disconnect(): Promise<void> {
+    // Cleanup
+  }
+}
+
+runtime.registerChannelAdapter('discord', new DiscordAdapter());
+```
+
+## Built-in Adapters
+
+
+| Adapter | Status | Features |
+|---------|--------|----------|
+| Terminal | ✅ Built-in | Full interaction, streaming, plan mode |
+| HTTP (REST) | ✅ Built-in | Execute, plan, watch endpoints |
+| SSE | ✅ Built-in | Real-time event streaming |
+| Telegram | ✅ Built-in | Async agent interaction via chat |
+| Discord | 🔲 Planned | Server/channel-based interaction |
+| Slack | 🔲 Planned | Workspace integration |
+| WebSocket | 🔲 Planned | Bidirectional real-time communication |

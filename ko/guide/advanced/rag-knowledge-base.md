@@ -1,23 +1,29 @@
 # RAG 지식 베이스
 
-Commander에는 외부 서비스 없이 지식 검색을 제공하는 선택적 **RAG (Retrieval-Augmented Generation)** 플러그인이 포함됩니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/advanced/rag-knowledge-base)
+
+
+
+Commander includes a built-in optional RAG (Retrieval-Augmented Generation) plugin that provides knowledge base search capabilities without requiring external services.
 
 ## 개요
 
-`builtin-rag`는 카테고리 `integration`의 `CommanderPlugin`이며 **기본 비활성**입니다.
 
-- 문서 수집 (청크 + 임베딩)
-- 빠른 유사도 검색용 HNSW 벡터 인덱스
-- (선택) LLM 호출 전 컨텍스트 자동 주입
-- OpenAI 또는 로컬 임베딩 (제로 의존 fallback)
+The `builtin-rag` plugin is a `CommanderPlugin` with category `integration`, **disabled by default**. It provides:
 
-## 활성화
+- Document ingestion with chunking and embedding
+- HNSW vector index for fast similarity search
+- Automatic context injection before LLM calls (optional)
+- OpenAI or local embedding (zero-dependency fallback)
+
+## Enabling the Plugin
+
 
 ```bash
-# CLI (빌드 후 commander, 또는 monorepo 엔트리)
-npx tsx packages/core/src/cliEntry.ts plugin enable rag
+# Enable via CLI
+commander plugin enable rag
 
-# 또는 .commander.json
+# Or in .commander.json
 {
   "plugins": {
     "builtin-rag": { "enabled": true }
@@ -25,51 +31,100 @@ npx tsx packages/core/src/cliEntry.ts plugin enable rag
 }
 ```
 
-## 설정
+## 구성
 
-| 옵션             | 기본                         | 설명                |
-| ---------------- | ---------------------------- | ------------------- |
-| `kbPath`         | `.commander/knowledge-base/` | 문서·벡터 저장 경로 |
-| `embeddingModel` | `text-embedding-3-small`     | OpenAI 임베딩 모델  |
-| `chunkSize`      | `512`                        | 청크 문자 수        |
-| `chunkOverlap`   | `50`                         | 청크 겹침           |
-| `maxResults`     | `5`                          | 최대 검색 결과      |
-| `autoInject`     | `false`                      | LLM 전 자동 주입    |
 
-## 임베딩 전략
+| Option | Default | Description |
+|--------|---------|-------------|
+| `kbPath` | `.commander/knowledge-base/` | Storage directory for documents and vectors |
+| `embeddingModel` | `text-embedding-3-small` | OpenAI embedding model (when API key available) |
+| `chunkSize` | `512` | Document chunk size in characters |
+| `chunkOverlap` | `50` | Overlap between chunks |
+| `maxResults` | `5` | Maximum search results returned |
+| `autoInject` | `false` | Auto-inject relevant context before LLM calls |
 
-1. **OpenAI** — `OPENAI_API_KEY`가 있을 때 (`text-embedding-3-small`)
-2. **로컬** — 오프라인용 제로 의존 fallback
+## Embedding Strategy
 
-## 벡터 검색
 
-`memory/hnswIndex.ts`의 HNSW를 사용합니다.
+The plugin automatically selects the embedding backend:
 
-- **1000+** 엔티티: 근사 최근접 이웃
-- 더 작으면 brute-force 정확 검색
-- `bruteForceThreshold` 기본 1000
+1. **OpenAI embeddings** — Used when `OPENAI_API_KEY` is set. Model: `text-embedding-3-small`
+2. **Local embedding** — Zero-dependency fallback for offline use. No API key required.
 
-## 문서 수집
+## Vector Search
+
+
+Search uses the existing HNSW index (`memory/hnswIndex.ts`):
+
+- Datasets with **1000+ entities** use HNSW for approximate nearest neighbor search
+- Smaller datasets fall back to brute-force search for exact results
+- The `bruteForceThreshold` defaults to 1000
+
+## Document Ingestion
+
+
+Documents are processed through a chunk → embed → index → persist pipeline:
 
 ```
-Document → Chunk (512, overlap 50) → Embed → Index (HNSW) → Persist
+Document → Chunk (512 chars, 50 overlap) → Embed → Index (HNSW) → Persist
 ```
 
-- `kb-documents.json` — 메타데이터
-- `kb-vectors.json` — 청크 + 임베딩
-- 쓰기는 temp + rename으로 atomic
+Storage layout:
+- `kb-documents.json` — Document metadata
+- `kb-vectors.json` — Chunk payloads with embeddings
 
-## API (활성 시)
+Writes are atomic (temp file + rename) to prevent corruption.
 
-| Endpoint                     | Method   | 용도      |
-| ---------------------------- | -------- | --------- |
-| `/api/knowledge-base`        | `GET`    | 문서 목록 |
-| `/api/knowledge-base`        | `POST`   | 업로드    |
-| `/api/knowledge-base/:id`    | `DELETE` | 삭제      |
-| `/api/knowledge-base/search` | `POST`   | 검색      |
+## API Endpoints
 
-## 관련
 
-- [플러그인 시스템](/ko/guide/advanced/plugin-system)
-- [Three-layer memory](/ko/api/three-layer-memory)
-- [보안](/ko/guide/security)
+When enabled, the following API endpoints become available:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/knowledge-base` | `GET` | List all documents |
+| `/api/knowledge-base` | `POST` | Upload a document |
+| `/api/knowledge-base/:id` | `DELETE` | Remove a document |
+| `/api/knowledge-base/search` | `POST` | Search the knowledge base |
+
+## Knowledge Search Tool
+
+
+The plugin registers a `knowledge_search` tool that LLM agents can call:
+
+```typescript
+// Tool parameters
+{
+  query: string,      // Search query
+  topK: number        // Results to return (1-50, default 5)
+}
+```
+
+## Auto-Inject Mode
+
+
+When `autoInject` is enabled, the plugin installs a `beforeLLMCall` hook that:
+
+1. Extracts the query context from the current conversation
+2. Searches the knowledge base for relevant chunks
+3. Assembles a system message with retrieved context
+4. Injects it at the front of the message list
+
+This provides RAG capabilities without requiring the LLM to explicitly call the `knowledge_search` tool.
+
+## Web Interface
+
+
+When the plugin is enabled, a Knowledge Base management page appears in the web GUI:
+
+- Upload documents (drag-and-drop)
+- View document list with metadata
+- Delete documents
+- Test search queries
+
+The page is hidden when the plugin is disabled.
+
+## Shared Store
+
+
+The `KnowledgeBaseStore` uses a process-level singleton (`getSharedKnowledgeBaseStore()`), ensuring that API endpoints and the plugin itself access the same instance.

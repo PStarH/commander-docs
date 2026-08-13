@@ -1,69 +1,99 @@
 # 에이전트 팀
 
-Commander는 장기·협업 워크플로를 위해 **영속 인박스 메시징**이 있는 에이전트 팀을 지원합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/guide/advanced/agent-teams)
+
+
+
+Commander supports persistent agent teams with inbox messaging for long-running, collaborative workflows.
 
 ## 개요
 
-에이전트 팀은 여러 에이전트가 긴 시간 동안 복잡한 작업을 함께 하도록 합니다. 각 에이전트는 자체 인박스를 가지며 비동기로 메시지를 주고받습니다.
 
-## 팀 생성
+Agent teams allow multiple agents to work together on complex tasks over extended periods. Each agent has its own inbox and can send/receive messages asynchronously.
+
+## Creating a Team
+
 
 ```typescript
-import { AgentTeamManager } from "@commander/core";
+import { AgentTeamManager } from '@commander/core';
 
-const team = new AgentTeamManager("team-1");
+const team = new AgentTeamManager('team-1');
 
+// Register agents
 const leadId = team.registerAgent({
-  id: "lead",
-  name: "Lead Architect",
-  role: "architect",
-  capabilities: ["system-design", "code-review"],
+  id: 'lead',
+  name: 'Lead Architect',
+  role: 'architect',
+  capabilities: ['system-design', 'code-review'],
 });
 
 const backendId = team.registerAgent({
-  id: "backend",
-  name: "Backend Specialist",
-  role: "engineer",
-  capabilities: ["api-design", "database"],
+  id: 'backend',
+  name: 'Backend Specialist',
+  role: 'engineer',
+  capabilities: ['api-design', 'database'],
 });
 
 const frontendId = team.registerAgent({
-  id: "frontend",
-  name: "Frontend Specialist",
-  role: "engineer",
-  capabilities: ["ui", "react"],
+  id: 'frontend',
+  name: 'Frontend Specialist',
+  role: 'engineer',
+  capabilities: ['ui', 'react'],
 });
 ```
 
-> `@commander/core`는 monorepo workspace에서 가져옵니다. npm 공개가 주 경로가 되기 전까지 clone + pnpm을 사용하세요.
+## Agent Communication
 
-## 통신
 
-영속 인박스를 통해 메시지를 보냅니다.
+Agents communicate via persistent inboxes:
 
 ```typescript
+// Send a message to an agent
 await team.sendMessage({
   from: leadId,
   to: backendId,
-  subject: "Design API endpoints",
-  body: "Need a REST API for the user module. Design the endpoints.",
-  priority: "high",
+  subject: 'Design API endpoints',
+  body: 'Need a REST API for the user module. Design the endpoints.',
+  priority: 'high',
+});
+
+// Agent reads its inbox
+const inbox = await team.getInbox(backendId);
+const messages = inbox.getMessages();
+
+// Agent replies
+await team.sendMessage({
+  from: backendId,
+  to: leadId,
+  subject: 'Re: Design API endpoints',
+  body: 'Proposed endpoints:\nGET /users\nPOST /users\nGET /users/:id',
 });
 ```
 
-에이전트는 인박스를 폴링하거나 이벤트 버스를 구독해 작업을 이어갑니다. 핸드오프와 artifact 참조는 정보 손실을 줄입니다.
+## Team Topologies
 
-## 언제 쓰나
 
-| 상황             | 추천                                         |
-| ---------------- | -------------------------------------------- |
-| 짧은 일회 작업   | 토폴로지 자동 선택 (DISPATCH / ORCHESTRATOR) |
-| 며칠에 걸친 협업 | Agent Teams + 영속 인박스                    |
-| 고위험 검증      | REVIEW 토폴로지 + 팀 리뷰 역할               |
+### Lead-Driven
 
-## 관련
+One lead agent coordinates specialists. Best for most development workflows.
 
-- [멀티 에이전트](/ko/architecture/multi-agent)
-- [토폴로지 의사결정 트리](/ko/guide/usage/topology-decision-tree)
-- [Agent Runtime](/ko/architecture/agent-runtime)
-- [SDK](/ko/guide/sdk)
+### Peer-to-Peer
+
+Agents collaborate without a hierarchy. Best for research and analysis.
+
+### Swarm
+
+Multiple agents work on the same problem and vote on the solution. Best for critical decisions.
+
+## Persistence
+
+
+Agent teams persist across sessions:
+- Messages are stored in the inbox store
+- Agent states are checkpointed
+- Teams can be resumed after restarts
+
+```typescript
+// Resume a team from a previous session
+const existingTeam = await AgentTeamManager.load('team-1');
+```

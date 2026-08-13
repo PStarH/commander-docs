@@ -1,69 +1,80 @@
-# クックブック: リポジトリのセキュリティ監査
+# Cookbook: Security audit a repository
 
-**ゴール:** ライブストリーミングと読みやすい findings でマルチエージェントのセキュリティ監査を実行する。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/cookbook/security-audit)
 
-**時間:** 約 10 分 · **リスク:** 読み取り中心（`read-only` または `plan` を推奨）
 
-## 1. 準備
+
+**Goal:** Run a multi-agent security-oriented audit with live streaming and readable findings.
+
+**Time:** ~10 minutes · **Risk:** read-heavy (prefer `read-only` or `plan` first)
+
+## 1. Setup
+
 
 ```bash
-cd /path/to/Commander   # モノレポルート
-export OPENAI_API_KEY=sk-...   # または対応キー
+cd /path/to/Commander   # monorepo root
+export OPENAI_API_KEY=sk-...   # or any supported key
 ```
 
-学習中は書き込みを制限:
+Optional: restrict writes while learning:
 
 ```bash
 export COMMANDER_MODE=read-only
 ```
 
-## 2. まず plan
+## 2. Plan first
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts plan "audit this repository for security vulnerabilities, secrets, and risky dependencies"
 ```
 
-**期待:** 分類（多くは ANALYSIS）、複雑度、トポロジ（多くは DISPATCH または REVIEW）、エージェント役割。
+**Expect:** classification (often ANALYSIS), complexity score, topology (often DISPATCH or REVIEW), agent roles.
 
-## 3. stream で実行
+## 3. Execute with stream
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts run "audit this repository for security vulnerabilities, secrets, and risky dependencies" --stream
 ```
 
-**ストリームで期待すること:**
+**Expect in the stream:**
 
-- 審議バナー（タスク種別 + トポロジ）
-- 複数エージェントまたは順次ツール（grep、package audit など）
-- 品質ゲート行（ACCURACY / COMPLETENESS / SAFETY …）
-- 統合された findings サマリー
+- Deliberation banner (task class + topology)  
+- Multiple agents or sequential tools (grep, package audit, etc.)  
+- Quality gate lines (ACCURACY / COMPLETENESS / SAFETY …)  
+- A synthesized findings summary  
 
-## 4. トポロジを固定（任意）
+## 4. Tighten the topology (optional)
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts run "audit this repository for security vulnerabilities" --stream --topology review
 ```
 
-REVIEW は厳しめの検証が欲しいときに produce → critique を強制します。
+REVIEW forces produce → critique style execution when you want higher scrutiny.
 
-## 5. 成功チェックリスト
+## 5. Success checklist
 
-- [ ] Plan がクラッシュせずトポロジを表示
-- [ ] Stream にエージェント/ツール活動がある
-- [ ] 最終サマリーに具体 findings、または範囲付きの「なし」
-- [ ] 説明のないハング（2 分以上イベント 0）がない
+
+- [ ] Plan printed a topology without crashing  
+- [ ] Stream showed agent/tool activity  
+- [ ] Final summary lists concrete findings or explicit “none found” with scope  
+- [ ] No unexplained hang (>2 min with zero events)  
 
 ## 失敗モード
 
-| 問題             | 対処                                                    |
-| ---------------- | ------------------------------------------------------- |
-| プロバイダーなし | `doctor`；現在のシェルの env を確認                     |
-| 浅い監査         | 実コードパスを指定；プロンプトを具体化                  |
-| SAFETY ゲート    | シークレット類似パターンがあれば正常なシグナル          |
-| コスト/遅延      | `plan` のみ、または高速プロバイダー（Groq）でトリアージ |
+
+| Issue | Action |
+|-------|--------|
+| No provider | `doctor`; verify env var in current shell |
+| Empty / shallow audit | Point at a real codebase path; increase specificity in the prompt |
+| SAFETY gate flags | Expected if secrets-like patterns exist — treat as signal |
+| Cost / latency high | Use `plan` only, or a faster provider (Groq) for triage |
 
 ## 関連
 
-- [セキュリティ](/ja/guide/security)
-- [トポロジ決定木](/ja/guide/usage/topology-decision-tree)
-- [Watch モード](/ja/guide/usage/watch-mode)
+
+- [Security](/ja/guide/security)  
+- [Topology Decision Tree](/ja/guide/usage/topology-decision-tree)  
+- [Watch Mode](/ja/guide/usage/watch-mode)  

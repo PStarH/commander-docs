@@ -1,12 +1,14 @@
-# Benchmarks
+# 벤치마크
 
-Commander 아키텍처 구성 요소에 대한 한국어 문서입니다. monorepo 구현과 정렬됩니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/benchmarks)
 
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
 
-## 참고 표
+> **Generated**: 2026-05-17 | **Base model**: MiMo (mimo-v2.5-pro)
+> **Raw data**: See `docs/benchmark-results/` in the Commander repository.
+
+## Results Summary
+
 
 | Benchmark | Scale | Commander | Competitor | Evidence |
 |-----------|:-----:|:---------:|:----------:|----------|
@@ -17,26 +19,54 @@ CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
 | **MT-Bench** | 5 questions (subset) | **7.8/10** | — | `docs/benchmark-results/mtbench/` |
 | **PinchBench** | 43 tasks | **97.7%** (42/43) | OpenClaw 89.5% | `docs/benchmark-results/pinchbench-final42/` |
 
+## Key Insight
 
-## 주요 내용
 
-### Results Summary
+Commander adds **+48.5 percentage points** over the bare MiMo base model on GAIA — demonstrating the power of multi-agent orchestration over single-agent baselines.
 
-운영 시 **Results Summary** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/benchmarks)를 보세요.
+## Benchmark Details
 
-### Key Insight
 
-운영 시 **Key Insight** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/benchmarks)를 보세요.
+### GAIA (165 Multi-Step Reasoning Tasks)
 
-### Benchmark Details
 
-운영 시 **Benchmark Details** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/benchmarks)를 보세요.
+- **Score**: 69.7% (115/165 correct)
+- **Caveat**: 105 of the 115 correct answers have an empty `answer` field — this is an extraction logic bug, not a scoring bug. The `correct` field is based on the full LLM response.
+- **Comparison**: Bare MiMo scores 21.2% — Commander's orchestration adds 48.5 percentage points.
 
-### Running Benchmarks Yourself
+### BFCL — Berkeley Function Calling Leaderboard
 
-운영 시 **Running Benchmarks Yourself** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/benchmarks)를 보세요.
 
-## 예제 (코드는 영어 유지)
+Commander has **two actual run subsets**:
+
+| Subset | Scenarios | Tool Accuracy | Parameter Accuracy |
+|--------|:---------:|:-------------:|:-----------------:|
+| 35-scenario (general) | 35 | 60.0% | 91.4% |
+| 12-core (core test) | 12 | 91.7% | 91.7% |
+
+Both are unofficial BFCL subsets. The official 2000+ task full run is pending.
+
+### PinchBench (43 Agentic Tasks)
+
+
+- **Score**: 97.7% (42/43 tasks passed)
+- **Failed**: `multifile.json`
+- **Comparison**: OpenClaw reports 89.5% on the same benchmark.
+
+### HumanEval+ (164 Python Problems)
+
+
+- **Score**: 91.5%
+- **Testing**: Generates Python solutions and runs them through the HumanEval+ test suite.
+
+### MT-Bench
+
+
+- **Score**: 7.8/10 on a 5-question subset
+- **Note**: This is NOT the standard 80-question full set. The full set run is pending.
+
+## Running Benchmarks Yourself
+
 
 ```bash
 cd packages/core
@@ -49,18 +79,3 @@ npx tsx benchmark.ts --benchmark gaia
 npx tsx benchmark.ts --benchmark bfcl
 npx tsx benchmark.ts --benchmark pinchbench
 ```
-
-## 운영
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
-
-## 관련
-
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)

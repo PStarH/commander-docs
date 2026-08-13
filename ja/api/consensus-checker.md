@@ -1,19 +1,24 @@
-# Consensus Checker
+# コンセンサスチェッカー
 
-高リスク判断のために複数 LLM の **重み付き投票** で合意を見ます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/api/consensus-checker)
 
-## 型
+
+
+Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
+
+## Types
+
 
 ```typescript
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
 
 interface ConsensusConfig {
-  minVoters: number;
-  agreementThreshold: number;
-  strongAgreementThreshold: number;
-  lowConsensusThreshold: number;
-  timeoutMs: number;
-  enableDiscussion: boolean;
+  minVoters: number;                    // Default: 3
+  agreementThreshold: number;           // Default: 0.8
+  strongAgreementThreshold: number;     // Default: 0.95
+  lowConsensusThreshold: number;        // Default: 0.5
+  timeoutMs: number;                    // Default: 30000
+  enableDiscussion: boolean;            // Default: true
 }
 
 interface ConsensusResult {
@@ -28,22 +33,37 @@ interface ConsensusResult {
 
 ## API
 
+
 ```typescript
 const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
+
+// Create a consensus check
 const checkId = checker.createCheck(question: string, context?: string): string;
-// addVote / finalize …
+
+// Add a vote from a model
+checker.addVote(
+  checkId: string,
+  modelId: string,
+  modelName: string,
+  decision: string,
+  confidence: number,
+  reasoning: string
+): boolean;
+
+// Get the consensus result
+const result = checker.getResult(checkId: string): ConsensusResult | undefined;
+
+// Wait for all votes
+await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
 ```
 
-## いつ使うか
+## Consensus Thresholds
 
-- セキュリティ・コンプライアンス・デプロイなどの高リスク  
-- REVIEW トポロジとの multi-model 交差検証  
-- Layer 2 拡張 — 通常は `CommanderClient.run` で十分  
 
-パッケージ: monorepo `@commander/core`。
-
-## 関連
-
-- [API 概要](/ja/api/overview)  
-- [検証](/ja/architecture/verification)  
-- [マルチエージェント](/ja/architecture/multi-agent)  
+| Level | Threshold | Action |
+|-------|-----------|--------|
+| Unanimous | ≥95% | Proceed |
+| Strong | ≥80% | Proceed |
+| Moderate | ≥50% | Discuss |
+| Low | >0 | Rethink |
+| Diverged | 0 | Escalate |

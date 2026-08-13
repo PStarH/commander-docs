@@ -1,39 +1,123 @@
 # CLI Commands
 
-本页说明 Commander 中 **CLI Commands** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/commands)
 
-## 快速入口
+
+
+Examples use the `commander` binary (available after building `@commander/core`).  
+From a source checkout without a build, replace `commander` with:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts
 ```
 
-
-## 说明
-
-### Task Execution
-
-（对应英文文档章节 **Task Execution** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Interface
-
-（对应英文文档章节 **Interface** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Analysis & Planning
-
-（对应英文文档章节 **Analysis & Planning** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Configuration
-
-（对应英文文档章节 **Configuration** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+## Task Execution
 
 
-## 指标口径
+| Command | Description |
+|---------|-------------|
+| `commander <task>` | Quick task analysis |
+| `commander run <task>` | Full multi-agent execution pipeline |
+| `commander plan <task>` | Show deliberation plan (topology, agents, budget) |
+| `commander run <task> --stream` | Execute with real-time SSE event stream |
+| `commander run --file <tasks.json>` | Batch process multiple tasks |
+| `commander swarm <task>` | Recursive decomposition with parallel execution |
+| `commander drive <task>` | Autonomous step-by-step execution |
+| `commander goal <task>` | Multi-round convergence loop |
+| `commander company <task>` | Enterprise pipeline with quality gates and memory |
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+## Interface
 
-## 相关
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+| Command | Description |
+|---------|-------------|
+| `commander gui` | Agent War Room dashboard (React + API server) |
+| `commander tui` | Terminal dashboard with live event feed |
+| `commander web` | Start web interface |
+
+## Analysis & Planning
+
+
+| Command | Description |
+|---------|-------------|
+| `commander review [--commit\|--base\|--json]` | Code review with guidelines (P0-P3 findings) |
+| `commander workers [topics]` | Parallel research workers |
+| `commander status` | System status, provider, MetaLearner stats |
+| `commander cost` | Cost analysis and breakdown |
+
+## 配置
+
+
+| Command | Description |
+|---------|-------------|
+| `commander mode [mode]` | Set approval mode (plan/read-only/auto-edit/full-auto/suggest) |
+| `commander config` | View or change settings |
+| `commander doctor` | Run diagnostics |
+| `commander budget` | Token budget management |
+| `commander --debug` | Enable verbose logging across all 74+ modules |
+
+## Skills
+
+
+| Command | Description |
+|---------|-------------|
+| `commander skill list` | List all available skills |
+| `commander skill view <name>` | View skill content |
+| `commander skill create <name>` | Create a new skill |
+| `commander skill pin <name>` | Pin a skill (always loaded) |
+
+## Session Management
+
+
+| Command | Description |
+|---------|-------------|
+| `commander history` | View session history |
+| `commander history view <id>` | View specific session |
+| `commander history prune` | Remove old sessions |
+| `commander history delete <id>` | Delete a session |
+| `commander share` | Share a session link |
+
+## Saga & Recovery
+
+
+| Command | Description |
+|---------|-------------|
+| `commander saga` | Saga transaction operations |
+| `commander checkpoint` | Checkpoint operations |
+| `commander compensation` | Compensation registry operations |
+| `commander resume` | Resume a paused or interrupted run |
+| `commander undo` | Undo last operation via compensation |
+
+## 进阶
+
+
+| Command | Description |
+|---------|-------------|
+| `commander connect` | Connect to providers |
+| `commander plan --topology <name>` | Force specific topology |
+| `commander run --agent-count <n>` | Override agent count |
+| `commander plugin enable <name>` | Enable a plugin (e.g., `rag`) |
+| `commander plugin disable <name>` | Disable a plugin |
+| `commander intelligence` | View intelligence metrics and patterns |
+
+## Approval Modes
+
+
+| Mode | Behavior |
+|------|----------|
+| `plan` | Show plan only, no execution |
+| `read-only` | Read files, no edits |
+| `auto-edit` | Automatic edits without approval |
+| `full-auto` | Fully autonomous operation |
+| `suggest` | Suggest changes, wait for approval |
+
+```bash
+# Set mode globally
+export COMMANDER_MODE=auto-edit
+
+# Or at runtime (from monorepo source)
+npx tsx packages/core/src/cliEntry.ts mode plan
+
+# After building @commander/core
+commander mode plan
+```

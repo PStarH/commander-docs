@@ -1,12 +1,13 @@
-# Extension Points
+# 拡張ポイント
 
-**Extension Points.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/extension-points)
 
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
 
-## 参照表
+Commander is designed to be extended at every layer.
+
+## Plugin System (19 Hook Points)
+
 
 | Hook | When It Fires |
 |------|---------------|
@@ -17,22 +18,12 @@ CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commande
 | `onAgentComplete` | Agent run finished |
 | `onError` | Run failed |
 
+Hooks can block, modify, or observe the execution.
 
-## 主な内容
+## Extension Interfaces
 
-### Plugin System (19 Hook Points)
 
-運用では **Plugin System (19 Hook Points)** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/extension-points)を参照してください。
-
-### Extension Interfaces
-
-運用では **Extension Interfaces** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/extension-points)を参照してください。
-
-### Meta-Learner
-
-運用では **Meta-Learner** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/architecture/extension-points)を参照してください。
-
-## 例（コードは英語のまま）
+### Custom LLM Provider
 
 ```typescript
 class MyProvider implements LLMProvider {
@@ -42,6 +33,8 @@ class MyProvider implements LLMProvider {
 }
 runtime.registerProvider('my-provider', new MyProvider());
 ```
+
+### Custom Tool
 
 ```typescript
 class MyTool implements Tool {
@@ -53,23 +46,35 @@ class MyTool implements Tool {
 runtime.registerTool('my-tool', new MyTool());
 ```
 
+### Custom Topology
+
+Add a new case in `topologyRouter.ts` to define a new orchestration pattern.
+
+### Channel Adapter
+
 ```typescript
 class TelegramAdapter implements ChannelAdapter {
   // Telegram integration
 }
 ```
 
-## 運用
+### Plugin
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
+```typescript
+class MyPlugin implements CommanderPlugin {
+  hooks = {
+    beforeLLMCall: async (params) => { /* modify params */ },
+    afterToolCall: async (result) => { /* observe result */ },
+  };
+}
+getHookManager().register(new MyPlugin());
 ```
 
-## 関連
+## Meta-Learner
 
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+
+Commander includes a self-evolution system based on **Thompson Sampling + Reflexion**:
+
+- Tracks which strategies work best over time
+- Automatically adjusts topology selection
+- Learns from failures and successes across runs

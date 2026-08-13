@@ -1,10 +1,15 @@
-# Custom Providers
+# 自定义提供商
 
-本页说明 Commander 中 **Custom Providers** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/advanced/custom-providers)
 
-## 快速入口
 
-```bash
+
+Connect Commander to any LLM provider by implementing the `LLMProvider` interface.
+
+## Provider Interface
+
+
+```typescript
 interface LLMProvider {
   readonly name: string;
   readonly model: string;
@@ -18,32 +23,83 @@ interface LLMProvider {
 }
 ```
 
-
-## 说明
-
-### Provider Interface
-
-（对应英文文档章节 **Provider Interface** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Example: Custom Provider
-
-（对应英文文档章节 **Example: Custom Provider** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Registering a Provider
-
-（对应英文文档章节 **Registering a Provider** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Provider Fallback Chain
-
-（对应英文文档章节 **Provider Fallback Chain** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+## Example: Custom Provider
 
 
-## 指标口径
+```typescript
+import { BaseLLMProvider, Message, CallOptions, LLMResponse } from '@commander/core';
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+class MyCustomProvider extends BaseLLMProvider {
+  readonly name = 'my-provider';
+  readonly model = 'my-model-v1';
 
-## 相关
+  async call(messages: Message[], options: CallOptions): Promise<LLMResponse> {
+    const response = await fetch('https://api.my-provider.com/v1/chat', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.MY_PROVIDER_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages,
+        max_tokens: options.maxTokens,
+        temperature: options.temperature ?? 0.7,
+      }),
+    });
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+    const data = await response.json();
+
+    return {
+      content: data.choices[0].message.content,
+      usage: {
+        promptTokens: data.usage.prompt_tokens,
+        completionTokens: data.usage.completion_tokens,
+        totalTokens: data.usage.total_tokens,
+      },
+      model: this.model,
+    };
+  }
+
+  isAvailable(): boolean {
+    return !!process.env.MY_PROVIDER_KEY;
+  }
+}
+```
+
+## Registering a Provider
+
+
+```typescript
+import { CommanderRuntime } from '@commander/core';
+
+const runtime = new CommanderRuntime();
+runtime.registerProvider('my-provider', new MyCustomProvider());
+```
+
+## Provider Fallback Chain
+
+
+Commander supports automatic fallback between providers:
+
+```typescript
+runtime.setFallbackChain('my-provider', ['openai', 'anthropic']);
+```
+
+If the primary provider fails (rate limited, timeout, down), Commander automatically:
+1. Detects the failure
+2. Logs the error with full context
+3. Falls back to the next provider in the chain
+4. Retries with appropriate backoff
+
+## Provider Selection Strategy
+
+
+Commander selects providers based on:
+
+| Factor | Behavior |
+|--------|----------|
+| Task complexity | Harder tasks → stronger models |
+| Cost constraints | Simple tasks → cheaper providers |
+| Latency requirements | Time-sensitive → fast inference (Groq, Together) |
+| Availability | Fallback chain if primary unavailable |
+| Historical accuracy | MetaLearner tracks success rates |

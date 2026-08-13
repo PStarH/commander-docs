@@ -1,46 +1,58 @@
-# マルチテナント・アーキテクチャ
+# Multi-Tenant Architecture
 
-Commander は **すべての層** でマルチテナント隔離をサポートします。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/multi-tenancy)
 
-## リクエストフロー
+
+
+Commander supports multi-tenant isolation at every layer.
+
+## Request Flow
+
 
 ```
 Request → HttpServer
            │
-           ├─ authenticate()           ← Bearer → テナント対応
+           ├─ authenticate()           ← Bearer token → tenant mapping
            ├─ resolveTenantFromAuth()  ← API key → tenantId
            │
            └─ execute({ tenantId }) → AgentRuntime
                                         │
                                         ├─ TenantProvider.getTenantConfig(tenantId)
-                                        │   → tokenBudget, maxConcurrency, maxRunsPerMinute
+                                        │   → per-tenant: tokenBudget, maxConcurrency, maxRunsPerMinute
                                         │
-                                        ├─ Rate limit / Concurrency チェック
+                                        ├─ Rate limit check     → TENANT_RATE_LIMIT
+                                        ├─ Concurrency check    → TENANT_CONCURRENCY_LIMIT
                                         │
-                                        └─ テナントスコープ:
-                                            SamplesStore / TraceStore / StateCheckpointer
-                                            ThreeLayerMemory / ToolResultCache(tenantId 込み)
+                                        └─ Tenant-scoped instances:
+                                            ├─ SamplesStore(path/tenant_{id}/)
+                                            ├─ TraceStore(path/tenant_{id}/)
+                                            ├─ StateCheckpointer(path/tenant_{id}/)
+                                            ├─ ThreeLayerMemory(per-instance)
+                                            └─ ToolResultCache(key = SHA256(tenantId + tool + args))
 ```
 
-## 隔離レイヤ
+## Isolation Layers
 
-| 層 | 仕組み |
-|----|--------|
-| Rate limits | テナントごとの分あたりリクエスト |
-| Concurrency | テナントごとの最大同時 run |
-| Storage | テナント別ディレクトリ |
-| Memory | インスタンス別 ThreeLayerMemory |
-| Cache | キーに tenantId（SHA-256） |
-| Metrics | すべてに `tenant` ラベル |
+
+| Layer | Mechanism |
+|-------|-----------|
+| Rate limits | Per-tenant: requests/minute |
+| Concurrency | Per-tenant: max concurrent runs |
+| Storage | Per-tenant directory paths |
+| Memory | Per-instance ThreeLayerMemory |
+| Cache | SHA-256 key includes tenantId |
+| Metrics | Every counter/gauge/histogram has `tenant` label |
 
 ## プロバイダー
 
-| プロバイダー | 動作 |
-|--------------|------|
-| `NullTenantProvider` | 隔離なし（単一テナント互換） |
-| `SimpleTenantProvider` | tenant → config の静的マップ |
 
-## TenantConfig
+| Provider | Behavior |
+|----------|----------|
+| `NullTenantProvider` | No isolation, backward compatible (single-tenant) |
+| `SimpleTenantProvider` | Static config map of tenant → config |
+
+## Tenant Config
+
 
 ```typescript
 interface TenantConfig {
@@ -52,20 +64,3 @@ interface TenantConfig {
   workspacePath?: string;
 }
 ```
-
-## 運用
-
-```bash
-export COMMANDER_API_KEY="long-random-secret"
-npx tsx packages/core/src/cliEntry.ts doctor
-curl -s http://localhost:4000/health/detailed
-```
-
-ローカル単機 CLI は多くの場合 `NullTenantProvider` で十分。本番の共有クラスタでは Simple（またはカスタム）とクォータを有効にしてください。
-
-## 関連
-
-- [セキュリティゲートウェイ](/ja/architecture/security-gateway)  
-- [キャッシュ](/ja/architecture/caching)  
-- [本番準備](/ja/architecture/production-readiness)  
-- [セキュリティ](/ja/guide/security)  

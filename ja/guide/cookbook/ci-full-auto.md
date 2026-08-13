@@ -1,17 +1,23 @@
-# クックブック: CI フルオート lint 修正
+# Cookbook: CI full-auto lint fix
 
-**ゴール:** CI で非対話的に Commander を走らせ、lint（など）を直す。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/cookbook/ci-full-auto)
 
-**時間:** 配線 ~15 分 · **リスク:** 高い自律性 — PR レビュー付きジョブに隔離
 
-## CI 設計ルール
 
-1. **使い捨てブランチ** または PR ワークフロー — エージェントが main に force-push しない
-2. ジョブに必要な **シークレットだけ** export
-3. サンプルリポジトリで dry-run してからだけ `COMMANDER_MODE=full-auto`
-4. ログを CI アーティファクトとして保存
+**Goal:** Run Commander non-interactively in CI to fix lint (or similar) issues.
 
-## 1. ローカル dry-run
+**Time:** ~15 minutes to wire · **Risk:** high autonomy — isolate to a job with PR review
+
+## Design rules for CI
+
+
+1. Use a **throwaway branch** or PR workflow — never force-push to main from the agent  
+2. Export **only** the secrets the job needs  
+3. Prefer `COMMANDER_MODE=full-auto` only after a dry run on a sample repo  
+4. Capture logs as CI artifacts  
+
+## 1. Local dry run
+
 
 ```bash
 export OPENAI_API_KEY=sk-...
@@ -19,15 +25,16 @@ export COMMANDER_MODE=full-auto
 npx tsx packages/core/src/cliEntry.ts run "fix all lint errors in this repository" --stream
 ```
 
-exit code と git diff が許容できるか確認します。
+Confirm exit code and that git diff is acceptable.
 
-## 2. GitHub Actions スケッチ
+## 2. GitHub Actions sketch
+
 
 ```yaml
 name: Commander lint fix
 on:
   workflow_dispatch:
-  # または schedule / pull_request
+  # or schedule / pull_request as you prefer
 
 jobs:
   fix:
@@ -54,27 +61,31 @@ jobs:
           npx tsx /tmp/Commander/packages/core/src/cliEntry.ts run "fix all lint errors" --stream
       - name: Show diff
         run: git diff --stat
+      # Optional: open PR with stefanzweifel/git-auto-commit-action or create-pull-request
 ```
 
-submodule や（将来の）公開パッケージで vendor する場合はパスを合わせてください。**現在の主経路は monorepo clone です。**
+Adapt paths if you vendor Commander as a submodule or published package.
 
-## 3. 成功チェックリスト
+## 3. Success checklist
 
-- [ ] ジョブが非対話（TTY プロンプトなし）
-- [ ] ログに審議 + ストリーム
-- [ ] merge 前に人が diff をレビュー
-- [ ] シークレットがログに出ない
+
+- [ ] Job is non-interactive (no TTY prompts)  
+- [ ] Logs include deliberation + stream  
+- [ ] Diff reviewed by human before merge  
+- [ ] Secrets not printed in logs  
 
 ## 失敗モード
 
-| 問題         | 対処                                                     |
-| ------------ | -------------------------------------------------------- |
-| 対話でハング | `full-auto`；承認プロンプトを無効化                      |
-| レート制限   | ジョブを直列化；キャッシュ；プロンプト範囲を縮小         |
-| 破壊的編集   | プロンプトを狭める（“eslint only”、path globs）；PR 必須 |
+
+| Issue | Action |
+|-------|--------|
+| Interactive hang | Ensure `full-auto`; disable approval prompts via mode/env |
+| Provider rate limits | Serialize jobs; cache; smaller scope prompt |
+| Destructive edits | Narrow prompt (“eslint only”, path globs); require PR |
 
 ## 関連
 
-- [FAQ — CI/CD](/ja/guide/faq)
-- [デプロイ](/ja/deployment)
-- [トラブルシューティング](/ja/guide/troubleshooting)
+
+- [FAQ — CI/CD](/ja/guide/faq)  
+- [Deployment](/ja/deployment)  
+- [Troubleshooting](/ja/guide/troubleshooting)  

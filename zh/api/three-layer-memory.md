@@ -1,10 +1,15 @@
-# Three-Layer Memory
+# 三层记忆
 
-本页说明 Commander 中 **Three-Layer Memory** 的用途、操作方式与生产注意点。命令路径与产品 monorepo 保持一致。
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/api/three-layer-memory)
 
-## 快速入口
 
-```bash
+
+Manages working, episodic, and long-term memory with embedding-based retrieval.
+
+## Types
+
+
+```typescript
 type MemoryLayer = 'working' | 'episodic' | 'longterm';
 
 interface MemoryEntry {
@@ -17,30 +22,54 @@ interface MemoryEntry {
   lastAccessedAt: string;
   accessCount: number;
   decayScore: number;
+  tags: string[];
+  metadata: Record<string, any>;
+}
+
+interface MemoryQuery {
+  layer?: MemoryLayer;
+  keywords?: string[];
+  context?: string;
+  importanceThreshold?: number;
+  limit?: number;
+  since?: string;
+}
 ```
 
-
-## 说明
-
-### Types
-
-（对应英文文档章节 **Types** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### API
-
-（对应英文文档章节 **API** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
-
-### Layer Configuration
-
-（对应英文文档章节 **Layer Configuration** 的完整说明与示例见 monorepo / 英文源；下方给出可运行入口。）
+## API
 
 
-## 指标口径
+```typescript
+const memory = new ThreeLayerMemory(config?: Partial<Record<MemoryLayer, LayerConfig>>);
 
-25 提供商 · 5 规范拓扑 · 18 内置工具 · 6700+ 测试。
+// Add memory
+const entry = memory.add(
+  content: string,
+  layer: MemoryLayer,
+  context?: string,
+  importance?: number,
+  tags?: string[],
+  metadata?: Record<string, any>
+): MemoryEntry;
 
-## 相关
+// Query memories
+memory.query(query: MemoryQuery): MemoryEntry[];
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [命令](/zh/guide/commands)  
+// Promote to long-term
+memory.promoteToLongTerm(id: string): boolean;
+
+// Search related
+memory.searchRelated(content: string, limit?: number): MemoryEntry[];
+
+// Apply time decay (episodic layer)
+memory.applyTimeDecay(hoursElapsed: number): number;
+```
+
+## Layer Configuration
+
+
+| Layer | Max Entries | Max Memory | Decay |
+|-------|-------------|------------|-------|
+| Working | 50 | 100KB | None |
+| Episodic | 500 | 500KB | Time-based |
+| Long-term | 10000 | 5MB | None |

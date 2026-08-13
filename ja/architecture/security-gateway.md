@@ -1,69 +1,170 @@
-# エンタープライズ・セキュリティゲートウェイ
+# Enterprise Security Gateway
 
-`EnterpriseSecurityGateway` は、すべての LLM 呼び出しとツール実行に適用される **7 層の防衛深度** です。迂回できません。コスト検査は LLM 呼び出しの **前後両方** で実行されます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/architecture/security-gateway)
 
-## 7 層防衛
 
-| 層  | 名前                 | 役割                                     |
-| --- | -------------------- | ---------------------------------------- |
-| 1   | Zero-Trust Signature | 完全性検証 + リプレイ防止                |
-| 2   | Authentication       | タイミング安全な API Key 検証            |
-| 3   | Rate Limiting        | グローバルトークンバケット + IP 階層制限 |
-| 4   | Input Scanning       | インジェクション検出 + 入力検証          |
-| 5   | Cost Pre-Check       | 請求爆発の防止（事前見積もり）           |
-| 6   | Request Processing   | ビジネスロジック実行                     |
-| 7   | Output Scanning      | DLP 漏洩防止 + コスト記録                |
 
-### 設計原則
+Commander's `EnterpriseSecurityGateway` provides a 7-layer defense-in-depth architecture that is invoked during all LLM calls and tool executions. It cannot be bypassed — cost checks execute both before and after LLM calls.
 
-- **防衛深度** — 独立した層、責任分離
-- **Fail fast** — 最も安い層で早期拒否
-- **観測可能** — すべての決定にセキュリティメタデータをログ
-- **テナント隔離** — 検査はテナント単位
-- **迂回不可** — コスト検査は呼び出し前後
+## 7-Layer Defense
 
-## DLP（Data Loss Prevention）
 
-`dataLossPrevention.ts` がすべての egress を 5 段パイプラインでスキャンします。
+| Layer | Name | Purpose |
+|-------|------|---------|
+| 1 | Zero-Trust Signature | Integrity verification + replay prevention |
+| 2 | Authentication | API Key validation with timing-safe comparison |
+| 3 | Rate Limiting | Global token bucket + tiered IP limits |
+| 4 | Input Scanning | Content injection detection + input validation |
+| 5 | Cost Pre-Check | Bill explosion prevention (pre-call estimation) |
+| 6 | Request Processing | Business logic execution |
+| 7 | Output Scanning | DLP data leak prevention + cost recording |
 
-### 検出パターン（12+）
+### Design Principles
 
-API Key · JWT · PEM 秘密鍵 · クレジットカード（Luhn）· SSN · Email/Phone · 内部 IP · DB 接続文字列 · クラウド資格情報 · その他。
 
-### リダクション戦略
+- **Defense in depth** — Multiple independent layers, each with distinct responsibility
+- **Fail fast** — Reject early at the cheapest layer
+- **Observable** — Every decision is logged with security metadata
+- **Tenant isolation** — All checks are per-tenant
+- **Unbypassable** — Cost checks execute both before and after LLM calls
 
-| 戦略     | 動作                |
-| -------- | ------------------- |
-| `REDACT` | `[REDACTED]` に置換 |
-| `MASK`   | 部分マスク          |
-| `HASH`   | SHA-256             |
-| `ALLOW`  | 通過（ログのみ）    |
+## Data Loss Prevention (DLP)
 
-適用点: API 応答 · ログ · ツール結果 · エージェント出力 · SSE ストリーム。
 
-ツール入力は実行前に API Key / Private Key / AWS / GitHub Token / JWT / Password をスキャンします。
+The `dataLossPrevention.ts` module scans all egress points for sensitive data across a 5-stage pipeline.
+
+### Detected Patterns (12+)
+
+
+| Pattern | Example |
+|---------|---------|
+| API Key | `sk-...`, `sk-ant-...` |
+| JWT | `eyJ...` |
+| Private Key (PEM) | `-----BEGIN PRIVATE KEY-----` |
+| Credit Card (Luhn) | `4111 1111 1111 1111` |
+| SSN | `123-45-6789` |
+| Email | `user@example.com` |
+| Phone | `+1-555-0123` |
+| Internal IP | `10.0.0.1`, `192.168.1.1` |
+| Database Connection String | `mongodb://user:pass@host:port` |
+| AWS/GCP/Azure Credentials | `AKIA...`, `AIza...` |
+| China ID Card (checksum) | `110101199003077735` |
+| Bank Account | Numeric with branch code |
+
+### Redaction Strategies
+
+
+| Strategy | Behavior |
+|----------|----------|
+| `REDACT` | Replace with `[REDACTED]` |
+| `MASK` | Partial masking (`sk-...abc`) |
+| `HASH` | SHA-256 hash |
+| `ALLOW` | Pass through (logged only) |
+
+### Egress Points
+
+
+DLP is applied at all output boundaries:
+
+- API responses
+- Log entries
+- Tool results
+- Agent outputs
+- SSE event streams
+
+### Tool Input Scanning
+
+
+Tool inputs are scanned for 6 specific sensitive patterns before execution:
+
+1. API Key
+2. Private Key
+3. AWS Key
+4. GitHub Token
+5. JWT
+6. Password
 
 ## Capability Tokens
 
-`capabilityToken.ts` が短命 HMAC 署名トークンを発行します。短い TTL · スコープ束縛 · 改ざん耐性 · 期限前失効。ツール実行点で検証必須。
+
+The `capabilityToken.ts` module issues short-lived HMAC-signed authorization tokens:
+
+- **Short TTL** — Tokens expire automatically, limiting exposure window
+- **Scope-bound** — Each token carries specific capabilities (tool, resource, duration)
+- **HMAC-signed** — Tamper-proof via server-side secret
+- **Revocable** — Can be invalidated before expiry
+
+All tool executions require capability token validation at execution points.
 
 ## Audit Chain Ledger
 
-`auditChainLedger.ts` がセキュリティイベントをハッシュ鎖で記録し、改ざん検知を可能にします。
 
-## 運用
+The `auditChainLedger.ts` creates a tamper-proof hash chain of all security-relevant events:
 
-```bash
-export COMMANDER_API_KEY="long-random-secret"
-npx tsx packages/core/src/cliEntry.ts doctor
-curl -s http://localhost:4000/health/detailed
+```
+entry_1 → SHA256(prev_hash | entry_1) → hash_1
+entry_2 → SHA256(hash_1 | entry_2) → hash_2
 ```
 
-TLS・認証なしで `:4000` を公開しないでください。メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
+Any modification to historical entries breaks the chain, making tampering detectable.
 
-## 関連
+## Agent Lineage
 
-- [セキュリティ](/ja/guide/security)
-- [本番準備](/ja/architecture/production-readiness)
-- [マルチテナント](/ja/architecture/multi-tenancy)
-- [Sandbox](/ja/architecture/sandbox)
+
+The `agentLineage.ts` module tracks immutable parent-child relationships between agents:
+
+- `spawnChild()` validates parent node existence in the lineage tree
+- Lineage is immutable once recorded
+- Enables complete audit trail of agent delegation chains
+
+## Additional Security Components
+
+
+| Component | Purpose |
+|-----------|---------|
+| `guardianAgent.ts` | Semantic drift, anomaly, and safety monitoring |
+| `securityMonitor.ts` | Continuous monitoring + anomaly detection + alerting |
+| `zeroTrustValidator.ts` | Zero-trust request validation |
+| `billExplosionGuard.ts` | Cost explosion prevention |
+| `memoryPoisoningDefenseEngine.ts` | Memory poisoning attack defense |
+| `toolPoisoningGuard.ts` | Tool poisoning detection |
+| `mcpToolPoisoningGuard.ts` | MCP tool poisoning detection |
+| `mlInjectionDetector.ts` | ML injection detection |
+| `taintTracker.ts` | Taint tracking across data flows |
+| `supplyChainScanner.ts` | Dependency supply chain scanning |
+| `owaspAgenticAiTop10.ts` | OWASP Agentic AI Top 10 compliance |
+| `mitreAtlasMapper.ts` | MITRE ATLAS threat mapping |
+| `redTeamFramework.ts` | Red team testing framework |
+| `postQuantumCrypto.ts` | Post-quantum cryptography |
+| `gdprCompliance.ts` | GDPR compliance checking |
+| `euAiActCompliance.ts` | EU AI Act compliance |
+
+## Plugin Permission Enforcement
+
+
+Third-party plugins receive a **sandboxed load context** that deliberately excludes the raw `HookManager`:
+
+```typescript
+// buildSandboxedLoadContext() — only for third-party plugins
+const sandboxContext = {
+  registerHook: enforcer.wrapRegisterHook(...),
+  readFile: enforcer.wrapReadFile(...),
+  writeFile: enforcer.wrapWriteFile(...),  // mode 0o600
+  fetch: enforcer.wrapFetch(...),          // domain + port check
+  getEnvVar: enforcer.wrapGetEnvVar(...),
+  getConfig: enforcer.wrapGetConfig(...),
+  log: enforcer.wrapLog(...),
+};
+// hookManager is NOT included — prevents privilege escalation
+```
+
+Built-in plugins (no enforcer) still receive the full `hookManager`.
+
+### Permission Constraints
+
+
+- Plugin permissions must **never exceed** main system permissions
+- `updateConfig()` routes through the same sandbox context as `register()`
+- `withTimeout()` uses `Math.min(plugin.maxExecutionTimeMs, globalTimeoutMs)` — the stricter value wins
+- Network requests are URL-parsed and checked via `enforcer.checkNetwork()`
+- All failures are reported via `reportSilentFailure` (never throws to plugin)

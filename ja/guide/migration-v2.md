@@ -1,77 +1,94 @@
-# Architecture V2 移行
+# アーキテクチャ V2 移行
 
-レガシー V1 実行経路から **Architecture V2** 耐久カーネルへ移行します。コントロールプレーンが作業をスケジュールし、ワーカーがステップを実行し、状態は PostgreSQL に置きます。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/migration-v2)
 
-> 運用の詳細は monorepo の [`docs/v2-migration-guide.md`](https://github.com/PStarH/Commander/blob/master/docs/v2-migration-guide.md)。このページは docs サイト向け要約です。
+
+
+Migrate from legacy V1 execution paths to the **Architecture V2** durable kernel: control plane schedules work; workers execute steps; state lives in PostgreSQL.
+
+> Full operator detail lives in the monorepo: [`docs/v2-migration-guide.md`](https://github.com/PStarH/Commander/blob/master/docs/v2-migration-guide.md). This page is the docs-site summary.
 
 ## メンタルモデル
 
-| プレーン            | 責任                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Gateway（制御）** | run 受付、WorkGraph スケジュール、lifecycle（pause/resume/cancel）。純 V2 ではエージェントを実行しない |
-| **Worker（実行）**  | ステップを claim し、エージェント/ツールを実行して結果を報告                                           |
-| **Kernel storage**  | runs / steps / events の PostgreSQL テーブル                                                           |
 
-## 機能フラグ / 環境変数
+| Plane | Responsibility |
+|-------|----------------|
+| **Gateway (control)** | Accept runs, schedule WorkGraphs, lifecycle (pause/resume/cancel) — **does not** execute agents in pure V2 |
+| **Worker (execution)** | Claim steps, run agents/tools, report results |
+| **Kernel storage** | PostgreSQL tables for runs, steps, events |
 
-| 変数                         | 既定          | 意味                                  |
-| ---------------------------- | ------------- | ------------------------------------- |
-| `COMMANDER_V2_MODE`          | `0`           | `1` で V2（レガシールート無効）       |
-| `NODE_ENV=production`        | —             | 多くの場合 V2 を強制                  |
-| `COMMANDER_LEGACY_EXECUTION` | `0`           | 一時的にレガシーを再有効化            |
-| `DATABASE_URL`               | —             | V2 カーネルに **必須**                |
-| `COMMANDER_WORKER_*`         | monorepo 参照 | worker 種別・同時実行・認証・テナント |
+## Feature flags / env
+
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `COMMANDER_V2_MODE` | `0` | `1` enables V2 (disables legacy routes) |
+| `NODE_ENV=production` | — | Often forces V2 on |
+| `COMMANDER_LEGACY_EXECUTION` | `0` | Temporary bridge to re-enable legacy routes |
+| `DATABASE_URL` | — | **Required** for V2 kernel |
+| `COMMANDER_WORKER_*` | see monorepo guide | Worker kind, concurrency, auth, tenants |
 
 ## ルート対応
 
-| Legacy                           | V2                                   |
-| -------------------------------- | ------------------------------------ |
-| `POST /api/runtime/execute`      | `POST /v1/runs`                      |
-| `POST /api/orchestrator/execute` | `POST /v1/runs`（多段グラフ）        |
-| `POST /api/chat`                 | `POST /v1/runs`（単一エージェント）  |
-| pause / resume / cancel          | `/v1/runs/:id/{pause,resume,cancel}` |
 
-### 主要 V2 エンドポイント
+| Legacy | V2 |
+|--------|-----|
+| `POST /api/runtime/execute` | `POST /v1/runs` |
+| `POST /api/orchestrator/execute` | `POST /v1/runs` (multi-step graph) |
+| `POST /api/chat` | `POST /v1/runs` (single agent step) |
+| `POST /api/pause/:runId` | `POST /v1/runs/:id/pause` |
+| `POST /api/resume/:runId` | `POST /v1/runs/:id/resume` |
+| `POST /api/cancel/:runId` | `POST /v1/runs/:id/cancel` |
 
-- `POST /v1/runs` · `GET /v1/runs/:id` · steps · events
-- lifecycle · human-in-the-loop
-- `/health` · `/metrics` · `/v1/slo`
+### Core V2 endpoints
+
+
+- `POST /v1/runs` · `GET /v1/runs/:id` · `GET /v1/runs/:id/steps` · `GET /v1/runs/:id/events`  
+- Lifecycle: pause / resume / cancel  
+- Interactions: human-in-the-loop  
+- `/health` · `/metrics` · `/v1/slo`  
 
 ## ストレージ移行
 
-| Legacy                | V2                          |
-| --------------------- | --------------------------- |
-| SQLite / pod ローカル | PostgreSQL `commander_*`    |
-| インメモリ chat       | イベントソーシング再構築    |
-| 旧チェックポイント    | **移植不可** — run を再投入 |
+
+| Legacy | V2 |
+|--------|-----|
+| SQLite / pod-local files | PostgreSQL `commander_*` tables |
+| In-memory chat maps | Event-sourced reconstruction |
+| Old checkpoints | **Not** portable — re-submit runs |
 
 ```bash
-# DATABASE_URL 設定後
-pnpm db:migrate   # monorepo の product scripts 参照
+# After setting DATABASE_URL
+pnpm db:migrate   # from monorepo — see product scripts
 ```
 
-## Worker スケッチ
+## Worker sketch
+
 
 ```bash
 export DATABASE_URL=postgres://...
 export COMMANDER_WORKER_AUTH_TOKEN=...
 export COMMANDER_WORKER_KIND=agent
-# monorepo の worker-plane パッケージで起動
+# start worker process — see monorepo worker-plane package
 ```
 
-## ロールアウト
+## ロールアウト戦略
 
-1. ステージングで dual-run（必要なら `COMMANDER_LEGACY_EXECUTION=1`）
-2. カナリアテナントを `POST /v1/runs` へ
-3. レガシー無効（`COMMANDER_V2_MODE=1`）
-4. `/v1/slo` · DLQ · worker lease を監視
 
-## いつ V1 風ローカル CLI のままか
+1. **Dual-run in staging** with `COMMANDER_LEGACY_EXECUTION=1` if needed  
+2. Point a canary tenant at `POST /v1/runs`  
+3. Disable legacy routes (`COMMANDER_V2_MODE=1`)  
+4. Monitor `/v1/slo`, DLQ, worker lease health  
 
-単機開発の `cliEntry.ts` / SDK `CommanderClient` は最速のままです。V2 が必要になるのは **耐久マルチレプリカ実行** と gateway/worker 分離が要るときです。
+## When you can stay on V1-style local CLI
+
+
+Local `cliEntry.ts` / SDK `CommanderClient` for single-machine development remains the fastest path. V2 matters when you need **durable multi-replica execution** and gateway/worker split.
 
 ## 関連
 
-- [デプロイ](/ja/deployment)
-- [本番準備](/ja/architecture/production-readiness)
-- [イベントソーシング](/ja/architecture/event-sourcing)
+
+- [Deployment](/ja/deployment)  
+- [Production readiness](/ja/architecture/production-readiness)  
+- [Event sourcing](/ja/architecture/event-sourcing)  
+- Monorepo guide: https://github.com/PStarH/Commander/blob/master/docs/v2-migration-guide.md  

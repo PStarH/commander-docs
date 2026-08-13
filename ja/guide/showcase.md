@@ -1,43 +1,39 @@
-# Showcase
+# ショーケース
 
-**Showcase.** このページは Commander アーキテクチャの構成要素を説明します。monorepo に沿った日本語の運用ドキュメントで、コードブロックは英語のままです。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/showcase)
 
-製品メトリクス: **25** プロバイダー · **5** トポロジ · **18** tools · **6700+** テスト。
 
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · ビルド後: `commander`
 
-## 参照表
+Real-world uses of Commander. **Want your project listed?** Open a PR against this page or an issue with:
+
+- Project name + link  
+- One sentence: what Commander runs for you  
+- Optional: topology / providers used  
+
+## Community projects
+
 
 | Project | How Commander is used | Link |
 |---------|------------------------|------|
 | *Your project* | *e.g. CI security audit + streaming review* | *URL* |
 
+> The table is intentionally empty until submissions land — honesty over fake logos.
 
-## 主な内容
+## Internal / reference patterns
 
-### Community projects
 
-運用では **Community projects** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/showcase)を参照してください。
+These patterns ship in the monorepo and docs:
 
-### Internal / reference patterns
+| Pattern | Docs |
+|---------|------|
+| Security audit stream | [Cookbook: security audit](/ja/guide/cookbook/security-audit) |
+| Safe module refactor | [Cookbook: refactor](/ja/guide/cookbook/refactor-module) |
+| CI full-auto lint | [Cookbook: CI](/ja/guide/cookbook/ci-full-auto) |
+| Web Console ops | [Web Console](/ja/guide/web-console) |
 
-運用では **Internal / reference patterns** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/showcase)を参照してください。
+## Star the product
 
-### Star the product
 
-運用では **Star the product** を品質ゲート・DLQ・サーキットブレーカーと併用します。ソースは monorepo、詳細は[英語リファレンス](/guide/showcase)を参照してください。
+If Commander helps you, a star helps others find it:
 
-## 運用
-
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
-
-## 関連
-
-- [アーキテクチャ概要](/ja/architecture/overview)
-- [本番準備](/ja/architecture/production-readiness)
-- [セキュリティ](/ja/guide/security)
-- [クイックスタート](/ja/guide/getting-started)
+[github.com/PStarH/Commander](https://github.com/PStarH/Commander)

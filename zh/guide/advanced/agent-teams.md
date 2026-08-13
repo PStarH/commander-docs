@@ -1,10 +1,20 @@
-# Agent Teams
+# 代理团队
 
-Commander supports persistent agent teams with inbox messaging for long-running, collaborative workflows. Agent teams allow multiple agents to work together on complex tasks over extended periods. Each agent has its own inbox and can send/receive messages asynchronously.
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/advanced/agent-teams)
 
-本文说明 **Agent Teams** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
 
-```bash
+
+Commander supports persistent agent teams with inbox messaging for long-running, collaborative workflows.
+
+## 概览
+
+
+Agent teams allow multiple agents to work together on complex tasks over extended periods. Each agent has its own inbox and can send/receive messages asynchronously.
+
+## Creating a Team
+
+
+```typescript
 import { AgentTeamManager } from '@commander/core';
 
 const team = new AgentTeamManager('team-1');
@@ -13,16 +23,77 @@ const team = new AgentTeamManager('team-1');
 const leadId = team.registerAgent({
   id: 'lead',
   name: 'Lead Architect',
+  role: 'architect',
+  capabilities: ['system-design', 'code-review'],
+});
+
+const backendId = team.registerAgent({
+  id: 'backend',
+  name: 'Backend Specialist',
+  role: 'engineer',
+  capabilities: ['api-design', 'database'],
+});
+
+const frontendId = team.registerAgent({
+  id: 'frontend',
+  name: 'Frontend Specialist',
+  role: 'engineer',
+  capabilities: ['ui', 'react'],
+});
 ```
 
-## 要点
+## Agent Communication
 
-- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
-- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
-- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-## 相关
+Agents communicate via persistent inboxes:
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [API 概览](/zh/api/overview)  
+```typescript
+// Send a message to an agent
+await team.sendMessage({
+  from: leadId,
+  to: backendId,
+  subject: 'Design API endpoints',
+  body: 'Need a REST API for the user module. Design the endpoints.',
+  priority: 'high',
+});
+
+// Agent reads its inbox
+const inbox = await team.getInbox(backendId);
+const messages = inbox.getMessages();
+
+// Agent replies
+await team.sendMessage({
+  from: backendId,
+  to: leadId,
+  subject: 'Re: Design API endpoints',
+  body: 'Proposed endpoints:\nGET /users\nPOST /users\nGET /users/:id',
+});
+```
+
+## Team Topologies
+
+
+### Lead-Driven
+
+One lead agent coordinates specialists. Best for most development workflows.
+
+### Peer-to-Peer
+
+Agents collaborate without a hierarchy. Best for research and analysis.
+
+### Swarm
+
+Multiple agents work on the same problem and vote on the solution. Best for critical decisions.
+
+## Persistence
+
+
+Agent teams persist across sessions:
+- Messages are stored in the inbox store
+- Agent states are checkpointed
+- Teams can be resumed after restarts
+
+```typescript
+// Resume a team from a previous session
+const existingTeam = await AgentTeamManager.load('team-1');
+```

@@ -1,92 +1,151 @@
 # トラブルシューティング
 
-よくある問題と対処。
+> **ローカライズについて** · 見出しは翻訳済みです。コードと正確な API は英語原文を正とします。英語版：[English](/guide/troubleshooting)
 
-> **CLI:** monorepo チェックアウトでは  
+
+
+Common issues and their solutions.
+
+> **CLI note:** From a monorepo checkout use  
 > `npx tsx packages/core/src/cliEntry.ts <command>`  
-> `@commander/core` ビルド後は `commander <command>`。
+> After building `@commander/core`, use `commander <command>` instead.
 
-## インストール
+## Installation issues
 
-### `pnpm install` 失敗
+
+### `pnpm install` fails
+
+
+```
+Error: Cannot find module '@commander/core'
+```
+
+**Solution:** Run from the monorepo root and install all workspaces:
 
 ```bash
 pnpm install
 pnpm build
 ```
 
-リポジトリ **ルート** で全 workspace を入れてください。
+### TypeScript errors after install
 
-### インストール後の TypeScript エラー
+
+```
+error TS2307: Cannot find module 'xyz'
+```
+
+**Solution:**
 
 ```bash
 pnpm build
+# or
 npx tsc --noEmit
 ```
 
-## プロバイダー
+## Provider issues
 
-### Provider not available
+
+### "Provider not available"
+
+
+Commander can't find a valid API key. Check:
 
 ```bash
+# Verify the key is set
 echo $OPENAI_API_KEY
+
+# Run diagnostics
 npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
-キーは **今のシェル** に export されている必要があります。
+### "Rate limited" errors
 
-### Rate limited
 
-- 待って再試行（自動 backoff）
-- 複数プロバイダー fallback
-- `export COMMANDER_MAX_CONCURRENCY=1`
+You're hitting provider rate limits. Solutions:
 
-### Timeout
+- Wait and retry (Commander auto-retries with backoff)
+- Use multiple providers with a fallback chain
+- Reduce concurrency: `export COMMANDER_MAX_CONCURRENCY=1`
 
-- ネットワーク / プロバイダー
-- より速いプロバイダー（Groq, Together）
-- `export COMMANDER_TIMEOUT_MS=120000`
+### "Timeout" errors
 
-## 実行
 
-### ハング
+The LLM provider took too long to respond.
+
+- Check your network connection
+- Try a faster provider (Groq, Together)
+- Increase timeout: `export COMMANDER_TIMEOUT_MS=120000`
+
+## Execution issues
+
+
+### Task hangs or never completes
+
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts status
 npx tsx packages/core/src/cliEntry.ts doctor
 ```
 
-### Circuit breaker open
+### "Circuit breaker open"
 
-~30 秒待つか:
+
+The circuit breaker tripped due to repeated failures. Wait ~30s for automatic recovery, or:
 
 ```bash
 npx tsx packages/core/src/cliEntry.ts doctor --reset
 ```
 
-### 結果がおかしい
+### Agent produces wrong results
+
+
+Force a stricter topology:
 
 ```bash
+# Canonical topologies: single | chain | dispatch | orchestrator | review
 npx tsx packages/core/src/cliEntry.ts run "task" --topology review
 npx tsx packages/core/src/cliEntry.ts plan "task"
 ```
 
-## Docker
+## Build issues
+
+
+### Docker build fails
+
 
 ```bash
 docker info
 docker compose build --no-cache
 ```
 
-## デバッグ
+### Test failures
+
+
+```bash
+cd packages/core
+npx tsx --test tests/integration.test.ts
+npx tsx --test tests/*.test.ts
+```
+
+## Debug mode
+
 
 ```bash
 export COMMANDER_DEBUG=true
-npx tsx packages/core/src/cliEntry.ts run "task" --stream
+npx tsx packages/core/src/cliEntry.ts run "task"
 ```
 
-## 関連
+This enables verbose output across modules, including:
 
-- [クイックスタート](/ja/guide/getting-started)
-- [インストール](/ja/guide/installation)
-- [プロバイダー](/ja/guide/providers)
+- LLM provider selection and calls
+- Tool execution with full arguments
+- Agent deliberation steps
+- Cache hits and misses
+- Circuit breaker state changes
+
+## Still stuck?
+
+
+- [FAQ](/ja/guide/faq)
+- [GitHub Issues](https://github.com/PStarH/Commander/issues)
+- [Architecture overview](/ja/architecture/overview)

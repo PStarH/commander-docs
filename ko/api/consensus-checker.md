@@ -1,8 +1,13 @@
-# Consensus Checker
+# 합의 검사기
 
-고위험 결정을 위해 여러 LLM 프로바이더의 **가중 투표**로 합의를 봅니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/consensus-checker)
 
-## 타입
+
+
+Multi-model consensus for high-risk decisions, using weighted voting across multiple LLM providers.
+
+## Types
+
 
 ```typescript
 type ConsensusLevel = 'unanimous' | 'strong' | 'moderate' | 'low' | 'diverged';
@@ -28,31 +33,37 @@ interface ConsensusResult {
 
 ## API
 
+
 ```typescript
 const checker = new ConsensusChecker(config?: Partial<ConsensusConfig>);
 
+// Create a consensus check
 const checkId = checker.createCheck(question: string, context?: string): string;
 
+// Add a vote from a model
 checker.addVote(
   checkId: string,
   modelId: string,
+  modelName: string,
   decision: string,
-  confidence?: number,
-);
+  confidence: number,
+  reasoning: string
+): boolean;
 
-const result = await checker.finalize(checkId);
+// Get the consensus result
+const result = checker.getResult(checkId: string): ConsensusResult | undefined;
+
+// Wait for all votes
+await checker.waitForVotes(checkId: string): Promise<ConsensusCheck | null>;
 ```
 
-## 언제 쓰나
+## Consensus Thresholds
 
-- 보안·규정·배포 같은 **고위험** 판단  
-- REVIEW 토폴로지와 함께 multi-model 교차 검증  
-- Layer 2 확장 — 일반 앱은 `CommanderClient.run` 으로 충분  
 
-패키지: monorepo `@commander/core`.
-
-## 관련
-
-- [API 개요](/ko/api/overview)  
-- [검증](/ko/architecture/verification)  
-- [멀티 에이전트](/ko/architecture/multi-agent)  
+| Level | Threshold | Action |
+|-------|-----------|--------|
+| Unanimous | ≥95% | Proceed |
+| Strong | ≥80% | Proceed |
+| Moderate | ≥50% | Discuss |
+| Low | >0 | Rethink |
+| Diverged | 0 | Escalate |

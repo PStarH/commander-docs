@@ -1,36 +1,48 @@
 # 보안 샌드박스
 
-Commander 샌드박스는 모든 실행을 격리하고, Petri net 스케줄러로 자원을 형식적으로 할당합니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/sandbox)
 
-## 구조
+
+
+Commander's sandbox system provides secure execution isolation for all operations, with formal resource allocation via Petri net scheduling.
+
+## Architecture
+
 
 ```
 sandbox/
-├── execPolicy.ts           ← 실행 정책
-├── approval.ts             ← 민감 작업 승인
-├── profiles.ts             ← READ_ONLY / WORKSPACE_WRITE / FULL_ACCESS / HARDENED
-├── platforms.ts            ← 플랫폼별 설정
-├── manager.ts              ← 수명주기
-├── executionRouter.ts      ← 백엔드 라우팅
-├── lane.ts                 ← 실행 레인
-├── seccompBpf.ts           ← Linux seccomp-BPF
-├── teeEnclave.ts           ← TEE
-├── petriNetScheduler.ts    ← Petri net 자원 할당
-├── networkProxy.ts
-├── backends/               ← local / ssh / docker
-└── types.ts
+├── execPolicy.ts           ← Execution policy definitions
+├── approval.ts             ← Approval workflow for sensitive operations
+├── profiles.ts             ← Security profiles (READ_ONLY, WORKSPACE_WRITE, FULL_ACCESS, HARDENED)
+├── platforms.ts            ← Platform-specific sandbox configurations
+├── manager.ts              ← Sandbox lifecycle management
+├── executionRouter.ts      ← Route executions to appropriate backends
+├── lane.ts                 ← Execution lane management
+├── seccompBpf.ts           ← seccomp-BPF system call filtering (Linux)
+├── teeEnclave.ts           ← Trusted Execution Environment sandbox
+├── petriNetScheduler.ts    ← Petri net resource allocation
+├── networkProxy.ts         ← Network proxy sandbox
+├── backends/               ← Sandbox backend implementations
+│   ├── localBackend.ts     ← Local execution
+│   ├── sshBackend.ts       ← Remote SSH execution
+│   └── dockerExecBackend.ts ← Docker container execution
+└── types.ts                ← Shared types
 ```
 
-## 보안 프로파일
+## Security Profiles
 
-| 프로파일 | Shell | 파일 쓰기 | 네트워크 | 용도 |
-|----------|-------|-----------|----------|------|
-| **READ_ONLY** | 없음 | 읽기 전용 | 차단 | 코드 리뷰, 비신뢰 입력 |
-| **WORKSPACE_WRITE** | 샌드박스 허용 | 프로젝트 파일 | 허용 | 개발 |
-| **FULL_ACCESS** | 전체 | 임의 | 허용 | CI/CD |
-| **HARDENED** | 없음 | 거부 | 차단 | 비신뢰 코드 실행 |
 
-## ExecPolicy
+| Profile | Shell Access | File Write | Network | Best For |
+|---------|-------------|-----------|---------|----------|
+| **READ_ONLY** (strict) | None | Read-only | Blocked | Code review, untrusted input |
+| **WORKSPACE_WRITE** (standard) | Allowed (sandboxed) | Project files | Allowed | Development |
+| **FULL_ACCESS** (permissive) | Full | Any | Allowed | CI/CD, automation |
+| **HARDENED** | None | Denied | Blocked | Untrusted code execution |
+
+## Execution Policies
+
+
+Policies control what operations are permitted:
 
 ```typescript
 interface ExecPolicy {
@@ -45,38 +57,78 @@ interface ExecPolicy {
 }
 ```
 
-## Petri Net 스케줄러
+## Petri Net Scheduler
 
-교착 없는 동시 실행을 위한 형식 모델:
 
-| Place | 용량 | 용도 |
-|-------|------|------|
-| `pending` | 무제한 | 대기 요청 |
-| `v8_slots` | 10 | V8 isolate |
-| `seccomp_slots` | 4 | seccomp-BPF |
-| `wasm_slots` | 2 | WebAssembly |
-| `tee_slots` | 1 | TEE |
-| `executing` / `completed` | 무제한 | 실행 중 / 완료 |
+The sandbox uses a Petri net model for formal resource allocation, ensuring deadlock-free concurrent execution:
 
-전이: `admit_<tier>` (pending + slot → executing), `complete_<tier>` (슬롯 반환). 데드락·포화·안전 상태 분석 후 입장.
+| Place | Capacity | Purpose |
+|-------|----------|---------|
+| `pending` | Unbounded | Requests waiting for execution |
+| `v8_slots` | 10 | V8 isolate execution slots |
+| `seccomp_slots` | 4 | seccomp-BPF sandbox slots |
+| `wasm_slots` | 2 | WebAssembly execution slots |
+| `tee_slots` | 1 | Trusted Execution Environment slots |
+| `executing` | Unbounded | Currently executing requests |
+| `completed` | Unbounded | Finished requests |
 
-## 백엔드
+Transitions: `admit_<tier>` (pending + slot → executing) and `complete_<tier>` (executing → completed + slot returned).
 
-- **local** — 프로세스 로컬  
-- **ssh** — 원격 SSH  
-- **docker** — 컨테이너 실행  
+The scheduler includes deadlock analysis (true deadlock, unsafe, saturated, safe) and safe-state verification before admitting new requests.
 
-## 운영
+## Trusted Execution Environment (TEE)
 
-```bash
-export COMMANDER_MODE=read-only   # 또는 plan / suggest
-npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
+
+The TEE sandbox uses Node.js `worker_threads` for isolated V8 Isolates, replacing `new Function()` to prevent code injection:
+
+- Code executes in an isolated worker thread
+- No access to main process memory or modules
+- Communication via message passing only
+- Enforced CPU and memory limits
+
+## seccomp-BPF (Linux)
+
+
+On Linux, the sandbox uses seccomp-BPF for system call filtering:
+
+- Allowlist approach: only approved syscalls are permitted
+- Per-profile filter customization
+- Blocks `ptrace`, `process_vm_readv`, and other escalation vectors
+
+## Approval Workflow
+
+
+Sensitive operations require human approval:
+
+```typescript
+import { ApprovalManager } from '@commander/core';
+
+const approval = new ApprovalManager();
+
+// Operations that trigger approval:
+// - File deletion
+// - External network requests
+// - Shell commands with sudo
+// - Modifying git configuration
 ```
 
-비신뢰 코드에는 HARDENED + 네트워크 차단을 기본으로 하세요.
+The approval system defaults to fail-closed — unknown or high-risk tools are denied unless explicitly approved.
 
-## 관련
+## Platform Support
 
-- [보안](/ko/guide/security)  
-- [보안 게이트웨이](/ko/architecture/security-gateway)  
-- [도구](/ko/architecture/tools)  
+
+| Platform | Sandbox Method |
+|----------|---------------|
+| macOS | Native sandbox + seccomp |
+| Linux | Docker / seccomp-BPF / TEE |
+| Windows | Windows Sandbox / WSL |
+
+## 사용법
+
+
+Set the security profile via environment:
+
+```bash
+export COMMANDER_SECURITY_PROFILE=strict
+npx tsx packages/core/src/cliEntry.ts run "review this code"
+```

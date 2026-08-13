@@ -1,92 +1,136 @@
-# Task Complexity Analyzer
+# 작업 복잡도 분석기
 
-**Task Complexity Analyzer.** 이 페이지는 Commander 아키텍처 구성 요소를 설명합니다. monorepo 구조에 맞춘 한국어 운영 문서이며, 코드 블록은 영어 그대로입니다.
-
-제품 지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
-
-CLI monorepo: `npx tsx packages/core/src/cliEntry.ts` · 빌드 후: `commander`
-
-## 참고 표
-
-| Condition | Topology |
-|-----------|----------|
-| Complexity > 80 | REVIEW |
-| Complexity > 60 + no dependencies | DISPATCH |
-| Complexity > 50 | ORCHESTRATOR |
-| Has dependencies + complexity > 30 | CHAIN |
-| No dependencies + complexity < 30 | DISPATCH |
-| Default | CHAIN |
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/api/task-complexity-analyzer)
 
 
-## 주요 내용
 
-### Types
+Analyzes task complexity and selects the optimal orchestration mode.
 
-운영 시 **Types** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/task-complexity-analyzer)를 보세요.
+## Types
 
-### API
-
-운영 시 **API** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/task-complexity-analyzer)를 보세요.
-
-### Topology Selection Rules
-
-운영 시 **Topology Selection Rules** 는 품질 게이트·DLQ·서킷 브레이커와 함께 씁니다. 소스는 monorepo, 전체 명세는 [영문 레퍼런스](/api/task-complexity-analyzer)를 보세요.
-
-## 예제 (코드는 영어 유지)
 
 ```typescript
 type ComplexityLevel = 'trivial' | 'simple' | 'moderate' | 'complex' | 'extreme';
-type Topology = 'SINGLE' | 'CHAIN' | 'DISPATCH' | 'ORCHESTRATOR' | 'REVIEW';
+
+type OrchestrationMode =
+  | 'SEQUENTIAL'  // Low complexity, single thread
+  | 'PARALLEL'    // Independent subtasks
+  | 'HANDOFF'     // Needs expert
+  | 'MAGENTIC'    // Open exploration
+  | 'CONSENSUS';  // High-risk decision
 
 interface ComplexityScore {
   level: ComplexityLevel;
-  score: number;           // 0-100
+  score: number;              // 0-100
   factors: ComplexityFactors;
-  recommendedTopology: Topology;
+  recommendedMode: OrchestrationMode;
   tokenBudget: TokenBudget;
-  confidence: number;      // 0-1
+  confidence: number;         // 0-1
 }
 
 interface ComplexityFactors {
-  treewidth: number;       // Dependency complexity (0-100)
-  dependencyDepth: number; // How deep dependencies go (0-100)
-  inputSize: number;       // Token count of input
-  outputComplexity: number;// Expected output structure (0-100)
-  domainKnowledge: number; // Need for specialized knowledge (0-100)
-  riskLevel: number;       // Failure impact (0-100)
-  uncertaintyLevel: number;// Ambiguity in requirements (0-100)
-  timeConstraints: number; // Deadline pressure (0-100)
+  treewidth: number;          // Dependency complexity (0-100)
+  dependencyDepth: number;    // How deep dependencies go (0-100)
+  inputSize: number;          // Token count of input
+  outputComplexity: number;   // Expected output structure (0-100)
+  domainKnowledge: number;    // Need for specialized knowledge (0-100)
+  riskLevel: number;          // Failure impact (0-100)
+  uncertaintyLevel: number;   // Ambiguity in requirements (0-100)
+  timeConstraints: number;    // Deadline pressure (0-100)
+}
+
+interface TokenBudget {
+  leadAgent: number;          // Percentage for lead agent
+  specialistAgents: number;   // Percentage for specialists
+  evaluation: number;         // Percentage for evaluation
+  overhead: number;           // Percentage for orchestration
+  total: number;              // Total budget
+}
+
+interface Task {
+  id: string;
+  description: string;
+  input?: string;
+  context?: string;
+  constraints?: string[];
+  deadline?: Date;
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
 }
 ```
 
-```typescript
-const analyzer = new TaskComplexityAnalyzer();
+## API
 
-// Analyze single task
-const score = analyzer.analyze(task: Task): ComplexityScore;
+
+```typescript
+import { TaskComplexityAnalyzer } from '@commander/core';
+// BatchComplexityAnalyzer lives in packages/core/src/taskComplexityAnalyzer.ts
+// and is not re-exported from the '@commander/core' package root.
+import { BatchComplexityAnalyzer } from 'packages/core/src/taskComplexityAnalyzer';
+
+// Analyze a single task
+const analyzer = new TaskComplexityAnalyzer();
+const score = analyzer.analyze(task); // → ComplexityScore
 
 // Batch analysis
-const scores = batchAnalyzer.analyzeBatch(tasks: Task[]): ComplexityScore[];
+const batchAnalyzer = new BatchComplexityAnalyzer();
+const scores = batchAnalyzer.analyzeBatch(tasks); // → ComplexityScore[]
 
 // Get orchestration recommendation
-const orch = batchAnalyzer.getBatchOrchestration(scores): {
-  topology: Topology;
-  totalBudget: number;
-  parallelGroups: number;
-};
+const orch = batchAnalyzer.getBatchOrchestration(scores);
+// → { mode: OrchestrationMode; totalBudget: number; parallelGroups: number }
 ```
 
-## 운영
+Factor weights (weighted sum → 0-100 score): treewidth 0.2 · dependencyDepth 0.15 · inputSize 0.1 · outputComplexity 0.15 · domainKnowledge 0.15 · riskLevel 0.1 · uncertaintyLevel 0.1 · timeConstraints 0.05.
 
-```bash
-npx tsx packages/core/src/cliEntry.ts doctor
-npx tsx packages/core/src/cliEntry.ts status
-curl -s http://localhost:4000/health/detailed || true
-```
+`scoreToLevel` thresholds: `< 15` trivial · `< 30` simple · `< 50` moderate · `< 75` complex · else extreme.
 
-## 관련
+## Mode Selection Rules
 
-- [아키텍처 개요](/ko/architecture/overview)
-- [프로덕션 준비](/ko/architecture/production-readiness)
-- [보안](/ko/guide/security)
-- [빠른 시작](/ko/guide/getting-started)
+
+High-priority factors win over the level-based default (checked in order):
+
+| Condition | Orchestration Mode |
+|-----------|--------------------|
+| `riskLevel >= 75` | CONSENSUS |
+| `uncertaintyLevel >= 60` | MAGENTIC |
+| `domainKnowledge >= 70` | HANDOFF |
+| Level `trivial` / `simple` | SEQUENTIAL |
+| Level `moderate` + `treewidth < 30` | PARALLEL |
+| Level `moderate` (otherwise) | SEQUENTIAL |
+| Level `complex` + `dependencyDepth > 50` | HANDOFF |
+| Level `complex` (otherwise) | PARALLEL |
+| Level `extreme` | MAGENTIC |
+
+## Token Budgets
+
+
+Base total by complexity level:
+
+| Level | Base total |
+|-------|-----------|
+| trivial | 1000 |
+| simple | 3000 |
+| moderate | 10000 |
+| complex | 30000 |
+| extreme | 100000 |
+
+Mode multiplier and split (lead / specialists / evaluation / overhead):
+
+| Mode | Multiplier | Split |
+|------|-----------|-------|
+| SEQUENTIAL | ×1 | 70 / 10 / 15 / 5 |
+| PARALLEL | ×1.5 | 30 / 50 / 15 / 5 |
+| HANDOFF | ×1.3 | 35 / 45 / 15 / 5 |
+| MAGENTIC | ×2 | 40 / 35 / 15 / 10 |
+| CONSENSUS | ×1.5 | 30 / 30 / 35 / 5 |
+
+Confidence starts at 1.0 and loses 0.05 per mid-range factor (30-70), floored at 0.5.
+
+## Batch Orchestration
+
+
+`getBatchOrchestration(scores)`:
+
+- Any task recommending `CONSENSUS` → whole batch runs `CONSENSUS`, `parallelGroups: 1`
+- All tasks `trivial`/`simple` → `PARALLEL`, total budget ×0.8 (parallel efficiency), `parallelGroups: scores.length`
+- Otherwise → highest-score task's mode, `parallelGroups: scores.length` when `PARALLEL` else `1`

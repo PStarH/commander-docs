@@ -1,8 +1,21 @@
 # Contributing to the docs
 
-Thank you for improving Commander documentation. 1. **Metrics:** `25 providers` · `5 topologies` · `18 built-in tools` · `6700+ tests`
+> **本地化说明** · 本页标题与结构已本地化；代码块与精确 API 以英文源为准。完整英文版：[English](/guide/contributing)
 
-本文说明 **Contributing to the docs** 在 Commander 中的职责、使用方式与相关模块。命令与代码路径与产品保持一致。
+
+
+Thank you for improving Commander documentation.
+
+## Repos
+
+
+| Repo | Role |
+|------|------|
+| [Commander](https://github.com/PStarH/Commander) | Product, CLI, SDK, tests |
+| [commander-docs](https://github.com/PStarH/commander-docs) | This VitePress site |
+
+## Local docs dev
+
 
 ```bash
 git clone https://github.com/PStarH/commander-docs.git
@@ -13,14 +26,37 @@ npm run check    # content guards
 npm run build
 ```
 
-## 要点
+## Content rules
 
-- 与英文源文档语义对齐；API 与 CLI 以 monorepo 为准  
-- 需要可运行示例时，优先使用 [快速开始](/zh/guide/getting-started) 中的 `cliEntry.ts` 路径  
-- 指标口径：25 提供商 · 5 拓扑 · 18 工具 · 6700+ 测试  
 
-## 相关
+1. **Metrics:** `25 providers` · `5 topologies` · `18 built-in tools` · `6700+ tests`  
+2. **CLI from source:** `npx tsx packages/core/src/cliEntry.ts …`  
+3. **CLI after build:** `commander …`  
+4. **Vue internal links:** always `withBase()` (GH Pages base `/commander-docs/`)  
+5. **themeConfig.logo:** `/logo.svg` only — never hardcode `/commander-docs/`  
+6. **Localhost URLs** in install docs are fine; CI allows them as dead-link exceptions  
 
-- [架构总览](/zh/architecture/overview)  
-- [快速开始](/zh/guide/getting-started)  
-- [API 概览](/zh/api/overview)  
+## i18n
+
+
+- English is the source of truth under `/guide`, `/architecture`, `/api`  
+- Chinese entry path: `/zh/` (Quick Start, Why, FAQ, cookbook samples)  
+- When you change EN quick-start commands, update `zh/guide/getting-started.md` if applicable  
+
+## PR checklist
+
+
+- [ ] `npm run check` passes  
+- [ ] `npm run build` passes  
+- [ ] No new `cli.ts` / wrong provider counts / 17-tools strings  
+- [ ] Screenshots or demos use accurate product claims  
+
+## 安全
+
+
+Do **not** open public issues for vulnerabilities. See [Security](/zh/guide/security).
+
+## Product code contributions
+
+
+Use the main [Commander](https://github.com/PStarH/Commander) repository for runtime, tools, and providers. Docs-only changes belong here.

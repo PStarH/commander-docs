@@ -1,77 +1,93 @@
 # 아키텍처 개요
 
-Commander는 단일 작업 설명을 여러 에이전트·도구·LLM 프로바이더에 걸친 구조화된 실행 계획으로 바꿉니다.
+> **현지화 안내** · 제목/구조는 번역되었습니다. 코드와 정확한 API는 영어 원문을 기준으로 하세요.영어 버전: [English](/architecture/overview)
 
-## 먼저 읽을 다섯 페이지
 
-1. **이 페이지** — 고수준 흐름과 패키지 맵  
-2. [코어 호출 체인](/ko/architecture/core-call-chain)  
-3. [멀티 에이전트](/ko/architecture/multi-agent)  
-4. [에이전트 런타임](/ko/architecture/agent-runtime)  
-5. [검증 파이프라인](/ko/architecture/verification)  
 
-나머지는 선택적 심화(신뢰성·보안·시스템)입니다.
+Commander is a multi-agent orchestration engine that transforms a single task description into a structured execution plan across multiple agents, tools, and LLM providers.
+
+## 먼저 이 다섯 페이지
+
+
+If you are new, this is enough to understand the system:
+
+1. **This page** — high-level flow and package map  
+2. [Core Call Chain](/ko/architecture/core-call-chain) — request → result path  
+3. [Multi-Agent Orchestration](/ko/architecture/multi-agent) — topologies and coordination  
+4. [Agent Runtime](/ko/architecture/agent-runtime) — LLM → tools → verify → retry  
+5. [Verification Pipeline](/ko/architecture/verification) — five quality gates  
+
+Everything else (reliability, security, systems) is optional depth — collapsed in the sidebar.
 
 ## 고수준 흐름
+
 
 ```
 CLI / HTTP / SDK
   │
-  ├─ deliberation.ts         작업 분석 & 토폴로지 선택
-  ├─ effortScaler.ts         에이전트 1–20 스케일
-  ├─ topologyRouter.ts       5 정규 토폴로지
-  ├─ atomizer.ts             ROMA 분해
+  ├─ deliberation.ts         Task analysis & topology selection
+  ├─ effortScaler.ts         Scale agents (1-20) by complexity
+  ├─ topologyRouter.ts       Route to optimal topology (5 canonical + 9 legacy)
+  ├─ atomizer.ts             ROMA task decomposition
   │
-  ├─ agentRuntime.ts         LLM → tools → verify → retry
-  │   ├─ providers/          25 프로바이더 + 폴백
-  │   ├─ toolResultCache / stateCheckpointer / circuitBreaker
-  │   ├─ deadLetterQueue / compensation / verificationLoop
-  │   └─ eventSourcing / qualityGater
+  ├─ agentRuntime.ts         LLM → tools → verification → retry
+  │   ├─ providers/          25 LLM providers with fallback chains
+  │   ├─ toolResultCache.ts  SHA-256 caching per tenant
+  │   ├─ stateCheckpointer.ts Crash-safe snapshots (SQLite WAL)
+  │   ├─ circuitBreaker.ts   Failure threshold → open circuit
+  │   ├─ deadLetterQueue.ts  7 categories, 15 failure modes, replay support
+  │   ├─ compensationRegistry.ts Mutation tool rollback
+  │   ├─ contextCompactor.ts Token-aware message compaction
+  │   ├─ tokenGovernor.ts    Token budget enforcement
+  │   ├─ verificationLoop.ts Quality gates (5-stage)
+  │   ├─ eventSourcingEngine.ts WAL + hash chain event log
+  │   └─ qualityGater.ts    Agent Capsules degradation detection
   │
-  ├─ enterpriseSecurityGateway (7계층) · DLP · capability tokens
-  ├─ agentHandoff / messageBus / metrics / threeLayerMemory
-  ├─ hallucinationDetector / reflection / metaLearner
-  ├─ recoveryBootstrapper / unifiedAuditLog
-  └─ pluginManager (19 hook)
+  ├─ enterpriseSecurityGateway.ts  7-layer defense-in-depth
+  │   ├─ dataLossPrevention.ts  DLP with 12+ sensitive patterns
+  │   ├─ capabilityToken.ts   Short-lived HMAC auth tokens
+  │   ├─ auditChainLedger.ts  Tamper-proof hash chain audit
+  │   └─ agentLineage.ts      Immutable parent-child agent tracking
+  │
+  ├─ agentHandoff.ts         Agent-to-agent handoff with inbox
+  ├─ messageBus.ts           Pub/sub for inter-agent + system events
+  ├─ metricsCollector.ts     Unified metrics (Prometheus + adapters)
+  ├─ threeLayerMemory.ts     Working/Episodic/Long-term with embedding
+  ├─ hallucinationDetector.ts Signal-based hallucination detection
+  ├─ reflectionEngine.ts     Post-execution self-evaluation
+  ├─ metaLearner.ts          Thompson Sampling + Reflexion
+  │
+  ├─ recoveryBootstrapper.ts Zombie run detection & recovery on startup
+  ├─ unifiedAuditLog.ts      Cross-source audit aggregation
+  │
+  └─ pluginManager.ts        19 hook points, sandboxed load context
 ```
 
 ## 패키지 구조
 
+
 ```
 packages/core/src/
-├── runtime/     실행 엔진
-├── ultimate/    오케스트레이션
-├── security/    보안 게이트웨이
-├── tools/       18 내장 도구
-├── sandbox/     프로파일, TEE, seccomp, Petri net
-├── atr/         Agent Transaction Runtime
-├── selfEvolution/  메타러닝
-├── saga/        보상 트랜잭션
-├── mcp/         MCP + A2A
-└── plugins/builtin/  RAG 등
+├── runtime/             ← Execution engine (190+ files)
+├── ultimate/            ← Orchestration engine (44+ files)
+├── security/            ← Enterprise security gateway (70+ files)
+├── tools/               ← 18 built-in tools
+├── sandbox/             ← Security profiles, TEE, seccomp, Petri net
+├── atr/                 ← Agent Task Recovery system
+├── selfEvolution/       ← Meta-learning
+├── saga/                ← Distributed compensation transactions
+├── mcp/                 ← Model Context Protocol + A2A
+├── plugins/builtin/     ← RAG knowledge base plugin
+└── ... core modules
 ```
 
-## 설계 원칙
+## 핵심 설계 원칙
 
-1. **Topology-first** — 실행 전에 작업 구조를 분석  
-2. **Provider-agnostic** — 25 프로바이더 통일 인터페이스 + 폴백  
-3. **Crash-safe** — 단계마다 WAL 체크포인트, 이벤트 재생  
-4. **Observable by default** — 메트릭, 트레이스, SSE, Grafana  
-5. **Multi-tenant by design** — 스토리지·메모리·쿼터·캐시 격리  
-6. **Secure by default** — 7계층 게이트웨이, DLP, 토큰, 플러그인 샌드박스  
-7. **Reversible by design** — 해시 체인, 보상, DLQ, RecoveryBootstrapper  
 
-## 로컬에서 보기
-
-```bash
-npx tsx packages/core/src/cliEntry.ts plan "audit this repo"
-npx tsx packages/core/src/cliEntry.ts run "audit this repo" --stream
-```
-
-지표: **25** 프로바이더 · **5** 토폴로지 · **18** tools · **6700+** 테스트.
-
-## 관련
-
-- [프로덕션 준비](/ko/architecture/production-readiness)  
-- [빠른 시작](/ko/guide/getting-started)  
-- [API 개요](/ko/api/overview)  
+1. **Topology-first** — Commander analyzes the task structure before choosing how to execute it
+2. **Provider-agnostic** — All 25 LLM providers share a unified interface with automatic fallback
+3. **Crash-safe** — Every step is checkpointed atomically (SQLite WAL); resume from any failure via event sourcing replay
+4. **Observable by default** — Metrics, traces, SSE event streams, and Grafana dashboards on every execution
+5. **Multi-tenant by design** — Isolation at every layer: storage, memory, rate limits, concurrency, cache
+6. **Secure by default** — 7-layer enterprise security gateway, DLP, capability tokens, plugin sandboxing
+7. **Reversible by design** — Event sourcing with hash chain, compensation registry, DLQ replay, and RecoveryBootstrapper

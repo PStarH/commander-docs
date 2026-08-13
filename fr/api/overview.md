@@ -35,11 +35,14 @@ await client.disconnect();
 ### HTTP
 
 ```bash
-curl http://localhost:4000/health
-curl -X POST http://localhost:4000/execute \
-  -H "Authorization: Bearer $COMMANDER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"task":"analyze this repository","mode":"plan"}'
+# Ops health server — default port 8081 (COMMANDER_OPS_HEALTH_PORT)
+curl http://localhost:8081/health   # → 200 {"status":"ok"}
+curl http://localhost:8081/ready    # → 200 (ready) / 503 (fail-closed)
+
+# HTTP API base used by the Web Console client — default :4000 (VITE_API_BASE_URL).
+# Requests carry `Authorization: Bearer <token>` when a token is configured.
+curl http://localhost:4000/v1/actions \
+  -H "Authorization: Bearer <token>"
 ```
 
 V2 : `POST /v1/runs` — [Migration V2](/fr/guide/migration-v2).
@@ -61,12 +64,10 @@ Modules internes `@commander/core`. Pour **étendre** le runtime uniquement.
 | Composant | Rôle |
 |-----------|------|
 | [Task Complexity Analyzer](/fr/api/task-complexity-analyzer) | Score → topologie |
-| [Adaptive Orchestrator](/fr/api/adaptive-orchestrator) | Plan multi-agents |
 | [Token Budget Allocator](/fr/api/token-budget-allocator) | Budget |
 | [Three-Layer Memory](/fr/api/three-layer-memory) | Mémoire 3 couches |
 | [Reflection Engine](/fr/api/reflection-engine) | Éval post-run |
 | [Consensus Checker](/fr/api/consensus-checker) | Votes multi-modèles |
-| [Inspector Agent](/fr/api/inspector-agent) | Santé / problèmes |
 
 ### Quand utiliser Layer 2
 
@@ -79,11 +80,7 @@ Topologie custom, recherche mémoire/consensus, tests d’un sous-système.
 ### Exemple minimal
 
 ```typescript
-import {
-  TaskComplexityAnalyzer,
-  AdaptiveOrchestrator,
-  TokenBudgetAllocator,
-} from '@commander/core';
+import { TaskComplexityAnalyzer } from '@commander/core';
 
 const analyzer = new TaskComplexityAnalyzer();
 const complexity = analyzer.analyze({
@@ -91,14 +88,10 @@ const complexity = analyzer.analyze({
   description: 'Build distributed logging system',
   riskLevel: 'high',
 });
-
-const allocator = new TokenBudgetAllocator({ baseBudget: 100_000 });
-const budget = allocator.allocate(
-  complexity.recommendedTopology,
-  complexity.score,
-  3,
-);
+// complexity: { level, score, factors, recommendedMode, tokenBudget, confidence }
 ```
+
+Le partage du budget au runtime est géré en interne par le gestionnaire de budget de tokens — voir [Allocateur de budget tokens](/fr/api/token-budget-allocator).
 
 Préférez `CommanderClient` aux singletons `getGlobal…` sauf état partagé voulu.
 
