@@ -1,7 +1,7 @@
 {
   "name": "commander-docs",
   "version": "0.1.0",
-  "description": "Commander docs — 25 providers · 5 topologies · 18 tools · multi-agent orchestration",
+  "description": "Commander documentation — alpha runtime, action governance, and historical Shadow evaluation",
   "type": "module",
   "scripts": {
     "dev": "vitepress dev",

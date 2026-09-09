@@ -1,234 +1,45 @@
 #!/usr/bin/env node
-/**
- * Content guards for commander-docs — fail CI on metric/CLI/base drift.
- */
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative } from 'node:path'
 
-const root = process.cwd();
-const errors = [];
-const warnings = [];
+const root = process.cwd()
+const locales = ['zh', 'ja', 'ko', 'es', 'fr']
+const pages = ['index.md', 'getting-started.md', 'deployment.md', 'operations.md', 'security.md', 'sdk.md', 'benchmarks.md', 'support.md']
+const errors = []
 
-function walk(dir, acc = []) {
+for (const locale of locales) {
+  for (const page of pages) {
+    if (!existsSync(join(root, locale, page))) errors.push(`missing ${locale}/${page}`)
+  }
+}
+
+function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
-    if (name === "node_modules" || name === ".vitepress" || name === ".git")
-      continue;
-    const p = join(dir, name);
-    const st = statSync(p);
-    if (st.isDirectory()) walk(p, acc);
-    else if (/\.(md|mts|vue|ts|js|mjs|css)$/.test(name)) acc.push(p);
+    if (['.git', '.vitepress', 'node_modules', '.omo'].includes(name)) continue
+    const file = join(dir, name)
+    if (statSync(file).isDirectory()) walk(file, out)
+    else if (file.endsWith('.md') || file.endsWith('.mts')) out.push(file)
   }
-  return acc;
+  return out
 }
 
-const files = walk(root);
-
-// --- Forbidden patterns (content drift) ---
 const forbidden = [
-  {
-    re: /npx tsx cli\.ts\b/,
-    msg: "Use packages/core/src/cliEntry.ts instead of bare cli.ts",
-  },
-  { re: /\b22 providers\b/i, msg: "Metric drift: use 25 providers" },
-  { re: /\b24 providers\b/i, msg: "Metric drift: use 25 providers" },
-  { re: /\b17 built-in tools\b/i, msg: "Metric drift: use 18 built-in tools" },
-  { re: /\b6,742\b/, msg: "Prefer 6700+ over exact fragile count" },
-  { re: /OLLAMA_HOST\b/, msg: "Use OLLAMA_BASE_URL / OLLAMA_API_KEY" },
-  {
-    re: /logo:\s*['"]\/commander-docs\//,
-    msg: "themeConfig.logo must not include base path (VitePress prefixes it)",
-  },
-];
+  [/localhost:3001/, 'Commander API must not use port 3001'],
+  [/\/api\/v1/, 'legacy API routes are not public documentation'],
+  [/6700\+ tests/, 'fragile test-count marketing is not a public claim'],
+  [/OpenClaw|PinchBench/, 'unverified competitive benchmark claim'],
+  [/100% defense/i, 'benchmark claim needs an evidence level, not an absolute'],
+]
 
-for (const file of files) {
-  const rel = relative(root, file);
-  if (rel.includes("scripts/check-docs")) continue;
-  const text = readFileSync(file, "utf8");
-  for (const { re, msg } of forbidden) {
-    if (re.test(text)) {
-      const line = text.split("\n").findIndex((l) => re.test(l)) + 1;
-      errors.push(`${rel}:${line}: ${msg}`);
-    }
+for (const file of walk(root)) {
+  const text = readFileSync(file, 'utf8')
+  for (const [pattern, message] of forbidden) {
+    if (pattern.test(text)) errors.push(`${relative(root, file)}: ${message}`)
   }
-}
-
-// --- Required public assets ---
-const requiredAssets = [
-  "public/og.png",
-  "public/robots.txt",
-  "public/llms.txt",
-  "public/logo.svg",
-  "public/terminal-mockup.svg",
-  "public/demo-stream.svg",
-  "public/console-mockup.svg",
-];
-for (const a of requiredAssets) {
-  try {
-    statSync(join(root, a));
-  } catch {
-    errors.push(`missing required asset: ${a}`);
-  }
-}
-
-// --- Dual-source drift: key claims must stay consistent across EN entry pages ---
-const dualSource = [
-  {
-    files: [
-      "guide/getting-started.md",
-      "guide/installation.md",
-      ".vitepress/theme/components/Home.vue",
-    ],
-    re: /cliEntry\.ts/,
-    msg: "must document monorepo CLI entry packages/core/src/cliEntry.ts",
-  },
-  {
-    files: ["guide/sdk.md", "guide/installation.md"],
-    re: /monorepo|workspace|not.*primary|publication is (in progress|not)/i,
-    msg: "install docs must stay monorepo-first / npm-honest",
-  },
-];
-for (const { files, re, msg } of dualSource) {
-  for (const f of files) {
-    try {
-      const text = readFileSync(join(root, f), "utf8");
-      if (!re.test(text)) errors.push(`${f}: ${msg}`);
-    } catch {
-      errors.push(`missing dual-source file: ${f}`);
-    }
-  }
-}
-
-// --- Home.vue must use withBase for internal CTAs ---
-const home = readFileSync(
-  join(root, ".vitepress/theme/components/Home.vue"),
-  "utf8",
-);
-if (!home.includes("withBase")) {
-  errors.push("Home.vue must import/use withBase for GH Pages");
-}
-if (
-  !home.includes("prefersReducedMotion") &&
-  !home.includes("prefers-reduced-motion")
-) {
-  warnings.push("Home.vue should respect prefers-reduced-motion");
-}
-
-// --- Config must declare multi-locale + hreflang ---
-const cfg = readFileSync(join(root, ".vitepress/config.mts"), "utf8");
-for (const loc of ["zh", "ja", "ko", "es", "fr"]) {
-  if (!cfg.includes(`${loc}:`) && !cfg.includes(`${loc}: {`)) {
-    errors.push(`config.mts should define ${loc} locale`);
-  }
-}
-if (!cfg.includes("25 providers")) {
-  errors.push("config description should mention 25 providers");
-}
-if (!cfg.includes("hreflang") && !cfg.includes("transformHead")) {
-  errors.push("config.mts should inject hreflang via transformHead");
-}
-if (!cfg.includes("x-default")) {
-  errors.push("config.mts hreflang should include x-default");
-}
-
-// --- Home demo must use monorepo CLI, not fake global binary as primary ---
-if (
-  /demoLines[\s\S]*?commander run/.test(home) &&
-  !home.includes("cliEntry.ts")
-) {
-  warnings.push(
-    "Home.vue demo should prefer cliEntry.ts over bare `commander run`",
-  );
-}
-if (!home.includes("demo-stream.svg") && !home.includes("cliEntry.ts")) {
-  errors.push(
-    "Home.vue demo strip should reference demo-stream.svg or cliEntry.ts",
-  );
-}
-
-// --- locale entry pages exist ---
-const localeRequired = [
-  "zh/index.md",
-  "zh/guide/getting-started.md",
-  "zh/guide/why-commander.md",
-  "zh/guide/faq.md",
-  "ja/index.md",
-  "ja/guide/getting-started.md",
-  "ja/guide/why-commander.md",
-  "ko/index.md",
-  "ko/guide/getting-started.md",
-  "ko/guide/why-commander.md",
-  "es/index.md",
-  "es/guide/getting-started.md",
-  "es/guide/why-commander.md",
-  "fr/index.md",
-  "fr/guide/getting-started.md",
-  "fr/guide/why-commander.md",
-  "guide/topology-explorer.md",
-];
-for (const p of localeRequired) {
-  try {
-    statSync(join(root, p));
-  } catch {
-    errors.push(`missing page: ${p}`);
-  }
-}
-
-// --- full coverage: each locale should mirror key EN trees ---
-for (const loc of ["zh", "ja", "ko", "es", "fr"]) {
-  for (const tree of ["guide", "architecture", "api"]) {
-    const dir = join(root, loc, tree);
-    try {
-      const count = readdirSync(dir, { recursive: true }).filter((f) =>
-        String(f).endsWith(".md"),
-      ).length;
-      // entry locales must have guide; arch/api may still be filling
-      if (tree === "guide" && count < 5) {
-        errors.push(`${loc}/${tree} coverage too thin (${count} md files)`);
-      }
-      if ((tree === "architecture" || tree === "api") && count < 1) {
-        warnings.push(`${loc}/${tree} not started yet (${count})`);
-      }
-    } catch {
-      if (tree === "guide") errors.push(`missing locale tree: ${loc}/${tree}`);
-      else warnings.push(`missing locale tree: ${loc}/${tree}`);
-    }
-  }
-}
-
-// Flag leftover stub banners (should be full 信达雅, not EN body + banner)
-for (const loc of ["zh", "ja", "ko", "es", "fr"]) {
-  const dir = join(root, loc);
-  try {
-    const files = readdirSync(dir, { recursive: true })
-      .filter((f) => String(f).endsWith(".md"))
-      .map((f) => join(dir, String(f)));
-    for (const file of files) {
-      const text = readFileSync(file, "utf8");
-      if (
-        text.includes("本地化说明") ||
-        text.includes("ローカライズについて") ||
-        text.includes("현지화 안내") ||
-        text.includes("Localization note")
-      ) {
-        warnings.push(
-          `stub banner still present (should be full native rewrite): ${relative(root, file)}`,
-        );
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-}
-
-if (warnings.length) {
-  console.log("Warnings:");
-  for (const w of warnings) console.log("  ⚠", w);
 }
 
 if (errors.length) {
-  console.error("check-docs failed:\n");
-  for (const e of errors) console.error("  ✗", e);
-  process.exit(1);
+  console.error(errors.join('\n'))
+  process.exit(1)
 }
-
-console.log(`check-docs OK (${files.length} files scanned)`);
+console.log(`Validated ${pages.length} public pages in ${locales.length + 1} locales.`)

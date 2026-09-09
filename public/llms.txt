@@ -1,25 +1,23 @@
 # Commander
-> Production-grade multi-agent orchestration engine.
 
-Commander classifies tasks, picks a topology (SINGLE/CHAIN/DISPATCH/ORCHESTRATOR/REVIEW), runs agents with tools, and streams every decision with quality gates.
+Commander is a local-first multi-agent orchestration tool for engineering work.
 
-## Docs
-- https://pstarh.github.io/commander-docs/
-- https://pstarh.github.io/commander-docs/zh/ (简体中文)
-- https://pstarh.github.io/commander-docs/guide/getting-started.html
-- https://pstarh.github.io/commander-docs/guide/why-commander.html
-- https://pstarh.github.io/commander-docs/guide/cookbook/
-- https://pstarh.github.io/commander-docs/architecture/overview.html
-- https://pstarh.github.io/commander-docs/api/overview.html
-- https://pstarh.github.io/commander-docs/guide/security.html
-- Full outline: https://pstarh.github.io/commander-docs/llms-full.txt
+## Public documentation
 
-## Source
-- https://github.com/PStarH/Commander
+- Quick start: https://pstarh.github.io/commander-docs/getting-started.html
+- Deployment: https://pstarh.github.io/commander-docs/deployment.html
+- Operations and rollback: https://pstarh.github.io/commander-docs/operations.html
+- Security and privacy: https://pstarh.github.io/commander-docs/security.html
+- SDKs and API: https://pstarh.github.io/commander-docs/sdk.html
+- Benchmarks: https://pstarh.github.io/commander-docs/benchmarks.html
+- Support and limits: https://pstarh.github.io/commander-docs/support.html
+- Enterprise Shadow Phase A: https://github.com/PStarH/Commander/blob/codex/release-20260810/docs/pilot/shadow/README.md
 
-## Key facts
-- 25 LLM providers with auto-failover
-- 5 canonical topologies
-- 18 built-in tools
-- 6700+ tests
-- MIT license
+## Product boundary
+
+- Current enterprise evaluation uses historical observations; it does not execute or authorize external actions. Live Kubernetes rollback is frozen.
+
+- Local API: http://localhost:4000
+- Local web interface: http://localhost:3000
+- Enterprise Gateway is alpha, not production-proven multi-tenant SaaS.
+- Benchmarks are CI or harness evidence, not production SLA or certification.

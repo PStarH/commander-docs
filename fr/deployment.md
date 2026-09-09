@@ -1,46 +1,41 @@
-# Déploiement
+# Deployment
 
-## Docker local
+> This page is synchronized from the canonical English documentation. Français navigation is available; commands and product limits are identical in every locale.
 
-```bash
-export COMMANDER_API_KEY="your-secret-key"
-export OPENAI_API_KEY="sk-..."
-docker compose up -d
-# API :4000 · Web :3000 · Dev GUI :5173 avec pnpm gui
-```
+## Supported local deployment
 
-Build multi-stage, Nginx, health checks, volumes, tini.
-
-## Production (VM)
+Copy the environment template, set an API key and one provider key, then start
+the local stack:
 
 ```bash
-cp .env.example .env.production
-./scripts/deploy-vm.sh your-vm-ip --env-file .env.production
-# ou
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+cp .env.example .env
+# Set COMMANDER_API_KEY and a provider API key in .env.
+docker compose up
 ```
 
-### Overlay prod
+The API listens on `http://localhost:4000` and the web interface on
+`http://localhost:3000`. Grafana, when the observability profile is enabled,
+uses port `3001`; it is not the Commander API.
 
-| Fonction | Réglage |
-|----------|---------|
-| CPU/RAM | 2 CPU / 4GB API |
-| Logs | json-file, 10MB, 3 rotations |
-| Restart | `always` |
-| Health | 30s / 10s / 5 retries |
-| Multi-tenant | `TENANT_PROVIDER=simple` optionnel |
-
-## Health
+Check the API after startup:
 
 ```bash
 curl http://localhost:4000/health
-curl http://localhost:4000/health/detailed
 curl http://localhost:4000/readyz
-curl http://localhost:4000/metrics
 ```
 
-## Lié
+## Enterprise Gateway boundary
 
-- [Installation](/fr/guide/installation)  
-- [Migration V2](/fr/guide/migration-v2)  
-- [Prêt production](/fr/architecture/production-readiness)
+The `/v1` Gateway needs a PostgreSQL DSN and is alpha. Do not present it as a
+complete production multi-tenant SaaS or rely on it for strict tenant-isolation
+requirements without your own validation and controls.
+
+## Production prerequisites
+
+- Terminate TLS and set explicit CORS origins.
+- Generate a strong `COMMANDER_API_KEY` and store provider credentials outside
+  source control.
+- Change default observability credentials before exposing any dashboard.
+- Back up durable state and rehearse recovery before relying on it.
+
+See [Operations and rollback](/operations) for recovery and rollback limits.

@@ -12,8 +12,8 @@
   <circle cx="128" cy="100" r="8" fill="#eab308"/>
   <circle cx="160" cy="100" r="8" fill="#22c55e"/>
   <text x="96" y="200" fill="#fafafa" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="56" font-weight="700">Commander</text>
-  <text x="96" y="270" fill="#a1a1aa" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">Multi-agent orchestration, built for production.</text>
-  <text x="96" y="360" fill="#71717a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22">25 providers  ·  5 topologies  ·  18 tools  ·  6700+ tests</text>
-  <text x="96" y="430" fill="#52525b" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20">$ commander run "audit this repo" --stream</text>
+  <text x="96" y="270" fill="#a1a1aa" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32">Local-first multi-agent orchestration for engineers.</text>
+  <text x="96" y="360" fill="#71717a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22">Run locally  ·  Inspect behavior  ·  Keep control of your workflow</text>
+  <text x="96" y="430" fill="#52525b" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20">Quick start, deployment, operations, security, and support</text>
   <text x="96" y="520" fill="#3f3f46" font-family="ui-sans-serif, system-ui, sans-serif" font-size="18">docs · github.com/PStarH/Commander</text>
 </svg>

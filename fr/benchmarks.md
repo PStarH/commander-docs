@@ -1,6 +1,6 @@
 # Benchmarks
 
-> This page is synchronized from the canonical English documentation. 日本語 navigation is available; commands and product limits are identical in every locale.
+> This page is synchronized from the canonical English documentation. Français navigation is available; commands and product limits are identical in every locale.
 
 Commander maintains benchmarks for regression detection and development
 feedback. They are not production SLAs, SOC evidence, or independent product

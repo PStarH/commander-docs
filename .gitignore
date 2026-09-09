@@ -1,4 +1,7 @@
 node_modules/
+.internal/
+.omo/
+.worktrees/
 .vitepress/dist/
 .vitepress/cache/
 .DS_Store
